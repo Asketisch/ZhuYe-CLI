@@ -84,7 +84,7 @@ def test_ctrl_o_copies_last_reply(tui, mock_script) -> None:
         assert not s.has_panic()
 
 
-def test_ctrl_g_external_editor_roundtrip(tui, sandbox) -> None:
+def test_ctrl_g_external_editor_roundtrip(tui, sandbox, mock_script) -> None:
     """K3 Ctrl+G 拉起 $EDITOR,编辑器写入的文本回填 composer 并可提交。"""
     editor = sandbox.home / "fake-editor.sh"
     editor.write_text(
@@ -92,7 +92,10 @@ def test_ctrl_g_external_editor_roundtrip(tui, sandbox) -> None:
     )
     editor.chmod(0o755)
 
-    with tui(env={"EDITOR": str(editor), "VISUAL": str(editor)}) as s:
+    # v0.1.8 起脚本耗尽的长回退文案会把「▶」用户行顶出屏幕窗口,
+    # 50ms 轮询的 wait() 抓不到瞬间态;短脚本让用户行常驻。
+    script = mock_script([text_reply("ok")] * 6)
+    with tui(env={"EDITOR": str(editor), "VISUAL": str(editor)}, script=script) as s:
         s.wait_boot(timeout=30)
         s.type_text("draft before editor")
         s._pump(settle=0.5, max_wait=1.0)

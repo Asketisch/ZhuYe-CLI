@@ -116,11 +116,18 @@ def test_plugin_slash_command_is_listed(plugin_home, sandbox) -> None:
         assert "demo:hello" in txt, f"命令弹窗应列出插件命令:\n{txt[-800:]}"
 
 
-def test_plugin_slash_command_passes_validation(plugin_home, sandbox) -> None:
+def test_plugin_slash_command_passes_validation(
+    plugin_home, sandbox, tmp_path: Path
+) -> None:
     """G3 插件命令提交不被「未知命令」校验拦下。"""
-    from tui_pty import TuiSession
+    from tui_pty import TuiSession, text_reply
 
     env = _plugin_env(plugin_home)
+    # v0.1.8 起脚本耗尽的长回退文案会把 `▶ /demo:hello` 用户行顶出屏幕
+    # 窗口(见 test_slash S6 注释);配确定性短脚本让用户行常驻。
+    script = tmp_path / "g3-mock.jsonl"
+    script.write_text("\n".join([text_reply("ok")] * 6) + "\n")
+    env["ZHUYE_MOCK_SCRIPT"] = str(script)
     with TuiSession(sandbox, env=env, cols=120, rows=40) as s:
         deadline = time.monotonic() + 40
         while time.monotonic() < deadline:

@@ -32,6 +32,8 @@ import time
 
 import pytest
 
+from tui_pty import text_reply
+
 # ── 结局矩阵 ──────────────────────────────────────────────────────────────
 # (命令, 参数, 类别, 期望文本)
 # 期望文本取自真二进制的实测输出(见 tests/COVERAGE.md §S 组逐条证据)。
@@ -232,33 +234,34 @@ def test_mode_switches_permission_mode(tui) -> None:
         assert "[plan]" in txt, f"HUD 应显示 plan 模式标记:\n{txt[-500:]}"
 
 
-def test_escaped_slash_is_plain_text(tui) -> None:
+def test_escaped_slash_is_plain_text(tui, mock_script) -> None:
     """S6 名字里带 `/` 的输入不按命令解析(当普通文本)。"""
-    with tui() as s:
+    # v0.1.8 起脚本耗尽的回退文案变长(反假绿标记);一次提交引擎会
+    # 多次调用模型,多条长回退会把用户行顶出 34 行屏幕窗口(pyte 无
+    # scrollback)。配确定性短脚本让屏幕保持紧凑,再等待式断言上屏。
+    script = mock_script([text_reply("ok")] * 6)
+    with tui(script=script) as s:
         s.wait_boot(timeout=30)
         _submit(s, "a/b", "")
-        time.sleep(2.0)
-        txt = s.normalized()
-        assert "a/b" in txt, "带斜杠的文本应作为普通消息上屏"
+        txt = s.wait_text("▶ /a/b", timeout=30)
         assert "尚未接入分发" not in txt, "不应被当作命令解析"
 
 
-def test_leading_space_allows_unknown_command(tui) -> None:
+def test_leading_space_allows_unknown_command(tui, mock_script) -> None:
     """S7 行首空格 → composer 不做「未知命令」拦截,按普通消息提交。
 
     `slash_input.rs:85` 的 `input_starts_with_space` 分支:行首有空格时,
     `validate_submission` 直接返回 Valid —— 未知命令不会被静默拒收,而是
     作为普通文本发给 agent。
     """
-    with tui() as s:
+    # 同 S6:v0.1.8 长回退文案会刷掉目标行,用短脚本 + 等待式断言替代固定 sleep。
+    script = mock_script([text_reply("ok")] * 6)
+    with tui(script=script) as s:
         s.wait_boot(timeout=30)
         s.type_text(" /not-a-real-command")
         s.key("enter")
-        time.sleep(2.5)
-        txt = s.normalized()
-        assert "/not-a-real-command" in txt, (
-            f"行首空格的未知命令应作为普通消息提交:\n{txt[-500:]}"
-        )
+        # 等「▶」用户行上屏本身即证明:未被命令校验拦截,按普通消息提交。
+        s.wait_text("▶ /not-a-real-command", timeout=30)
 
 
 def test_leading_space_still_parses_known_command(tui) -> None:

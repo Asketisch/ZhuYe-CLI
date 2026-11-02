@@ -224,16 +224,17 @@ def test_tool_args_streamed_into_call_line(tui, mock_script) -> None:
     `args_from_start == false` 分支 → 逐段转发 `tool_call_args_delta`。
     TUI 累积后在工具完成瞬间把摘要落到历史行(`✓ glob (…) · *.rs`)。
     """
+    # 工具行之后的收尾轮仍要消费脚本行;v0.1.8 起耗尽时的长回退文案会把
+    # 工具历史行顶出屏幕窗口,补足短文本让「定型」可稳定等待。
     script = mock_script(
         [tool_call_delta("glob", ['{"pattern": "*.', 'rs"}'])]
+        + [text_reply("ok")] * 6
     )
     with tui(script=script) as s:
         s.wait_boot(timeout=30)
         s.type_text("list rust files")
         s.key("enter")
-        txt = s.wait_text("glob", timeout=30)
+        s.wait_text("glob", timeout=30)
         assert not s.has_panic(), f"不应 panic:\n{s.raw_output()[-600:]}"
         # 参数摘要进调用行:`*.rs` 是 glob 工具的 pattern 参数。
-        assert "*.rs" in txt, (
-            f"工具调用行应带上参数摘要(来自 ToolCallArgsDelta):\n{txt[-800:]}"
-        )
+        txt = s.wait_text("*.rs", timeout=30)
