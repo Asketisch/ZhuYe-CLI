@@ -18,7 +18,7 @@
 #      - test_coverage_audit.py 覆盖自审门禁
 #   2. tests/rust/cli_core.sh + cli_modules.sh  CLI 参数矩阵
 #
-# 前置:release 二进制(入口自动补建)、Python 3 + pytest + pyte。
+# 前置:release 二进制(入口每次 cargo 增量校验新鲜)、Python 3 + pytest + pyte。
 # 缺依赖的批次自动 SKIP,不算失败。
 #
 # 全程离线(ZHUYE_MODEL=mock/mock-1)+ 隔离 HOME。退出码 0 = 全部通过。
@@ -40,11 +40,8 @@ cd "$ROOT"
 
 TOTAL_RC=0
 
-# release 二进制不存在则构建(幂等)
-if [ ! -x "$ZHUYE_CLI_BIN" ]; then
-    echo "── 构建 release 二进制 ──"
-    cargo build --release -p zhuye-cli --quiet || exit 2
-fi
+# release 二进制与源码对齐(每次 cargo 增量校验,详见 lib.sh 注释)
+ensure_release_binary
 
 echo
 echo "════════════════════════════════════════════════"

@@ -26,11 +26,8 @@ fi
 
 cd "$ROOT"
 
-# release 二进制不存在则构建(幂等)
-if [ ! -x "$ZHUYE_CLI_BIN" ]; then
-    echo "── 构建 release 二进制 ──"
-    cargo build --release -p zhuye-cli --quiet || exit 2
-fi
+# release 二进制与源码对齐(每次 cargo 增量校验,详见 lib.sh 注释)
+ensure_release_binary
 
 OVERALL=0
 for s in "${SUITES[@]}"; do

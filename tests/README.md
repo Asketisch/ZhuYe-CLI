@@ -18,7 +18,8 @@ headless CLI,以及 Rust 编译面。
 ./tests/run_all.sh live         # live 端到端(需真实 LLM + API key)
 ```
 
-前置:`cargo build --release -p zhuye-cli`(入口脚本会自动补建)、
+前置:`cargo build --release -p zhuye-cli`(入口脚本每次自动增量校验二进制
+与源码对齐,`--locked`,旧产物冒充新行为的假绿通道已封死)、
 Python 3 + pytest + pyte(`pip install pytest pyte`)、Node 不需要。
 缺依赖的批次自动 **SKIP**,不算失败。
 

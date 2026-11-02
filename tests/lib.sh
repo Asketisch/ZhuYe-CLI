@@ -20,6 +20,24 @@ TESTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$TESTS_DIR/.." && pwd)"
 ZHUYE_CLI_BIN="${ZHUYE_CLI_BIN:-$ROOT/target/release/zhuye-cli}"
 
+# ensure_release_binary:入口统一调用,保证被测二进制与源码一致。
+# 「缺了才建」的旧写法在 submodule 指针升级 / 源码变更后会让旧二进制
+# 冒充新行为(实测:v0.1.8 升级后本地与 CI macos 缓存均出现假绿)。
+# 改为每次走 cargo build —— 无改动时增量判定是秒级,不构成负担;带
+# --locked 让 Cargo.lock 过期在套件入口就响亮失败,而不是拖到测试层。
+# 若显式指定了外部 ZHUYE_CLI_BIN(非默认构建产物路径),则信任用户自带
+# 的二进制,不代跑 cargo(产物路径归用户自己保证新鲜)。
+ensure_release_binary() {
+    if [ "$ZHUYE_CLI_BIN" = "$ROOT/target/release/zhuye-cli" ]; then
+        echo "── 校验/刷新 release 二进制 ──"
+        cargo build --manifest-path "$ROOT/Cargo.toml" \
+            --release -p zhuye-cli --quiet --locked || {
+            echo "FAIL: release 二进制构建失败(Cargo.lock 过期或编译错误)" >&2
+            exit 2
+        }
+    fi
+}
+
 # ── 全局状态 ──────────────────────────────────────────────────────────────
 declare -i PASS_COUNT=0
 declare -i FAIL_COUNT=0
