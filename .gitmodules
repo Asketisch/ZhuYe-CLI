@@ -1,4 +1,4 @@
-[submodule "reflect-agent"]
-	path = reflect-agent
+[submodule "zhuye-agent"]
+	path = zhuye-agent
 	url = https://github.com/Asketisch/Reflect-Agent.git
 	branch = main

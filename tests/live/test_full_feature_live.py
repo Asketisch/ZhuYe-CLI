@@ -841,10 +841,10 @@ def test_live_cli_fork_rename_rm(live_tui, live_sandbox: Sandbox) -> None:
 
 # submodule 构建出的 reflect-cli(bin 名是 `reflect`)。
 _CLI_CANDIDATES = [
-    ROOT / "reflect-agent" / "target" / "release" / "reflect",
-    ROOT / "reflect-agent" / "target" / "debug" / "reflect",
+    ROOT / "zhuye-agent" / "target" / "release" / "reflect",
+    ROOT / "zhuye-agent" / "target" / "debug" / "reflect",
 ]
-_EXAMPLE_PLUGIN = ROOT / "reflect-agent" / "examples" / "plugin-demo"
+_EXAMPLE_PLUGIN = ROOT / "zhuye-agent" / "examples" / "plugin-demo"
 
 
 def _find_submodule_cli() -> Path | None:
@@ -864,7 +864,7 @@ def plugin_home(tmp_path_factory) -> str:
     cli = _find_submodule_cli()
     if cli is None:
         pytest.skip(
-            "submodule 的 reflect CLI 未构建(需在 reflect-agent 下 cargo build -p reflect-cli);插件面跳过"
+            "submodule 的 reflect CLI 未构建(需在 zhuye-agent 下 cargo build -p reflect-cli);插件面跳过"
         )
     if not _EXAMPLE_PLUGIN.is_dir():
         pytest.skip(f"示例插件不存在:{_EXAMPLE_PLUGIN}")

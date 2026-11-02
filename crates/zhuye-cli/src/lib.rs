@@ -13,7 +13,7 @@
 )]
 //! ZhuYe-CLI —— ZhuYe 的终端交互界面(ratatui)。
 //!
-//! 架构:核心引擎(zhuye-core / AgentThread 等)由 reflect-agent submodule 提供,
+//! 架构:核心引擎(zhuye-core / AgentThread 等)由 zhuye-agent submodule 提供,
 //! 本 crate 只负责表现层 —— 事件循环、布局、ratatui 渲染、协议事件适配。
 //!
 //! `tui_core` 下是本仓库自包含的呈现原语;ratatui/crossterm fork 的来源说明

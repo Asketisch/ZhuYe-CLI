@@ -2,7 +2,7 @@
 # ── ZhuYe-CLI 跨平台构建脚本 ───────────────────────────────────────
 # 编译 `zhuye-cli` 二进制,可选打包成平台分发包。
 #
-# 核心 crate 由 `reflect-agent/` submodule 提供,打包前会检查 submodule
+# 核心 crate 由 `zhuye-agent/` submodule 提供,打包前会检查 submodule
 # 是否已初始化,未初始化时提示 `git submodule update --init --recursive`。
 #
 # 用法:
@@ -93,10 +93,10 @@ case "$OS_NAME" in
         ;;
 esac
 
-# ── submodule 检查:TUI 依赖 reflect-agent/ submodule 提供核心 crate ──
-SUBMODULE_DIR="${REPO_ROOT}/reflect-agent"
+# ── submodule 检查:TUI 依赖 zhuye-agent/ submodule 提供核心 crate ──
+SUBMODULE_DIR="${REPO_ROOT}/zhuye-agent"
 if [[ ! -f "${SUBMODULE_DIR}/Cargo.toml" ]]; then
-    echo "✗ reflect-agent submodule 未初始化:缺少 ${SUBMODULE_DIR}/Cargo.toml" >&2
+    echo "✗ zhuye-agent submodule 未初始化:缺少 ${SUBMODULE_DIR}/Cargo.toml" >&2
     echo "  请先运行:git submodule update --init --recursive" >&2
     if ! $DRY_RUN; then
         exit 1

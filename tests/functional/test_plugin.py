@@ -26,10 +26,10 @@ from tui_pty import ROOT
 
 # submodule 构建出的 reflect-cli(bin 名是 `zhuye`(烛夜更名后))。
 _CLI_CANDIDATES = [
-    ROOT / "reflect-agent" / "target" / "release" / "zhuye",
-    ROOT / "reflect-agent" / "target" / "debug" / "zhuye",
+    ROOT / "zhuye-agent" / "target" / "release" / "zhuye",
+    ROOT / "zhuye-agent" / "target" / "debug" / "zhuye",
 ]
-_EXAMPLE_PLUGIN = ROOT / "reflect-agent" / "examples" / "plugin-demo"
+_EXAMPLE_PLUGIN = ROOT / "zhuye-agent" / "examples" / "plugin-demo"
 
 
 def _find_cli() -> Path | None:

@@ -14,7 +14,7 @@
 //! 标记 → 白名单 → id 模式。**判定规则不硬编码模型清单** —— 模型本身
 //! 永远来自 provider 的清单端点。
 //!
-//! 实现与 submodule 的 `reflect models` 同源(`reflect-agent/crates/
+//! 实现与 submodule 的 `reflect models` 同源(`zhuye-agent/crates/
 //! runtime/reflect-cli/src/models.rs`),但只保留 TUI 需要的两个动作
 //! (`list` / `pick`):本仓是表现层,不提供 headless 推理入口。
 

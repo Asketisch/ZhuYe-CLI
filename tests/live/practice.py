@@ -8,7 +8,7 @@
 
 ## 与 submodule 的区别
 
-submodule `reflect-agent/scripts/free_model_practice.sh` 驱动的是 headless
+submodule `zhuye-agent/scripts/free_model_practice.sh` 驱动的是 headless
 `reflect exec`(事件流 JSONL);本脚本驱动的是**终端 TUI**(pty + pyte),
 因此测的是「真实模型 + 真实 TUI 渲染 + 真实工具审批」这一整条链路。
 

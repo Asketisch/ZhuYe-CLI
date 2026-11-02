@@ -6,7 +6,7 @@
 的用例;断言失败即失败。全程离线(`ZHUYE_MODEL=mock/mock-1`,零网络、
 零 API key)+ 隔离 HOME(mktemp,不污染真实 `~/.zhuye`)。
 
-> 本文件的结构与判据对齐 submodule `reflect-agent/tests/COVERAGE.md`,
+> 本文件的结构与判据对齐 submodule `zhuye-agent/tests/COVERAGE.md`,
 > 但**覆盖对象不同**:submodule 是 agent 基座(测 headless `reflect serve`
 > 的 JSONL wire);本仓是终端 TUI(测 pty 上的真实渲染、真实按键路由、
 > 真实文件落盘)。
@@ -415,7 +415,7 @@
 | D4 | **4 个协议事件被静默丢弃**:`McpToolInvoked` / `PermissionBubble` / `ConfigReloaded` / `CollabMessage` / `Routing` 在 `convert_event` 里返回 `None`,屏幕无任何痕迹 | `tui/conversion.rs:226-241` | 未修(记录) |
 | D5 | **picker 的 `Nop` 键位不吞键**:在 image/keymap/statusline/theme/skills_hub 里按 `j`/`k` 既移动选择又往 composer 输入框打字;keymap / skills_hub / statusline 的 `Enter` 也是 `Nop`(会提交草稿) | `tui/mod.rs:2594, 2721, 2737, 2772, 2788, 2804, 2848` | 未修(记录)。本套件一律用 `Esc` 关闭弹层以规避 |
 | D6 | **`REFLECT_TUI_UPDATE_CHECK` 无人读取**:旧 harness 设它以屏蔽启动期更新探测,但本 fork 的 `update_action.rs:29-33` 恒返回 `None` | `crates/zhuye-cli/src/tui_core/update_action.rs:29-33` | 未修(记录)。无害,但属残留 |
-| D7 | **mock provider 一次提交触发多次模型调用**:实测 4 次,导致脚本行与最终落盘的 assistant 消息不是一一对应 | `reflect-agent/crates/abilities/reflect-llm/src/providers/mock.rs:163` | 引擎侧行为,记录 |
+| D7 | **mock provider 一次提交触发多次模型调用**:实测 4 次,导致脚本行与最终落盘的 assistant 消息不是一一对应 | `zhuye-agent/crates/abilities/reflect-llm/src/providers/mock.rs:163` | 引擎侧行为,记录 |
 | D8 | **`Ctrl+Shift+D` 快捷键在真实终端不可达**:终端无法区分 Ctrl+D 与 Ctrl+Shift+D(同为字节 `0x04`),crossterm 把 `0x04` 解析成 `Char('d') + CONTROL`(**不带 SHIFT**),而 `keymap.rs` 的 `OpenDiff` 分支要求 `CONTROL|SHIFT` —— 该分支永远命中不了,实际落到 `Ctrl+D → Exit` | `crates/zhuye-cli/src/keymap.rs:88-94`(要求 SHIFT)vs `:60-65`(Ctrl+D 排除 SHIFT);实测见 `test_overlay.py::test_ctrl_shift_d_is_unreachable_from_a_terminal` | 未修(记录)。diff overlay 的实际入口只有 `/diff` |
 | D9 | ~~**坏 `config.toml` 静默回落**~~:`this is [ not valid toml {{{` 这类非法内容不产生任何用户可见告警,TUI 以默认配置照常启动 —— 用户改了配置却不生效时无从得知 | W9 实证(2026-10):进程存活、无 panic、raw 无 config 相关输出 | **已修**:bootstrap 启动前显式体检 config.toml,解析失败在终端打印 `⚠ 警告:<路径> 解析失败(...)`,仍回落默认配置不挡启动 |
 | D10 | **busy 窗口内的 composer 提交被吞且草稿保留**:回合进行中按 Enter,提交内容不上传也不清框;`/loop stop` 在迭代 busy 窗口内提交即失效,且残留草稿会污染后续输入(与 `/loop` 的自动提交叠加尤其明显) | W5 调试实证(2026-10):第 2 轮触发后立刻 stop 无效,拖到空闲窗口才生效;残留草稿使后续 stop 拼成非法命令 | 未修(记录) |

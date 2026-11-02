@@ -1,14 +1,14 @@
 # AGENTS.md
 
 > 本文件是本仓库的 AI 助手说明(原 `CLAUDE.md`,2026-10 起改名)。
-> submodule 侧的同名文件见 `reflect-agent/AGENTS.md`,两者结构对标。
+> submodule 侧的同名文件见 `zhuye-agent/AGENTS.md`,两者结构对标。
 
 ## 项目概览
 
 ZhuYe-CLI — ZhuYe 的终端交互式客户端(ratatui + crossterm),面向终端 AI Agent 工作流。
 
 - 单 crate workspace:仅 `crates/zhuye-cli`(lib `zhuye_cli` + thin binary `zhuye-cli`)
-- 核心引擎(AgentThread / StateGraph / 工具 / 协议)由 `reflect-agent/` **git submodule** 提供,
+- 核心引擎(AgentThread / StateGraph / 工具 / 协议)由 `zhuye-agent/` **git submodule** 提供,
   本 crate 只负责表现层:事件循环、布局、渲染、协议事件适配
 - Rust stable,edition 2024,MSRV 1.85(`rust-toolchain.toml` 锁定)
 - 用户数据目录:`~/.zhuye/`(config.toml / sessions/ / traces/);Plan 草稿写 `<workspace>/.zhuye/plan/`
@@ -64,7 +64,7 @@ make gc                         # 清 target/debug 中 cargo 不自动 GC 的中
 
 ### 核心引擎(submodule,只读消费,勿改)
 
-`reflect-agent/crates/{protocol,abilities,resources,orchestration,integrations,runtime}(烛夜更名后 crate 名为 `zhuye-*`)` 六层。
+`zhuye-agent/crates/{protocol,abilities,resources,orchestration,integrations,runtime}(烛夜更名后 crate 名为 `zhuye-*`)` 六层。
 本 crate 直接依赖的关键 crate:zhuye-core(AgentThread)、zhuye-llm(ModelRegistry)、
 zhuye-tools(内置工具)、zhuye-config、zhuye-rollout、zhuye-telemetry、
 zhuye-task/subagent、zhuye-protocol。
@@ -72,7 +72,7 @@ zhuye-task/subagent、zhuye-protocol。
 ## 关键约束(改代码前必读)
 
 1. **Cargo 不支持嵌套 workspace**:核心 crate **不**列入本仓库 `workspace.members`,
-   只用 `path` 依赖(`zhuye-core = { path = "reflect-agent/crates/runtime/zhuye-core" }`)。
+   只用 `path` 依赖(`zhuye-core = { path = "zhuye-agent/crates/runtime/zhuye-core" }`)。
    核心 crate 大量 `workspace = true` 继承依赖会解析到**本仓库**根 `[workspace.dependencies]`,
    因此该段必须**完整声明**核心引用的全部 zhuye-* 与外部依赖 —— 升级 submodule 或新增
    核心 crate 依赖时,同步补声明,否则跨 workspace 解析失败。详见 [CONTRIBUTING.md](CONTRIBUTING.md) 的「submodule 工作流」小节。
@@ -102,7 +102,7 @@ zhuye-task/subagent、zhuye-protocol。
 
 ## 开发流程检查表(改任何代码前必读)
 
-> 本节结构与 submodule `reflect-agent/AGENTS.md` 的同名章节对标。
+> 本节结构与 submodule `zhuye-agent/AGENTS.md` 的同名章节对标。
 > **新功能或修改必须与测试脚本一起提交** —— 不接受「先合功能、后补测试」,
 > 也不接受只有「退出码 0 / 不崩」这类伪断言。
 
@@ -170,7 +170,7 @@ zhuye-task/subagent、zhuye-protocol。
 
 ## Submodule 维护
 
-- 升级:`git submodule update --remote reflect-agent && git add reflect-agent && git commit`
+- 升级:`git submodule update --remote zhuye-agent && git add zhuye-agent && git commit`
 - 指针变更必须与代码适配一起提交;接线记录追加到 CONTRIBUTING.md「submodule 工作流」段。
 - 完整流程(分支切换、联调)见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 

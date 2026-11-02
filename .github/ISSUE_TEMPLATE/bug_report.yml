@@ -23,9 +23,9 @@ body:
   - type: input
     id: submodule
     attributes:
-      label: reflect-agent submodule 指针
-      description: '运行 `git submodule status reflect-agent` 的输出'
-      placeholder: '例如 d1372cfe598590d9190f8c9a75f5e65d0ba23de2 reflect-agent (main)'
+      label: zhuye-agent submodule 指针
+      description: '运行 `git submodule status zhuye-agent` 的输出'
+      placeholder: '例如 d1372cfe598590d9190f8c9a75f5e65d0ba23de2 zhuye-agent (main)'
     validations:
       required: true
 

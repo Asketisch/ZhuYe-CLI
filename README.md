@@ -155,9 +155,9 @@ make help           # 全部 target
 Reflect-Agent 是 submodule。升级核心到最新:
 
 ```bash
-git submodule update --remote reflect-agent
-git add reflect-agent
-git commit -m "chore: bump reflect-agent submodule"
+git submodule update --remote zhuye-agent
+git add zhuye-agent
+git commit -m "chore: bump zhuye-agent submodule"
 ```
 
 本地联调核心改动:在 Reflect-Agent 仓库改代码 → `git push` → 本仓库 `git submodule update --remote`。完整流程(含分支切换、指针记录)见 [CONTRIBUTING.md](CONTRIBUTING.md) 的「submodule 工作流」小节。

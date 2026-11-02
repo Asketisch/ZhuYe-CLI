@@ -28,11 +28,11 @@ limitations under the License.
 二、Reflect-Agent(核心引擎,Apache-2.0)
 ────────────────────────────────────────────────────────────────────────
 
-本仓库通过 `reflect-agent/` git submodule 引入 Reflect-Agent 仓库的
+本仓库通过 `zhuye-agent/` git submodule 引入 Reflect-Agent 仓库的
 全部核心 crate,包括但不限于:
 
   reflect-protocol, reflect-llm, reflect-tools, reflect-hooks,
-  reflect-skills, reflect-memory, reflect-agent-def, reflect-prompt,
+  reflect-skills, reflect-memory, zhuye-agent-def, reflect-prompt,
   reflect-compact, reflect-recovery, reflect-notes, reflect-sanitize,
   reflect-config, reflect-permissions, reflect-plugin, reflect-rollout,
   reflect-telemetry, reflect-sandbox, reflect-ast,
@@ -42,7 +42,7 @@ limitations under the License.
 
   - 来源仓库:https://github.com/Asketisch/Reflect-Agent
   - 许可证:Apache-2.0
-  - 路径:本仓库根目录下的 `reflect-agent/` 子模块
+  - 路径:本仓库根目录下的 `zhuye-agent/` 子模块
   - 使用方式:仅作为 path 依赖被本仓库消费,核心 crate 不列入本仓库
             workspace.members(Cargo 不支持嵌套 workspace)
 

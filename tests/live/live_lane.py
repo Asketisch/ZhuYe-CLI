@@ -1,6 +1,6 @@
 """实模型演练层 · 免费模型车道设施(清单发现 / 能力探测 / 配置注入)。
 
-与 submodule `reflect-agent/tests/live/` 同款车道,但驱动对象不同:
+与 submodule `zhuye-agent/tests/live/` 同款车道,但驱动对象不同:
 那边驱动 headless `reflect serve`(JSONL wire),这边驱动**终端 TUI**
 (pty + pyte 屏幕快照)—— 断言落在「用户真的看到了什么」。
 

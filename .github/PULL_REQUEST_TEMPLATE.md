@@ -14,7 +14,7 @@
 - [ ] 重构(无功能变化)
 - [ ] 文档 / 注释
 - [ ] 构建 / CI / 工具链
-- [ ] Submodule 升级(reflect-agent 指针变更,**请单独提交**)
+- [ ] Submodule 升级(zhuye-agent 指针变更,**请单独提交**)
 - [ ] 其他:
 
 ## 关联 Issue / 上下文

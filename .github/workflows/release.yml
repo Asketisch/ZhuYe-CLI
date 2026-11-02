@@ -4,7 +4,7 @@
 # 各平台原生分发包(macOS/Linux tar.gz / Windows zip),上传到 workflow
 # run,tag 触发时聚合到 GitHub Release。
 #
-# 注意:本仓库通过 `reflect-agent/` submodule 引用核心 crate,CI 必须
+# 注意:本仓库通过 `zhuye-agent/` submodule 引用核心 crate,CI 必须
 # 递归 checkout submodule 才能编译。
 #
 # 本地一次性构建无需此 workflow —— 直接 `./scripts/build.sh --dist`。

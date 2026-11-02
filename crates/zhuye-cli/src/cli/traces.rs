@@ -4,7 +4,7 @@
 //! (每次 LLM 调用一条 `ModelIoRecord`)。`ls` 列 session 文件 + 调用次数 +
 //! 最近时间;`show` 展开某 session 的逐条调用详情。
 //!
-//! 参照:`reflect-agent/crates/runtime/reflect-cli/src/traces.rs`。
+//! 参照:`zhuye-agent/crates/runtime/reflect-cli/src/traces.rs`。
 
 use zhuye_rollout::index::list_sessions;
 use zhuye_telemetry::{

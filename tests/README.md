@@ -99,10 +99,10 @@ make coverage-audit    # = 覆盖自审(有未覆盖命令即失败)
 
 ## 与 submodule 的关系
 
-本套件的结构与判据对齐 submodule `reflect-agent/tests/`
+本套件的结构与判据对齐 submodule `zhuye-agent/tests/`
 (统一入口 / 分层 / 覆盖矩阵 / 已知缺陷清单),但覆盖对象不同:
 
-| | submodule `reflect-agent/tests/` | 本仓 `tests/` |
+| | submodule `zhuye-agent/tests/` | 本仓 `tests/` |
 |---|---|---|
 | 测什么 | agent 基座的 headless `reflect serve` | 终端 TUI 的表现层 |
 | 怎么驱动 | 原始 JSONL wire(`subprocess` + `json`) | pty + pyte 屏幕快照 |

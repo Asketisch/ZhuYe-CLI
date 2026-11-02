@@ -1,7 +1,7 @@
 # ZhuYe-CLI 持续集成。
 #
 # push / PR 触发,在 ubuntu + macOS 上跑 fmt / clippy / test。
-# 注意:本仓库通过 `reflect-agent/` submodule 引用核心 crate,
+# 注意:本仓库通过 `zhuye-agent/` submodule 引用核心 crate,
 # 必须递归 checkout submodule 才能编译。
 
 name: ci

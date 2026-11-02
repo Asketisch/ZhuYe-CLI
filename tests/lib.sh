@@ -10,7 +10,7 @@
 #
 # 约定:注释一律中文;脚本自身可独立执行,退出码 0 = 全部通过。
 #
-# 与 submodule `reflect-agent/tests/lib.sh` 的差异:
+# 与 submodule `zhuye-agent/tests/lib.sh` 的差异:
 #   submodule 测的是 headless `reflect serve`(JSONL wire),本仓测的是
 #   终端 TUI —— 因此这里额外提供 mock 脚本生成与 pty 相关的基础环境变量,
 #   但**不**提供 wire 会话设施(那由 tests/functional/ 的 pty 层负责)。

@@ -152,9 +152,9 @@ make help           # list all targets
 Reflect-Agent is a submodule. To bump the core to the latest:
 
 ```bash
-git submodule update --remote reflect-agent
-git add reflect-agent
-git commit -m "chore: bump reflect-agent submodule"
+git submodule update --remote zhuye-agent
+git add zhuye-agent
+git commit -m "chore: bump zhuye-agent submodule"
 ```
 
 For local joint development on the core: make changes in the Reflect-Agent repo → `git push` → in this repo run `git submodule update --remote`. See the "Submodule workflow" section in [CONTRIBUTING.md](CONTRIBUTING.md) for the full process (branch switching, pointer updates, joint debugging).
