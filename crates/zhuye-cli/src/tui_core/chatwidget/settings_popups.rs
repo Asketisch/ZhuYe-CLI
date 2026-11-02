@@ -7,7 +7,8 @@ use super::*;
 
 impl ChatWidget {
     pub(super) fn open_theme_picker(&mut self) {
-        let zhuye_home = crate::utils_home_dir::find_reflect_home();
+        let zhuye_home = // v0.1.8-develop:home 解析收编为 zhuye-config 的 data_dir 单一事实源
+        zhuye_config::data_dir();
         let terminal_width = self
             .last_rendered_width
             .get()

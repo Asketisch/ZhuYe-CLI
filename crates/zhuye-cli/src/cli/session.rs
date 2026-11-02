@@ -408,12 +408,11 @@ pub fn export(id: &str, out: Option<&std::path::Path>) -> anyhow::Result<()> {
     match out {
         Some(p) => {
             // 原子落盘:直接写目标文件时若进程崩溃/磁盘满,用户指定的导出路径
-            // 会被截断成一个不完整的 markdown,而且看不出是坏的。同目录
-            // temp + rename 保证要么完整要么原文件不动。
-            let tmp = p.with_extension(format!("md.tmp.{}", std::process::id()));
-            std::fs::write(&tmp, &markdown)
-                .with_context(|| format!("write export temp {}", tmp.display()))?;
-            std::fs::rename(&tmp, p).with_context(|| format!("finalize export {}", p.display()))?;
+            // 会被截断成一个不完整的 markdown。v0.1.8-develop 起走框架的
+            // zhuye_fs::write_atomic(失败保全 + symlink 穿透:导出目标若被
+            // 运维用链接挂载,写指向目标而不替换链接)。
+            zhuye_fs::write_atomic(p, markdown.as_bytes())
+                .with_context(|| format!("finalize export {}", p.display()))?;
             println!(
                 "Exported session {tid} → {} ({} bytes)",
                 p.display(),

@@ -14,7 +14,6 @@ use crate::config_compat::ConfigLayerSource;
 use crate::protocol_compat::config_types::ServiceTier;
 use crate::protocol_compat::models::PermissionProfile;
 use crate::tui_core::bottom_pane::status_line_from_segments;
-use crate::tui_core::branch_summary;
 use crate::tui_core::chatwidget::limit_label_for_window;
 use crate::tui_core::chatwidget::rate_limits::get_limits_duration;
 use crate::tui_core::legacy_core::config::Config;
@@ -545,7 +544,8 @@ impl ChatWidget {
         self.status_line_branch_pending = true;
         let tx = self.app_event_tx.clone();
         tokio::spawn(async move {
-            let branch = branch_summary::current_branch_name(runner.as_ref(), &cwd).await;
+            let runner = crate::tui_core::workspace_command::CommandRunnerBridge(&runner);
+            let branch = zhuye_git::current_branch_name(&runner, &cwd).await;
             tx.send(AppEvent::StatusLineBranchUpdated { cwd, branch });
         });
     }
@@ -561,7 +561,8 @@ impl ChatWidget {
         self.status_line_git_summary_pending = true;
         let tx = self.app_event_tx.clone();
         tokio::spawn(async move {
-            let summary = branch_summary::status_line_git_summary(runner.as_ref(), &cwd).await;
+            let runner = crate::tui_core::workspace_command::CommandRunnerBridge(&runner);
+            let summary = zhuye_git::status_line_git_summary(&runner, &cwd).await;
             tx.send(AppEvent::StatusLineGitSummaryUpdated { cwd, summary });
         });
     }

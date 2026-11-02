@@ -686,8 +686,8 @@ fn handle_event(
                 let sha = state.checkpoint_rewind_sha.take().unwrap();
                 let short: String = sha.chars().take(8).collect();
                 // 真实回退:`git reset --hard <sha>`,回退前先做一次安全快照提交
-                // (git_checkpoint::rewind 内部保证),用户反悔还能再回退回去。
-                match crate::git_checkpoint::rewind(&state.cwd, &sha) {
+                // (zhuye_git::rewind 内部保证),用户反悔还能再回退回去。
+                match zhuye_git::rewind(&state.cwd, &sha) {
                     Ok((target, safety)) => {
                         let tshort: String = target.sha.chars().take(8).collect();
                         let mut msg = format!("⏪ rewound to {tshort}");
@@ -1501,8 +1501,7 @@ fn show_branch(state: &mut UiState, arg: Option<&str>) {
 /// 这一层可独立编译。连接状态与工具清单由后端 agent 运行时管理，故仅展示
 /// 配置态并给出 `/debug-config` 指引。
 fn format_configured_mcp_servers() -> String {
-    use crate::utils_home_dir::find_reflect_home;
-    let Some(home) = find_reflect_home() else {
+    let Some(home) = zhuye_config::data_dir() else {
         return "/mcp: 无法定位 Reflect 配置目录（ZHUYE_HOME / HOME 均未设置）".into();
     };
     let path = home.join("config.toml");
@@ -2086,7 +2085,7 @@ fn open_checkpoint_overlay(state: &mut UiState) {
 
 /// 用 git 里的真实 checkpoint 刷新 overlay 列表。
 fn refresh_checkpoint_overlay(state: &mut UiState) {
-    match crate::git_checkpoint::list(&state.cwd, 50) {
+    match zhuye_git::list(&state.cwd, 50) {
         Ok(checkpoints) => {
             let entries: Vec<crate::picker::checkpoint_overlay::CheckpointEntry> = checkpoints
                 .into_iter()
@@ -2760,7 +2759,7 @@ fn handle_key(
             }
             crate::picker::checkpoint_overlay::CheckpointAction::Create => {
                 // 真实落 git:`git add -A` + 带前缀的提交 + tag。
-                match crate::git_checkpoint::create(&state.cwd, "") {
+                match zhuye_git::create(&state.cwd, "") {
                     Ok(Some(cp)) => {
                         let short: String = cp.sha.chars().take(8).collect();
                         state.history.push(adapter::UiHistoryItem::Notice(format!(

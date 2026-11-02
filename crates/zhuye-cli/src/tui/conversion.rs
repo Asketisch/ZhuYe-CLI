@@ -187,6 +187,14 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
                 })
                 .collect(),
         },
+        // v1.x side-channel agent(协议三事件):后台旁路 agent 的生命周期
+        // 以 Notice 行实时进对话流 —— 启动让用户知道有 agent 在后台跑,
+        // 终态(Done / Cancelled / Error)必须可见,否则后台失败无从知晓。
+        // 专门分组视图留待后续迭代;Status 查询应答 TUI 不发
+        // `Op::QuerySideChannels`,按构造不可能到达,整条忽略。
+        SideChannelStarted(e) => UiEventKind::Notice(format_side_channel_event(&e)),
+        SideChannelFinished(e) => UiEventKind::Notice(format_side_channel_event(&e)),
+        SideChannelStatus(_) => return None,
         // M4:v1.4 工具输出流式增量 → live 区 tail 渲染。开关
         // ZHUYE_CLI_TOOL_STREAM=0 关闭(默认开);关闭时保持旧行为,
         // ToolCallEnd 的完整输出仍是唯一展示路径,不会缺失内容。
@@ -326,6 +334,28 @@ fn format_prompt_layers(layers: &[String]) -> String {
         "(内嵌默认)".to_string()
     } else {
         layers.join(", ")
+    }
+}
+
+/// side-channel 事件载荷 → 人读一行。Started / Finished 两种消息共用
+/// 同一载荷枚举,这里对四个变体都给出确定文案,不依赖外层消息判别。
+fn format_side_channel_event(e: &zhuye_protocol::event_msg::SideChannelEvent) -> String {
+    use zhuye_protocol::event_msg::SideChannelEvent as E;
+    match e {
+        E::Started {
+            id,
+            agent_name,
+            prompt,
+            ..
+        } => format!("[旁路 agent 启动] {agent_name}({id}):{prompt}"),
+        E::Done {
+            id,
+            summary: Some(summary),
+            ..
+        } => format!("[旁路 agent 完成] {id}:{summary}"),
+        E::Done { id, .. } => format!("[旁路 agent 完成] {id}"),
+        E::Cancelled { id, .. } => format!("[旁路 agent 已取消] {id}"),
+        E::Error { id, message, .. } => format!("[旁路 agent 出错] {id}:{message}"),
     }
 }
 
@@ -534,6 +564,91 @@ mod tests {
         };
         assert!(text.contains("reload"), "{text}");
         assert!(text.contains("claude"), "{text}");
+    }
+
+    // ── v1.x side-channel 事件转换回归(develop 接线) ────────────────────
+
+    #[test]
+    fn side_channel_started_becomes_visible_notice() {
+        use zhuye_protocol::event_msg::EventMsg;
+        let ev = zhuye_protocol::Event::new(
+            "id-sc",
+            EventMsg::SideChannelStarted(zhuye_protocol::event_msg::SideChannelEvent::Started {
+                id: "side-1".into(),
+                agent_name: "reviewer".into(),
+                prompt: "审查本次改动".into(),
+                started_at_ms: 0,
+            }),
+        );
+        let ui = convert_event(ev).expect("SideChannelStarted 不应被丢弃");
+        let text = match &ui.kind {
+            UiEventKind::Notice(t) => t.clone(),
+            other => panic!("期望 Notice,得到 {other:?}"),
+        };
+        assert!(text.contains("reviewer"), "{text}");
+        assert!(text.contains("side-1"), "{text}");
+        assert!(text.contains("审查本次改动"), "{text}");
+    }
+
+    #[test]
+    fn side_channel_finished_variants_all_carry_detail() {
+        use zhuye_protocol::event_msg::{EventMsg, SideChannelEvent};
+        // Done 带 summary:必须进 Notice 且含 summary。
+        let done = zhuye_protocol::Event::new(
+            "id-done",
+            EventMsg::SideChannelFinished(SideChannelEvent::Done {
+                id: "side-2".into(),
+                finished_at_ms: 9,
+                summary: Some("通过".into()),
+            }),
+        );
+        let ui = convert_event(done).expect("SideChannelFinished(Done) 不应被丢弃");
+        let text = match &ui.kind {
+            UiEventKind::Notice(t) => t.clone(),
+            other => panic!("期望 Notice,得到 {other:?}"),
+        };
+        assert!(text.contains("side-2"), "{text}");
+        assert!(text.contains("通过"), "{text}");
+
+        // Error 必须进 Notice 且含错误信息 —— 后台失败不可静默。
+        let err = zhuye_protocol::Event::new(
+            "id-err",
+            EventMsg::SideChannelFinished(SideChannelEvent::Error {
+                id: "side-3".into(),
+                finished_at_ms: 9,
+                message: "boom".into(),
+            }),
+        );
+        let ui = convert_event(err).expect("SideChannelFinished(Error) 不应被丢弃");
+        let text = match &ui.kind {
+            UiEventKind::Notice(t) => t.clone(),
+            other => panic!("期望 Notice,得到 {other:?}"),
+        };
+        assert!(text.contains("side-3"), "{text}");
+        assert!(text.contains("boom"), "{text}");
+
+        // Cancelled 同理可见。
+        let cancelled = zhuye_protocol::Event::new(
+            "id-cancel",
+            EventMsg::SideChannelFinished(SideChannelEvent::Cancelled {
+                id: "side-4".into(),
+                finished_at_ms: 9,
+            }),
+        );
+        let ui = convert_event(cancelled).expect("SideChannelFinished(Cancelled) 不应被丢弃");
+        assert!(matches!(ui.kind, UiEventKind::Notice(_)));
+    }
+
+    #[test]
+    fn side_channel_status_query_reply_is_dropped() {
+        // Status 是 `Op::QuerySideChannels` 的应答;TUI 不发该 Op,
+        // 按构造不可能到达 —— 保持整条丢弃。
+        use zhuye_protocol::event_msg::{EventMsg, SideChannelStatusSnapshot};
+        let ev = zhuye_protocol::Event::new(
+            "id-status",
+            EventMsg::SideChannelStatus(SideChannelStatusSnapshot::default()),
+        );
+        assert!(convert_event(ev).is_none(), "Status 应答应被丢弃");
     }
 
     fn diff_block(s: &str) -> ContentBlock {

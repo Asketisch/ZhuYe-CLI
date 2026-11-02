@@ -59,7 +59,9 @@ pub mod exec_server;
 pub mod features;
 pub mod feedback;
 pub mod file_search;
-pub mod git_checkpoint;
+// v0.1.8-develop 接线:/checkpoint 的 git 实现收编进 submodule 的 zhuye-git
+// crate(checkpoint / 分支与 PR 探测 / assistant 指令解析),本仓库删除
+// git_checkpoint / branch_summary / git_action_directives 三份本地实现。
 pub mod git_utils;
 pub mod install_context;
 pub mod login;
@@ -84,7 +86,6 @@ pub mod utils_approval_presets;
 pub mod utils_cli;
 pub mod utils_elapsed;
 pub mod utils_fuzzy_match;
-pub mod utils_home_dir;
 pub mod utils_oss;
 pub mod utils_path;
 pub mod utils_path_uri;

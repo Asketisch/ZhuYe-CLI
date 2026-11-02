@@ -132,8 +132,8 @@ use crate::tui_core::bottom_pane::StatusSurfacePreviewItem;
 use crate::tui_core::bottom_pane::TerminalTitleItem;
 use crate::tui_core::bottom_pane::TerminalTitleSetupView;
 use crate::tui_core::diff_model::FileChange;
-use crate::tui_core::git_action_directives::parse_assistant_markdown;
 use crate::tui_core::legacy_core::config::Config;
+use zhuye_git::parse_assistant_markdown;
 // Windows 沙箱等级:仅 windows 门控代码消费,经 `use super::*` 传递给子模块。
 #[cfg(target_os = "windows")]
 pub(crate) use crate::protocol_compat::config_types::WindowsSandboxLevel;
@@ -387,13 +387,13 @@ use self::user_messages::user_message_for_restore;
 use self::user_messages::user_message_preview_text;
 mod warnings;
 use self::warnings::WarningDisplayState;
-pub(crate) use crate::tui_core::branch_summary::StatusLineGitSummary;
 use crate::tui_core::streaming::chunking::AdaptiveChunkingPolicy;
 use crate::tui_core::streaming::commit_tick::CommitTickScope;
 use crate::tui_core::streaming::commit_tick::run_commit_tick;
 use crate::tui_core::streaming::controller::PlanStreamController;
 use crate::tui_core::streaming::controller::StreamController;
 use crate::tui_core::workspace_command::WorkspaceCommandRunner;
+pub(crate) use zhuye_git::StatusLineGitSummary;
 
 use crate::app_server_protocol::AskForApproval;
 use crate::file_search::FileMatch;

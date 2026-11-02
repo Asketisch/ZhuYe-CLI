@@ -33,6 +33,11 @@ zhuye-notes      = { path = "zhuye-agent/crates/abilities/zhuye-notes" }
 zhuye-sanitize   = { path = "zhuye-agent/crates/abilities/zhuye-sanitize" }
 
 # resources 层
+# v0.1.8-develop:zhuye-fs / zhuye-git 为 submodule 新增 crate,
+# 被可达核心 crate 以 workspace 继承引用(memory/tools/rollout/stream/exec),
+# 必须在此镜像声明(见 AGENTS.md 关键约束 1)。
+zhuye-fs          = { path = "zhuye-agent/crates/resources/zhuye-fs" }
+zhuye-git         = { path = "zhuye-agent/crates/resources/zhuye-git" }
 zhuye-config      = { path = "zhuye-agent/crates/resources/zhuye-config" }
 zhuye-permissions = { path = "zhuye-agent/crates/resources/zhuye-permissions" }
 zhuye-plugin      = { path = "zhuye-agent/crates/resources/zhuye-plugin" }
@@ -59,8 +64,8 @@ zhuye-discussion  = { path = "zhuye-agent/crates/orchestration/zhuye-discussion"
 zhuye-pipeline    = { path = "zhuye-agent/crates/orchestration/zhuye-pipeline" }
 
 # runtime 层(核心引擎)
+# 注:develop 起 submodule 移除了 reflect crate(顶层二进制由 zhuye/zhuye-cli facade 取代)。
 zhuye-core = { path = "zhuye-agent/crates/runtime/zhuye-core" }
-reflect      = { path = "zhuye-agent/crates/runtime/reflect" }
 zhuye-exec = { path = "zhuye-agent/crates/runtime/zhuye-exec" }
 
 # ── 通用外部依赖(与核心 workspace 对齐版本)──
