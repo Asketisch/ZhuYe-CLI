@@ -116,15 +116,20 @@ pub fn no_color_env() -> bool {
     std::env::var_os("NO_COLOR").is_some()
 }
 
-/// 解析调色板:主题 id + `NO_COLOR` 环境变量。
-///
-/// `NO_COLOR` 优先于主题选择 —— 用户显式要求无颜色时不该被配置覆盖。
-pub fn resolve(theme_id: &str) -> Palette {
-    if no_color_env() {
+/// 纯函数版本:显式传入 `NO_COLOR` 判定结果,便于无全局环境竞态的单测。
+pub fn resolve_with_no_color(theme_id: &str, no_color: bool) -> Palette {
+    if no_color {
         Palette::NONE
     } else {
         Palette::for_theme(theme_id)
     }
+}
+
+/// 解析调色板:主题 id + `NO_COLOR` 环境变量。
+///
+/// `NO_COLOR` 优先于主题选择 —— 用户显式要求无颜色时不该被配置覆盖。
+pub fn resolve(theme_id: &str) -> Palette {
+    resolve_with_no_color(theme_id, no_color_env())
 }
 
 /// 主题持久化文件:`<reflect home>/theme`(内容是主题 id,如 `light`)。
@@ -279,10 +284,11 @@ mod tests {
     }
 
     #[test]
-    fn resolve_honors_no_color_env() {
-        // 不能污染调用方的环境,所以只在显式设置时验证,且用完即清。
-        // (并行测试下 env 是进程级的,故这里只验证不带 env 时的纯映射。)
-        assert_eq!(resolve("dark"), Palette::DARK);
-        assert_eq!(resolve("light"), Palette::LIGHT);
+    fn resolve_no_color_branches_are_pure() {
+        // 并行测试下全局 env 是进程级的,这里显式传入分支结果避免竞态。
+        assert!(resolve_with_no_color("dark", true) == Palette::NONE);
+        assert!(resolve_with_no_color("light", true) == Palette::NONE);
+        assert!(resolve_with_no_color("dark", false) == Palette::DARK);
+        assert!(resolve_with_no_color("light", false) == Palette::LIGHT);
     }
 }
