@@ -383,3 +383,77 @@ def test_stdin_not_a_tty_fails_fast(sandbox) -> None:
     assert "Device not configured" in out or "Error" in out, (
         f"应给出可诊断错误:\n{out[-400:]}"
     )
+
+
+def test_valid_config_reload_shows_notice_and_keeps_tui_alive(tui, sandbox) -> None:
+    """W13 有效 config.toml 热重载:界面收到通知,进程保持可用。
+
+    用同目录临时文件 + `os.replace` 触发一次真实文件系统事件,避免原地
+    截断被 watcher 去抖吞掉。变更 `[sandbox]` 不依赖外部 provider,能稳定
+    验证 ConfigWatcher → 后端应用 → UiEvent Notice 这条已完成链路。
+    """
+    with tui() as s:
+        s.wait_boot(timeout=30)
+        config = sandbox.home / ".zhuye" / "config.toml"
+        staged = config.with_suffix(".toml.reloading")
+        staged.write_text(
+            "# W13 热重载探针\n[sandbox]\nos_level = false\n",
+            encoding="utf-8",
+        )
+        os.replace(staged, config)
+
+        txt = s.wait_text("配置已重载", timeout=20)
+        assert "sandbox" in txt, f"通知应列出实际变更段:\n{txt[-500:]}"
+        assert not s.has_panic(), "有效配置热重载不应 panic"
+        assert s.alive(), "热重载后 TUI 应保持运行"
+
+
+def test_subagent_dispatch_returns_child_result_to_parent(tui, mock_script) -> None:
+    """W14 离线触发真实 `call_explorer` 派发链路。
+
+    mock 脚本按模型调用顺序消费三行:父模型发起 `call_explorer`、子模型
+    返回最终答案、父模型基于工具结果收尾。这样可以覆盖 TUI 默认子代理
+    spec 注册、工具可见、工厂 spawn、子代理结果回填与父回合继续。
+    """
+    script = mock_script(
+        [
+            tool_call("call_explorer", {"prompt": "W14 look for the marker"}),
+            text_reply("W14_CHILD_RESULT"),
+            text_reply("W14_PARENT_RESULT"),
+        ]
+    )
+    with tui(script=script) as s:
+        s.wait_boot(timeout=30)
+        s.type_text("delegate the search")
+        s.key("enter")
+        s.wait_text("APPROVAL NEEDED", timeout=30)
+        s.type_text("y")
+        txt = s.wait_text("✓ call_explorer", timeout=30)
+        assert "W14_CHILD_RESULT" in txt, f"子代理最终结果应回填工具行:\n{txt[-600:]}"
+        txt = s.wait_text("W14_PARENT_RESULT", timeout=30)
+        assert not s.has_panic(), "子代理真实派发不应 panic"
+        assert s.alive(), "父回合结束后 TUI 应保持可用"
+
+
+def test_tool_output_ansi_and_osc_do_not_control_terminal(tui, mock_script) -> None:
+    """W15 工具输出中的控制序列只影响该行样式,不得控制终端或执行链接。"""
+    payload = (
+        "W15_BEFORE\x1b[2J\x1b]0;W15_ESCAPED_TITLE\x07"
+        "\x1b]8;;https://evil.invalid\x07W15_LINK\x1b]8;;\x07"
+        "\x1b[2K W15_AFTER"
+    )
+    script = mock_script(
+        [tool_call('echo', {'text': payload}), text_reply('W15_DONE')]
+    )
+    with tui(script=script) as s:
+        s.wait_boot(timeout=30)
+        s.type_text("run W15")
+        s.key("enter")
+        txt = s.wait_text("W15_DONE", timeout=30)
+        visible = s.normalized()
+        assert "W15_BEFORE" in visible, visible[-800:]
+        assert "W15_LINK" in visible, visible[-800:]
+        assert "W15_AFTER" in visible, visible[-800:]
+        assert "W15_ESCAPED_TITLE" not in visible
+        assert "evil.invalid" not in s.raw_output()
+        assert not s.has_panic()

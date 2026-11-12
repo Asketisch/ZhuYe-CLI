@@ -103,6 +103,34 @@ def _text_reply_events(text):
     return events
 
 
+def _openai_text_reply_events(text):
+    """OpenAI Chat Completions 的最小 SSE 流。"""
+    text = f"OPENAI MOCK REPLY: {text}"
+    chunks = [text[i : i + 24] for i in range(0, len(text), 24)] or [""]
+    events = [
+        (
+            "data",
+            json.dumps(
+                {
+                    "id": "chatcmpl_mock",
+                    "model": "fallback-model",
+                    "choices": [{"index": 0, "delta": {"content": chunk}}],
+                },
+                ensure_ascii=False,
+            ),
+        )
+        for chunk in chunks
+    ]
+    events.append(
+        (
+            "data",
+            json.dumps({"choices": [{"index": 0, "finish_reason": "stop"}]}),
+        )
+    )
+    events.append(("data", "[DONE]"))
+    return events
+
+
 def _tool_reply_events(name, args_json):
     events = []
     events += _sse(
@@ -202,7 +230,9 @@ class _Handler(BaseHTTPRequestHandler):
         parsed = urlsplit(self.path)
         length = int(self.headers.get("Content-Length", "0"))
         body = self.rfile.read(length) if length else b""
-        if parsed.path != "/v1/messages":
+        is_anthropic = parsed.path == "/v1/messages"
+        is_openai = parsed.path == "/v1/chat/completions"
+        if not (is_anthropic or is_openai):
             self.send_response(404)
             self.send_header("Content-Length", "0")
             self.end_headers()
@@ -211,6 +241,29 @@ class _Handler(BaseHTTPRequestHandler):
             req = json.loads(body or b"{}")
         except Exception:
             req = {}
+        # 官方 Anthropic 用 x-api-key;自定义 base_url 的兼容网关用 Bearer。
+        # 两种形态都归一成 key 字符串,路由测试才能断言真实凭据切换。
+        api_key = self.headers.get("x-api-key") or self.headers.get(
+            "Authorization", ""
+        ).removeprefix("Bearer ")
+        with self.server.request_key_lock:
+            self.server.request_keys.append(api_key)
+        with self.server.request_model_lock:
+            self.server.request_models.append(str(req.get("model", "")))
+        rate_limited = api_key in self.server.rate_limit_keys or (
+            str(req.get("model", "")) in self.server.rate_limit_models
+        )
+        if rate_limited:
+            payload = json.dumps(
+                {"type": "error", "error": {"type": "rate_limit_error", "message": "mock limit"}}
+            )
+            self.send_response(429)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Retry-After", "60")
+            self.send_header("Content-Length", str(len(payload.encode())))
+            self.end_headers()
+            self.wfile.write(payload.encode())
+            return
         last_user = ""
         for m in reversed(req.get("messages", [])):
             if m.get("role") == "user":
@@ -228,6 +281,8 @@ class _Handler(BaseHTTPRequestHandler):
         log(f"request: model={req.get('model')} last_user={last_user!r}")
 
         events = self.server.state.next(last_user)
+        if is_openai:
+            events = _openai_text_reply_events(last_user)
         # 可选人工延迟(秒):给「回合中断」等时序敏感的测试留出窗口。
         # 客户端可能已中断(管道断开),写响应全程吞 BrokenPipe/ConnectionReset。
         try:
@@ -259,6 +314,22 @@ class _Handler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
     def do_GET(self):
+        if urlsplit(self.path).path in ("/v1/models", "/models"):
+            payload = json.dumps(
+                {
+                    "object": "list",
+                    "data": [
+                        {"id": "paid-model", "isFree": False},
+                        {"id": "mock-free", "isFree": True},
+                    ],
+                }
+            ).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
         body = b"mock anthropic ok"
@@ -272,11 +343,24 @@ class _Server(ThreadingHTTPServer):
 
     daemon_threads = True
 
-    def __init__(self, addr, delay: float, state: ScriptState):
+    def __init__(
+        self,
+        addr,
+        delay: float,
+        state: ScriptState,
+        rate_limit_keys: set[str],
+        rate_limit_models: set[str],
+    ):
         # _Handler 在响应阶段读 self.server.delay / self.server.state,
         # 两者必须挂在 httpd 实例上(而非外层包装对象)。
         self.delay = delay
         self.state = state
+        self.rate_limit_keys = rate_limit_keys
+        self.request_keys: list[str] = []
+        self.request_key_lock = threading.Lock()
+        self.request_models: list[str] = []
+        self.request_model_lock = threading.Lock()
+        self.rate_limit_models = rate_limit_models
         super().__init__(addr, _Handler)
 
 
@@ -290,9 +374,22 @@ class MockAnthropicServer:
     - 服务线程是守护线程,进程退出自动回收;显式 `stop()` 立即收尾。
     """
 
-    def __init__(self, port: int = 0, delay: float = 0.0, script_file: str = ""):
+    def __init__(
+        self,
+        port: int = 0,
+        delay: float = 0.0,
+        script_file: str = "",
+        rate_limit_keys: set[str] | None = None,
+        rate_limit_models: set[str] | None = None,
+    ):
         self.state = ScriptState(load_script(script_file))
-        self._httpd = _Server(("127.0.0.1", port), delay, self.state)
+        self._httpd = _Server(
+            ("127.0.0.1", port),
+            delay,
+            self.state,
+            rate_limit_keys or set(),
+            rate_limit_models or set(),
+        )
         self._thread = threading.Thread(
             target=self._httpd.serve_forever, name="mock-anthropic", daemon=True
         )
@@ -310,6 +407,16 @@ class MockAnthropicServer:
     def stop(self) -> None:
         self._httpd.shutdown()
         self._httpd.server_close()
+
+    def recorded_keys(self) -> list[str]:
+        """返回请求 API key 到达序列,供路由测试断言真实切换顺序。"""
+        with self._httpd.request_key_lock:
+            return list(self._httpd.request_keys)
+
+    def recorded_models(self) -> list[str]:
+        """返回请求模型到达序列,供跨模型降级测试断言真实切换。"""
+        with self._httpd.request_model_lock:
+            return list(self._httpd.request_models)
 
 
 def serve_standalone():

@@ -17,7 +17,7 @@
 
 | 层 | 位置 | 测谁 | 依赖 SDK? | 规模 |
 |---|---|---|---|---|
-| **能力覆盖层**(主) | `tests/functional/` | **Rust 代码在真产物上的行为**(真二进制 + pty + pyte 屏幕快照) | ❌ | 215 条 |
+| **能力覆盖层**(主) | `tests/functional/` | **Rust 代码在真产物上的行为**(真二进制 + pty + pyte 屏幕快照) | ❌ | 222 条 |
 | **覆盖自审层** | `tests/tools/coverage_audit.py` | 「声明了什么」× 「测了什么」的**机械差集** | ❌ | 4 条门禁 |
 | CLI 参数面 | `tests/rust/cli_core.sh`、`cli_modules.sh` | 17 个子命令的**参数矩阵**与输出契约(bash,含退出码) | ❌ | 101 断言 |
 | CLI 语义面 | `tests/functional/test_cli.py` | CLI 输出的**语义**(列结构、预览条数、统计口径) | ❌ | 10 条 |
@@ -49,8 +49,8 @@
 | headless CLI 语义 | C1–C10 | cli_modules(traces) | — |
 | 键盘交互(权限循环 / 历史召回 / 编辑器 / 复制 / 多行 / vim) | K1–K11(无 K6) | — | — |
 | 渲染与视觉(宽字符 / 折行 / markdown / 主题 / resize / 小窗) | V1–V9 | — | — |
-| 工作流与容错(审批 / AskUser / loop / 恢复边界 / 坏输入 / 信号) | W1–W12 | — | — |
-| 真实 HTTP 链路(Anthropic SSE / 跨天恢复 / busy 窗口中断) | H1–H3 | — | — |
+| 工作流与容错(审批 / AskUser / loop / 恢复边界 / 坏输入 / 信号 / 热重载 / 子代理 / 控制序列注入) | W1–W15 | — | — |
+| 真实 HTTP 链路(Anthropic/OpenAI SSE / 跨天恢复 / busy 窗口 Esc·Ctrl+C 中断 / 凭据 failover / 跨 provider 降级 / 动态免费模型发现) | H1–H7 | — | — |
 | Rust 编译面 | — | workspace_tests(cargo test/clippy/fmt/doc) | — |
 
 ---
@@ -252,6 +252,9 @@
 | W10 | 非法 `ZHUYE_MODEL` | 非 0 退出 + 错误含 `provider` |
 | W11 | SIGTERM | rc=-15(死于信号)+ 无 panic + 会话文件已落盘 |
 | W12 | stdin 非 tty(管道) | 非 0 退出 + `Error: Device not configured`,不挂死 |
+| W13 | 有效 config.toml 热重载 | 原子替换后 `配置已重载` + `sandbox` 通知上屏,进程存活且无 panic |
+| W14 | 离线子代理真实派发 | 父模型 `call_explorer` → 子模型结果回填工具行 → 父模型继续收尾,TUI 存活 |
+| W15 | 工具输出 ANSI/OSC 注入 | 清屏 / 标题 / OSC 8 链接序列被剥离;`W15_BEFORE`、`W15_LINK`、`W15_AFTER` 可见,恶意 URL 不进入 raw 输出 |
 
 > W5 的 stop 需要**空闲窗口**:busy 期间 composer 的提交会被吞且草稿
 > 保留(§6 D10),用例内先等 HUD spinner 消失再提交(带重试)。
@@ -294,6 +297,10 @@
 | H1 | 真实 Anthropic SSE 往返 | 请求打到本地 mock server,`content_block_delta` 聚合出的回复上屏 |
 | H2 | 跨天会话 resume(真实 HTTP 产出) | 会话搬到 `2026/01/01` 桶后 `--resume` 仍回放既往消息 |
 | H3 | 确定性 busy 窗口下 Esc 中断 | 出现「已发送中断请求」,且连按 3 次只出现一次(去抖生效) |
+| H4 | 同 provider 双凭据 429 failover | 真实请求 primary → backup;路由提示可见;备用凭据最终回复上屏 |
+| H5 | busy 回合 Ctrl+C 首按中断 / 二按强退 | 首按显示中断与强退提示且进程存活;1.5s 内二按 rc=0 退出 |
+| H6 | 主模型凭据池耗尽后跨 provider fallback | 降级提示含起止模型;网关实际收到 primary → fallback 模型并正常收尾 |
+| H7 | 动态 `model = "free"` 清单发现 | 真实 `/models` 解析出 `mock-free`;HUD 与首个请求均使用 `openai/mock-free` |
 
 > **为什么要有这一组**:其余用例都用 `ZHUYE_MODEL=mock/mock-1` —— 那是
 > reflect-llm `ModelClient` 层的内置 provider,**完全绕过** HTTP 传输、
@@ -437,7 +444,7 @@
 | `functional/test_slash.py` | 96 条(89 行命令矩阵覆盖 86 条命令 + 7 条独立用例) |
 | `functional/test_overlay.py` | 20 条(10 条可达弹层 + 9 条不可达弹层反向门禁 + 1 条鼠标反向门禁) |
 | `functional/test_boot.py` | 15 条(含 2 条全屏模式 + 3 条 model 解析) |
-| `functional/test_flow.py` | 14 条(审批 / AskUser / loop / 恢复边界 / 容错 / 信号) |
+| `functional/test_flow.py` | 17 条(审批 / AskUser / loop / 恢复边界 / 容错 / 信号 / 热重载 / 子代理 / 控制序列注入) |
 | `functional/test_turn.py` | 12 条 |
 | `functional/test_keys.py` | 11 条(键盘交互) |
 | `functional/test_cli.py` | 10 条 |
@@ -446,8 +453,8 @@
 | `functional/test_session.py` | 9 条 |
 | `functional/test_plugin.py` | 4 条 |
 | `functional/test_coverage_audit.py` | 4 条 |
-| `functional/test_http_mock.py` | 3 条(真实 HTTP + SSE + 确定性 busy 窗口) |
-| **能力覆盖层合计** | **215 条** |
+| `functional/test_http_mock.py` | 7 条(真实 HTTP + SSE + busy + failover + Ctrl+C + 跨 provider + 动态发现) |
+| **能力覆盖层合计** | **222 条** |
 | `rust/cli_core.sh` | 45 断言(含退出码) |
 | `rust/cli_modules.sh` | 56 断言(含退出码) |
 | 另有 `cargo test --workspace` / clippy / fmt / doc | 既有基线 |
@@ -461,10 +468,6 @@
 - **一次性提交触发多次模型调用的原因**:实测引擎在一次用户提交里调用
   模型 4 次(落盘 4 条 `token_count`),但未定位到是哪几条辅助调用
   (title 生成 / compact 判定 / auto-review?),故未对调用次数做断言。
-- **Ctrl+C busy 首按中断**:mock 回复瞬时完成,离线无法确定性制造 busy
-  窗口;空闲态 Ctrl+C 是退出,两种结局不可区分。Esc 中断由 T9 覆盖,
-  确定性 busy 窗口下的 Esc 中断(含去抖)由 H3 覆盖 —— 但 **Ctrl+C**
-  仍缺用例:它与空闲退出同键,需另设退出判据。
 - **真实 shift+enter 序列**:依赖 kitty 键盘协议(`ESC[13;2u`),哑 pty
   发不出;K7 用 composer 支持的等价路径 alt+enter 锁定多行语义。
 - **系统剪贴板真实内容**:K2 只断言 `Copied last reply` 通知,未读回
@@ -473,22 +476,10 @@
 - **resize 后的具体版面**:V8 断言锚点仍可见,不断言行列位置。
 - **终端能力分支**(kitty 图形协议 / sixel 图片 / OSC 9 通知 / 真实
   alt-screen 语义):依赖真实终端;B11/B12 只验 `ESC[?1049h/l` 序列发出。
-- **subagent 真实派发**:需引擎侧的 `call_<role>` 工具被模型选中,离线
-  mock 只能脚本化单个 `tool_call`,派发链路未覆盖。
 - **鼠标正向交互**:鼠标整体未接入,O12 只做反向门禁。
 - **vendored 上游测试(约 760 条)**:受 feature `tui-upstream-tests` 门控,
   且测的是**运行时不可达**的 `tui_core/bottom_pane` / `chatwidget` 一族,
   不宜当作「已覆盖」。
-- **`model = "free"` 的清单发现**:mock provider 不提供模型清单端点
-  (`list_models` 返回 `Ok(None)`),离线路径只能验到「如实报错」这一支;
-  真正的「从清单里挑一个免费模型」需要带 `/models` 端点的 provider。
-  判定规则(`reflect_llm::model_catalog::FreeModelRules`)本身有 Rust 单测。
-- **路由 failover / `SpecFallback` 跨模型降级**:需要同 provider 的多个
-  凭据(至少一个失效)+ `[routing] fallbacks` 配置,离线 mock 只有单凭据。
-  事件格式化(`routing_status.rs`)有 Rust 单测,真实切换路径未覆盖。
-- **配置热重载**:watcher 已接上(`ConfigWatcher` → 重建 provider client →
-  推 `🔄 配置已重载` 通知),但「改文件 → 界面出现通知」这条端到端路径
-  未加 pty 用例(依赖文件系统事件时序,易 flaky)。
 - **LSP 诊断**:需要真实语言服务器(rust-analyzer 等)推送
   `publishDiagnostics`;`/lsp` 的空态路径有用例覆盖。
 - **分析遥测(OTLP)**:需要真实的 OTLP 端点;`[analytics]` 段的解析与

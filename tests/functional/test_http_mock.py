@@ -49,6 +49,14 @@ def _stop_server(server: MockAnthropicServer) -> None:
     server.stop()
 
 
+def _wait_exit(s: TuiSession, timeout: float = 10.0) -> int | None:
+    """等待 TUI 子进程退出;超时返回 None 而不挂死测试。"""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline and s.returncode() is None:
+        time.sleep(0.1)
+    return s.returncode()
+
+
 @pytest.fixture(scope="session")
 def http_mock() -> str:
     """无延迟的 mock Anthropic server(会话级,全程复用)。"""
@@ -203,6 +211,150 @@ def test_esc_interrupt_during_deterministic_busy_window(http_tui, sandbox) -> No
             assert after.count("已发送中断请求") == 1, (
                 f"连按 Esc 只应发一次中断请求,实际 {after.count('已发送中断请求')} 次:\n{after[-400:]}"
             )
+            assert not s.has_panic()
+    finally:
+        _stop_server(server)
+
+
+def test_http_credential_failover_switches_to_backup(sandbox, monkeypatch) -> None:
+    """H4 primary 凭据 HTTP 429 后切换 backup,最终回复和路由提示可见。"""
+    server = MockAnthropicServer(port=0, rate_limit_keys={"sk-primary"})
+    try:
+        (sandbox.home / ".zhuye" / "config.toml").write_text(
+            "[active]\n"
+            'provider = "anthropic"\n'
+            "[anthropic]\n"
+            f'base_url = "{server.base_url}"\n'
+            'model = "mock-claude"\n'
+            "[[anthropic.credentials]]\n"
+            'label = "primary"\n'
+            'api_key = "sk-primary"\n'
+            f'base_url = "{server.base_url}"\n'
+            "weight = 100\n"
+            "cooldown_override_secs = 60\n"
+            "[[anthropic.credentials]]\n"
+            'label = "backup"\n'
+            'api_key = "sk-backup"\n'
+            f'base_url = "{server.base_url}"\n'
+            "weight = 1\n"
+            "cooldown_override_secs = 60\n"
+        )
+        monkeypatch.delenv("ZHUYE_MODEL", raising=False)
+        with TuiSession(sandbox) as s:
+            s.wait_boot(timeout=30)
+            s.type_text("H4_ROUTE_PROBE")
+            s.key("enter")
+            txt = s.wait_text("MOCK REPLY: H4_ROUTE_PROBE", timeout=40)
+            keys = server.recorded_keys()
+            assert keys[:2] == ["sk-primary", "sk-backup"], f"请求凭据顺序错误:{keys}"
+            assert "路由切换" in txt or "路由切换" in s.raw_output(), (
+                f"429 后应渲染路由切换提示:\n{txt[-600:]}"
+            )
+            assert not s.has_panic()
+    finally:
+        _stop_server(server)
+
+
+def test_http_spec_fallback_switches_to_configured_model(sandbox, monkeypatch) -> None:
+    """H6 主模型凭据池耗尽后,按配置切换到 fallback 模型并完成本回合。"""
+    server = MockAnthropicServer(port=0, rate_limit_keys={"sk-primary"})
+    try:
+        (sandbox.home / ".zhuye" / "config.toml").write_text(
+            "[active]\n"
+            'provider = "anthropic"\n'
+            "[anthropic]\n"
+            f'base_url = "{server.base_url}"\n'
+            'model = "primary-model"\n'
+            "[[anthropic.credentials]]\n"
+            'label = "primary"\n'
+            'api_key = "sk-primary"\n'
+            f'base_url = "{server.base_url}"\n'
+            "weight = 1\n"
+            "cooldown_override_secs = 60\n"
+            "\n"
+            "[openai]\n"
+            f'base_url = "{server.base_url}"\n'
+            'api_key = "sk-fallback"\n'
+            'model = "fallback-model"\n'
+            "\n"
+            "[routing]\n"
+            "max_attempts = 4\n"
+            "[routing.main]\n"
+            'primary = "anthropic/primary-model"\n'
+            'fallbacks = ["openai/fallback-model"]\n'
+        )
+        monkeypatch.delenv("ZHUYE_MODEL", raising=False)
+        with TuiSession(sandbox) as s:
+            s.wait_boot(timeout=30)
+            s.type_text("H6_FALLBACK_PROBE")
+            s.key("enter")
+            txt = s.wait_text("模型降级", timeout=40)
+            assert "primary-model" in txt and "fallback-model" in txt, (
+                f"降级提示应包含起止模型:\n{txt[-800:]}"
+            )
+            deadline = time.monotonic() + 10
+            models = server.recorded_models()
+            while "fallback-model" not in models and time.monotonic() < deadline:
+                time.sleep(0.05)
+                models = server.recorded_models()
+            assert "primary-model" in models, f"主模型未请求:{models}"
+            assert "fallback-model" in models, f"降级模型未到达网关:{models}"
+            assert models.index("primary-model") < models.index("fallback-model"), (
+                f"模型切换顺序错误:{models}"
+            )
+            assert not s.has_panic()
+    finally:
+        _stop_server(server)
+
+
+def test_ctrl_c_interrupts_busy_turn_then_second_press_exits(sandbox, monkeypatch) -> None:
+    """H5 busy 回合 Ctrl+C:首按中断,1.5s 内二按强制退出。"""
+    server = MockAnthropicServer(port=0, delay=BUSY_DELAY_SECS)
+    try:
+        _write_http_config(sandbox, server.base_url)
+        monkeypatch.delenv("ZHUYE_MODEL", raising=False)
+        with TuiSession(sandbox) as s:
+            s.wait_boot(timeout=30)
+            s.type_text("H5_BUSY_PROBE")
+            s.key("enter")
+            time.sleep(1.5)
+            s.key("ctrl+c")
+            txt = s.wait_text("已发送中断请求", timeout=15)
+            assert "再按 Ctrl-C 强制退出" in txt, f"首按应提示强制退出:\n{txt[-500:]}"
+            assert s.alive(), "首按 Ctrl+C 只应中断回合,不应退出进程"
+            assert not s.has_panic()
+
+            s.key("ctrl+c")
+            rc = _wait_exit(s, timeout=10)
+            assert rc == 0, f"1.5s 内二按 Ctrl+C 应以 0 退出,实际 {rc}"
+    finally:
+        _stop_server(server)
+
+
+def test_dynamic_free_model_resolves_from_real_openai_catalog(sandbox, monkeypatch) -> None:
+    """H7 `model = "free"` 从真实 OpenAI `/models` 响应解析并用于首个请求。"""
+    server = MockAnthropicServer(port=0)
+    try:
+        (sandbox.home / ".zhuye" / "config.toml").write_text(
+            "[active]\n"
+            'provider = "openai"\n'
+            "[openai]\n"
+            f'base_url = "{server.base_url}"\n'
+            'api_key = "sk-free"\n'
+            'model = "free"\n'
+            "[model_discovery]\n"
+            "enabled = true\n"
+        )
+        monkeypatch.delenv("ZHUYE_MODEL", raising=False)
+        with TuiSession(sandbox) as s:
+            s.wait_boot(timeout=30)
+            assert "openai/mock-free" in s.screen_text(), (
+                f"HUD 应显示从清单解析的真实模型:\n{s.screen_text()[-500:]}"
+            )
+            s.type_text("H7_FREE_PROBE")
+            s.key("enter")
+            s.wait_text("OPENAI MOCK REPLY: H7_FREE_PROBE", timeout=30)
+            assert "mock-free" in server.recorded_models(), "解析结果应进入真实请求"
             assert not s.has_panic()
     finally:
         _stop_server(server)
