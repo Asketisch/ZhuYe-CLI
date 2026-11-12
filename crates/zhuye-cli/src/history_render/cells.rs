@@ -5,6 +5,7 @@
 //! (`✓ ✗ …`)+ 配色在这里复刻,适配新 TUI 的原生 scrollback 模型
 //! (工具输出截断而非可折叠交互)。
 
+use crate::ansi_escape::ansi_escape_line;
 use crate::tui_core::history_cell::PlainHistoryCell;
 use crate::tui_core::live_wrap::take_prefix_by_width;
 use ratatui::style::{Color, Modifier, Style};
@@ -65,10 +66,15 @@ pub fn tool_call_cell(
         let shown = all.into_iter().take(MAX_OUTPUT_LINES);
         let body_color = if error { Color::LightRed } else { Color::White };
         for out_line in shown {
-            lines.push(Line::from(vec![
+            let mut line = ansi_escape_line(out_line);
+            for span in &mut line.spans {
+                span.style = span.style.fg(body_color);
+            }
+            line.spans.insert(
+                0,
                 Span::styled("│   ", Style::default().fg(Color::DarkGray)),
-                Span::styled(out_line.to_string(), Style::default().fg(body_color)),
-            ]));
+            );
+            lines.push(line);
         }
         if total > MAX_OUTPUT_LINES {
             let more = total - MAX_OUTPUT_LINES;
@@ -246,6 +252,20 @@ mod tests {
         assert_eq!(lines.len(), 1 + MAX_OUTPUT_LINES + 1);
         let last = line_to_plain(lines.last().unwrap()).to_string();
         assert!(last.contains("+7 more lines"), "truncation hint: {last}");
+    }
+
+    #[test]
+    fn tool_call_strips_terminal_control_sequences_from_output() {
+        let output = "before\x1b[2J\x1b]0;hidden title\x07\
+                      \x1b]8;;https://evil.invalid\x07link\x1b]8;;\x07\x1b[2K after";
+        let cell = tool_call_cell("echo", output, false, 1, None);
+        let lines = cell.display_lines(120);
+        let rendered = line_to_plain(&lines[1]);
+
+        assert!(rendered.contains("beforelink after"), "{rendered}");
+        assert!(!rendered.contains('\x1b'), "{rendered}");
+        assert!(!rendered.contains("hidden title"), "{rendered}");
+        assert!(!rendered.contains("evil.invalid"), "{rendered}");
     }
 
     #[test]

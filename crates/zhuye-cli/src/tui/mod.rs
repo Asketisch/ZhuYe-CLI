@@ -3958,13 +3958,16 @@ fn compute_live_region(state: &mut UiState, width: u16) -> (Vec<Line<'static>>, 
             let dim = Style::default().fg(Color::DarkGray);
             let mut lines: Vec<Line<'static>> = Vec::with_capacity(owned.len() - skip);
             for (i, l) in owned.iter().enumerate().skip(skip) {
+                let mut safe_line = crate::ansi_escape::ansi_escape_line(l);
+                for span in &mut safe_line.spans {
+                    span.style = span.style.fg(Color::DarkGray);
+                }
                 if i == skip {
-                    lines.push(Line::from(Span::styled(
-                        format!("⚒ {} ▷ {}", tl.tool, l),
-                        dim,
-                    )));
+                    let mut spans = vec![Span::styled(format!("⚒ {} ▷ ", tl.tool), dim)];
+                    spans.extend(safe_line.spans);
+                    lines.push(Line::from(spans));
                 } else {
-                    lines.push(Line::from(Span::styled((*l).to_string(), dim)));
+                    lines.push(safe_line);
                 }
             }
             let h = lines_height(&lines, width);
@@ -4519,6 +4522,27 @@ mod draw_tests {
             .unwrap();
         let text = terminal.backend().vt100().screen().contents();
         assert!(text.contains("line1"), "live region not rendered: {text}");
+    }
+
+    #[test]
+    fn tool_live_preview_strips_terminal_control_sequences() {
+        let mut state = UiState::default();
+        state.tool_live = Some(crate::events::ToolLiveStream {
+            call_id: "call-w15".into(),
+            tool: "echo".into(),
+            tail: "before\x1b[2J\x1b]0;hidden\x07\x1b]8;;https://evil.invalid\x07link\x1b]8;;\x07 after".into(),
+        });
+        let (lines, _) = compute_live_region(&mut state, 100);
+        let rendered = lines
+            .iter()
+            .flat_map(|line| line.spans.iter())
+            .map(|span| span.content.as_ref())
+            .collect::<String>();
+
+        assert!(rendered.contains("beforelink after"), "{rendered}");
+        assert!(!rendered.contains('\x1b'), "{rendered}");
+        assert!(!rendered.contains("hidden"), "{rendered}");
+        assert!(!rendered.contains("evil.invalid"), "{rendered}");
     }
 
     #[test]
