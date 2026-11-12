@@ -21,7 +21,7 @@ headless CLI,以及 Rust 编译面。
 前置:`cargo build --release -p zhuye-cli`(入口脚本每次自动增量校验二进制
 与源码对齐,`--locked`,旧产物冒充新行为的假绿通道已封死)、
 Python 3 + pytest + pyte(`pip install pytest pyte`)、Node 不需要。
-缺依赖的批次自动 **SKIP**,不算失败。
+缺 pytest / pyte 时能力覆盖层报告基础设施错误(退出码 2),不算通过。
 
 Makefile 快捷方式:
 
@@ -115,3 +115,23 @@ make coverage-audit    # = 覆盖自审(有未覆盖命令即失败)
 - [`COVERAGE.md`](COVERAGE.md) —— 功能覆盖矩阵、已知产品限制、已知缺陷、未覆盖清单
 - [`../AGENTS.md`](../AGENTS.md) —— 项目架构与关键约束
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) —— 提交前检查与 submodule 工作流
+
+## 统一测试调度器(PLAN.md §1.4 接口)
+
+`runner.py` 是跨平台(Python 3.10+,仅标准库)任务调度入口,把 PLAN.md
+第 3 章任务 ID(`tui.*`)映射到本仓既有套件(functional / rust / audit / live):
+
+```bash
+python3 tests/runner.py list                     # 任务 / 选集 / 用例索引
+python3 tests/runner.py run --suite pr           # PR 门禁选集
+python3 tests/runner.py run --case T-E04         # 按 PLAN 用例 ID 定向
+python3 tests/runner.py run --suite smoke --dry-run
+```
+
+- 结果语义:`pass / fail / skip / infra_error / timeout / pending(未覆盖)`;
+  `coverage: pending` 的任务(ConPTY 专项、性能 / 长稳 / 发布矩阵)是如实登记的
+  缺口,报告为未覆盖,不假绿。
+- Unix PTY 层是 Linux/macOS 必测任务;Windows 运行 `tui.platform.windows`
+  (`python tests/conpty.py`),缺 pywinpty / pyte / release 二进制均报基础设施错误。
+- 报告:`.test-runner/report.json` + `junit.xml` + 人类摘要;记录 HEAD 与工作树状态。
+- 任务注册表见 `test_registry.py`。

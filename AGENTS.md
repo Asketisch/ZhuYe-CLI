@@ -165,7 +165,7 @@ zhuye-task/subagent、zhuye-protocol。
 | 发版前 | `make release-check` |
 
 > 全程离线:`ZHUYE_MODEL=mock/mock-1` + 隔离 HOME(mktemp),
-> 不污染真实 `~/.zhuye`;缺 pytest / pyte 的批次自动 SKIP,不算失败。
+> 不污染真实 `~/.zhuye`;缺 pytest / pyte 时能力覆盖层判基础设施错误。
 > 首次运行需 `pip install pytest pyte`(Node 不需要)。
 
 ## Submodule 维护

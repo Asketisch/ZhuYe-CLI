@@ -13,24 +13,23 @@
 #      - test_render.py        渲染与视觉(宽字符 / 折行 / markdown / 主题 / resize)
 #      - test_flow.py          工作流与容错(审批 / AskUser / loop / 恢复边界 / 信号)
 #      - test_plugin.py        插件面
-#      - test_http_mock.py     真实 HTTP 链路(Anthropic SSE + 确定性 busy 窗口)
+#      - test_http_mock.py     真实 HTTP 链路(Anthropic/OpenAI SSE、busy、路由)
 #      - test_pty_helpers.py   测试设施自检
 #      - test_coverage_audit.py 覆盖自审门禁
 #   2. tests/rust/cli_core.sh + cli_modules.sh  CLI 参数矩阵
 #
 # 前置:release 二进制(入口每次 cargo 增量校验新鲜)、Python 3 + pytest + pyte。
-# 缺依赖的批次自动 SKIP,不算失败。
+# 缺少必测依赖时报基础设施错误(退出码 2),不允许整层跳过后仍全绿。
 #
 # 全程离线(ZHUYE_MODEL=mock/mock-1)+ 隔离 HOME。退出码 0 = 全部通过。
 
 set -u
 
-# Windows 无 pty(pty 模块仅 Unix),能力覆盖层整体跳过,保持与
-# 「缺依赖自动 SKIP,不算失败」的套件哲学一致。移植到 Windows pty
-# 方案后再移除此守卫。
+# Windows 尚无 ConPTY 能力层。能力覆盖是必测门禁,这里明确失败,
+# 待 ConPTY 后端落地后移除守卫。
 if [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* || "$(uname -s)" == CYGWIN* ]]; then
-    echo "  [SKIP] Windows 无 pty;能力覆盖层跳过(移植期)"
-    exit 0
+    echo "  [ERROR] Windows 无 ConPTY 能力层;能力覆盖未执行" >&2
+    exit 2
 fi
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,13 +53,16 @@ if require_cmd python3; then
         ( cd "$HERE" && python3 -m pytest -q --tb=short ) || TOTAL_RC=1
     elif python3 -c "import pytest" 2>/dev/null; then
         # pyte 缺失会让 TuiSession 在用例里抛 ImportError(逐条失败而非跳过),
-        # 与 README 声称的「缺依赖自动 SKIP」不符 —— 在门口整层拦下。
-        echo "  [SKIP] 未安装 pyte(pip install pyte);能力覆盖层跳过"
+        # 在门口转为基础设施错误,避免能力层零用例后仍显示通过。
+        echo "  [ERROR] 未安装 pyte(pip install pyte);能力覆盖层未执行" >&2
+        TOTAL_RC=2
     else
-        echo "  [SKIP] 未安装 pytest(pip install pytest);能力覆盖层跳过"
+        echo "  [ERROR] 未安装 pytest(pip install pytest);能力覆盖层未执行" >&2
+        TOTAL_RC=2
     fi
 else
-    echo "  [SKIP] 未找到 python3;能力覆盖层跳过"
+    echo "  [ERROR] 未找到 python3;能力覆盖层未执行" >&2
+    TOTAL_RC=2
 fi
 
 echo

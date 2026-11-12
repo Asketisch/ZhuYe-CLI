@@ -32,6 +32,8 @@ lcov.info
 __pycache__/
 *.pyc
 .pytest_cache/
+.test-runner/
+.test-results/
 
 # ── 临时文件 ──
 *.log

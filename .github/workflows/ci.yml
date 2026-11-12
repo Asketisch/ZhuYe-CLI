@@ -7,6 +7,8 @@
 name: ci
 
 on:
+  schedule:
+    - cron: '17 18 * * *'
   push:
     branches: [main]
   pull_request:
@@ -27,6 +29,16 @@ env:
   RUSTFLAGS: -D warnings
 
 jobs:
+  runner-tests:
+    name: test runner registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest -v tests.test_runner
+
   fmt:
     name: fmt
     runs-on: ubuntu-latest
@@ -158,13 +170,57 @@ jobs:
           python-version: '3.12'
 
       - name: Install test dependencies
-        run: python3 -m pip install --upgrade pip pytest pyte
+        run: python -m pip install --upgrade pip pytest pyte
+
+      - name: Install Windows ConPTY dependency
+        if: matrix.os == 'windows'
+        run: python -m pip install --upgrade pywinpty
 
       - name: Build release binary
         run: cargo build --release -p zhuye-cli --locked
 
       - name: Run functional suite
+        if: matrix.os != 'windows'
         run: ./tests/run_all.sh functional
+
+      - name: Run Windows ConPTY suite
+        if: matrix.os == 'windows'
+        run: python tests/conpty.py
 
       - name: Coverage audit
         run: python3 tests/tools/coverage_audit.py --strict
+
+  nightly-quality:
+    name: nightly quality (${{ matrix.os }})
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos
+            runner: macos-latest
+          - os: linux
+            runner: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '. -> target'
+
+      - name: Build release binary
+        run: cargo build --release -p zhuye-cli --locked
+
+      - name: Run performance baseline
+        run: python3 tests/performance.py
+
+      - name: Run soak baseline
+        run: python3 tests/soak.py
