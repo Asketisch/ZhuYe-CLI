@@ -2619,6 +2619,9 @@ fn handle_key(
                                 action: zhuye_permissions::PermissionAction::Allow,
                                 tool_glob: None,
                                 shell_pattern,
+                                // v1.9:资源维度 glob —— TUI 的 always-allow
+                                // 只按工具 / 命令收窄,不带资源上下文。
+                                resource_glob: None,
                             })
                             .await
                         {

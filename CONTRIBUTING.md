@@ -48,7 +48,7 @@ python3 tests/tools/coverage_audit.py --strict   # 覆盖自审
 
 > 前置：`cargo build --release -p zhuye-cli`（入口脚本会自动补建）、
 > Python 3 + `pytest` + `pyte`（`pip install pytest pyte`）。
-> 缺依赖的批次自动 SKIP，不算失败。
+> 缺 pytest / pyte 等必测依赖时判基础设施错误，不算通过。
 
 注意：不同 rustc 版本的 clippy lint 集有差异，若你的工具链比 CI 新，
 以 `cargo check` 无错误 + 不新增警告为底线。
@@ -98,6 +98,7 @@ git add zhuye-agent && git commit            # 指针与代码适配一起提交
 
 | submodule 指针 | 接线内容 |
 | --- | --- |
+| `5f45f0a` | v0.1.12 指针适配:根 Cargo.toml 镜像 `[workspace.lints]`(核心 crate 自 v0.1.9 起以 `[lints] workspace = true` 继承,跨 workspace 解析落到外层根清单,缺定义即 manifest 加载失败);补声明 zhuye-kms / zhuye-audit / zhuye-secrets / zhuye-fs / zhuye-git / zhuye-wasm / facade `zhuye`,移除已更名消亡的 `reflect` 死路径;外部依赖版本对齐(pyo3 0.23→0.30、reqwest 补 gzip、新增 rusqlite / sha2 / aes-gcm / hkdf / wasmtime(-wasi) 30.0.1 / proptest);代码适配三处 —— `M4Deps` 新字段 `skill_dirs` / `bundled_skills`(TUI 与 exec 同口径:内置 skill 包默认关闭,`[active] bundled_skills = true` 显式开启),`PermissionRule.resource_glob`(TUI always-allow 不带资源上下文,填 `None`),`convert_event` 补 `SideChannelStarted/Finished/Status` + `ExtensionsRescanned` 分支(Notice 行透出,交互式频道视图留待后续) |
 | `34238dd` | CI 修复批次:reflect-sandbox 的 seatbelt 相关代码(`seatbelt_argv` / `seatbelt_profile` / 原子序号常量)补 `#[cfg(target_os = "macos")]` 门控,`seatbelt_argv` 另补非 macOS 占位实现(调用方按 status 运行时分派,占位实现运行时不可达),修复 Windows 编译失败(`std::os::unix` 不存在);macOS/Linux 行为不变,本仓库无消费点适配。该修复已以 `e7bbb4b` 并入 zhuye-agent main(烛夜更名后路径为 `crates/resources/zhuye-sandbox/`);本仓库指针暂留 `34238dd` —— 更名后结构本仓库尚不能消费,指针随外层更名适配一并前移,临时分支已删除 |
 | `e4560bc` | 修复批次(D1–D7 收口):会话恢复回放换 submodule 共享 API —— `reader::replay` 升级后支持任意日期桶 + 轮转副本合并 + 文件名/内部 id 双入口,删除本仓库此前维护的全盘扫描 workaround(`resume.rs::collect_session_files`);`JsonlRolloutWriter` 恢复后续写原日期目录的原文件(会话不再被拆成两份);「会话不存在」仍显式报错(共享 API 返回空 Vec,包装层兜底) |
 | `7912323` | **未接线 submodule 能力全量接线**(v1.5 / v1.7):`EventMsg::ToolCallArgsDelta` 流式工具参数(live 区渐进预览 + 参数摘要进调用行)、`EventMsg::Routing` 路由事件(failover / 冷却 / `SpecFallback` 跨模型降级)、`reflect_rollout::search_sessions` 跨会话全文搜索(新增 `session search`)、`reflect_config::resolve_model_spec` + `[model_discovery]`(`model = "free"` 运行时解析,配 `routing_policy_with` 传真实 spec)、`reflect_llm::model_catalog` provider 模型清单 + 免费判定(`/model` 无参列出)、`reflect_goal::GoalState` 权威读口(`/goal` 无参显示状态 + `--verify` / `--budget` 选项)、`reflect_config::init_exporter` OTLP 分析遥测、`reflect_config::ConfigWatcher` 配置热重载、`reflect_mcp::curated_catalog` MCP 精选目录(`/mcp` overlay)、`reflect_lsp::DiagnosticRegistry` 诊断(`/lsp`)、`AgentConfig::todos_slot` 待办清单(`/todo`)、`reflect_sandbox::OsSandbox::status_line` 沙箱状态(`/status`)、`reflect_stream::workspace_sync` 工作区克隆(新增 `workspace clone`)、`reflect_discussion::cli::run` 多 agent 讨论(新增 `discussion run`)、`reflect_integration::security_scan` 安全扫描(新增 `security audit`)、`reflect_config::TuiNotificationsSection` 终端通知开关与通道(`[notifications.tui]` 真正生效);同时修 `[sandbox].os_level` 改 `Option<bool>` 带来的编译断点 |

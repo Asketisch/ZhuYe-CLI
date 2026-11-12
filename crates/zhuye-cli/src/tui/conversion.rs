@@ -316,6 +316,42 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
             ps.action,
             format_prompt_layers(&ps.active_layers),
         )),
+        // v1.x side-channel(WP9):后台 agent 生命周期事件。TUI 当前没有
+        // 发起 side-channel 的入口,事件仅可能经会话恢复 / 外部注入到达;
+        // 以 Notice 行透出,保证终态(Cancelled / Error)用户可见,
+        // 不会静默丢在协议层。交互式频道视图留待后续迭代。
+        SideChannelStarted(sc) => {
+            use zhuye_protocol::event_msg::SideChannelEvent as Sc;
+            let (id, agent) = match &sc {
+                Sc::Started { id, agent_name, .. } => (id.as_str(), agent_name.as_str()),
+                _ => ("", ""),
+            };
+            UiEventKind::Notice(format!("🛰 side-channel 已启动 {id} · agent {agent}"))
+        }
+        SideChannelFinished(sc) => UiEventKind::Notice(format!(
+            "🛰 side-channel 终态 {} · {}{}",
+            side_channel_id(&sc),
+            side_channel_finish_label(&sc),
+            match side_channel_finish_summary(&sc) {
+                Some(s) => format!(" · {s}"),
+                None => String::new(),
+            },
+        )),
+        SideChannelStatus(ss) => UiEventKind::Notice(format!(
+            "🛰 side-channel 快照 · {} 个频道",
+            ss.channels.len()
+        )),
+        // v1.x `Op::RescanExtensions` 的应答:skills 目录已重扫,回报
+        // 重扫后的条目总数;commands 运行时重扫协议侧尚未接线(恒 false)。
+        ExtensionsRescanned(er) => UiEventKind::Notice(format!(
+            "♻ 扩展已重扫 · skills: {} 条 · commands: {}",
+            er.skills,
+            if er.commands {
+                "已处理"
+            } else {
+                "未接线"
+            },
+        )),
     };
     Some(UiEvent { kind })
 }
@@ -326,6 +362,40 @@ fn format_prompt_layers(layers: &[String]) -> String {
         "(内嵌默认)".to_string()
     } else {
         layers.join(", ")
+    }
+}
+
+/// side-channel 事件的 id 字段(启动即失败时 Error 变体可能为空串)。
+fn side_channel_id(sc: &zhuye_protocol::event_msg::SideChannelEvent) -> &str {
+    use zhuye_protocol::event_msg::SideChannelEvent as Sc;
+    match sc {
+        Sc::Started { id, .. }
+        | Sc::Done { id, .. }
+        | Sc::Cancelled { id, .. }
+        | Sc::Error { id, .. } => id,
+    }
+}
+
+/// side-channel 终态事件的结局标签(完成 / 取消 / 出错)。
+fn side_channel_finish_label(sc: &zhuye_protocol::event_msg::SideChannelEvent) -> String {
+    use zhuye_protocol::event_msg::SideChannelEvent as Sc;
+    match sc {
+        Sc::Done { .. } => "完成".to_string(),
+        Sc::Cancelled { .. } => "已取消".to_string(),
+        Sc::Error { message, .. } => format!("出错: {message}"),
+        Sc::Started { .. } => "启动".to_string(),
+    }
+}
+
+/// side-channel 终态事件携带的摘要文本(仅 Done 且非空白时有)。
+fn side_channel_finish_summary(sc: &zhuye_protocol::event_msg::SideChannelEvent) -> Option<String> {
+    match sc {
+        zhuye_protocol::event_msg::SideChannelEvent::Done { summary, .. } => summary
+            .as_ref()
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string()),
+        _ => None,
     }
 }
 

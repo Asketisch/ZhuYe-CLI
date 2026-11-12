@@ -300,15 +300,21 @@ pub(crate) fn build_m4(
     });
     let active_def = Arc::new(active_def);
 
-    // Skills:扫描 workspace + home skill 目录,合并编译期内置技能包
-    // (code-review / commit-helper 等)。同名 skill 以文件目录扫描结果优先。
+    // Skills:扫描 workspace + home skill 目录。内置 skill 包默认关闭,
+    // `[active] bundled_skills = true` 显式开启(与 exec bootstrap_m4 同口径);
+    // 同名 skill 以文件目录扫描结果优先(`merge_bundled` 内部守卫)。
     let ws_skills = workspace.join(".zhuye").join("skills");
     let home_skills = home_path.join(".zhuye").join("skills");
     let skill_dirs: Vec<&std::path::Path> = vec![&ws_skills, &home_skills];
     let skills_catalog = SkillsCatalog::new();
     skills_catalog.scan(&skill_dirs);
-    zhuye_skills::merge_bundled(&skills_catalog);
+    if cfg.active.bundled_skills {
+        zhuye_skills::merge_bundled(&skills_catalog);
+    }
     let skills_catalog = Arc::new(skills_catalog);
+    // owned 目录序进 M4Deps:运行时 RescanExtensions 与 bootstrap 同源
+    // (scan 结束后 move,免 clone)。
+    let skill_dirs_owned = vec![ws_skills, home_skills];
 
     // 注册 `load_skill` + `read_skill_resource`(渐进披露第三级)。
     // 走 `register_runtime_tool` 应用 Runtime 源的 `Prompt` 安全 floor。
@@ -417,6 +423,10 @@ pub(crate) fn build_m4(
         // v1.6.1:`/prompt` Switch 重扫用的目录序(home 在前、workspace 在后,
         // 与启动时 init_library 同序)。
         prompt_dirs: vec![home_prompts, ws_prompts],
+        // v1.x:skills 重扫目录序(workspace → home)与 bundled 表态,
+        // 与 exec bootstrap 同口径注入。
+        skill_dirs: skill_dirs_owned,
+        bundled_skills: cfg.active.bundled_skills,
     }
 }
 

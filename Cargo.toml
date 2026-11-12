@@ -14,6 +14,28 @@ homepage = "https://github.com/Asketisch/Reflect-TUI"
 # ── 核心依赖:从 zhuye-agent submodule 通过 path 引用 ──
 # 注意:Cargo 不支持嵌套 workspace,这里只用 path 依赖,不把核心 crate 列入 members。
 # 核心 crate 仍属于 zhuye-agent 自己的 workspace,通过 path 被本仓库消费。
+# ── workspace 统一 lint 配置 ──────────────────────────────
+# 镜像 zhuye-agent 根 Cargo.toml 的 [workspace.lints]:核心 crate 自 v0.1.9 起
+# 通过 `[lints] workspace = true` 继承,跨 workspace 解析落到本根清单,
+# 不定义则 manifest 加载直接报错。
+[workspace.lints.clippy]
+all = "deny"
+redundant_clone  = "deny"
+needless_collect = "deny"
+map_unwrap_or    = "deny"
+# M1 宽松清单(priority 高于 all,数值更大者优先)。
+derivable_impls    = { level = "allow", priority = 10 }
+needless_lifetimes = { level = "allow", priority = 10 }
+collapsible_if     = { level = "allow", priority = 10 }
+io_other_error     = { level = "allow", priority = 10 }
+collapsible_match  = { level = "allow", priority = 10 }
+needless_borrow    = { level = "allow", priority = 10 }
+redundant_closure  = { level = "allow", priority = 10 }
+or_fun_call        = { level = "allow", priority = 10 }
+option_if_let_else = { level = "allow", priority = 10 }
+nonminimal_bool    = { level = "allow", priority = 10 }
+manual_div_ceil    = { level = "allow", priority = 10 }
+
 [workspace.dependencies]
 # protocol 层
 zhuye-protocol = { path = "zhuye-agent/crates/protocol/zhuye-protocol" }
@@ -31,6 +53,7 @@ zhuye-compact    = { path = "zhuye-agent/crates/abilities/zhuye-compact" }
 zhuye-recovery   = { path = "zhuye-agent/crates/abilities/zhuye-recovery" }
 zhuye-notes      = { path = "zhuye-agent/crates/abilities/zhuye-notes" }
 zhuye-sanitize   = { path = "zhuye-agent/crates/abilities/zhuye-sanitize" }
+zhuye-kms        = { path = "zhuye-agent/crates/abilities/zhuye-kms" }
 
 # resources 层
 zhuye-config      = { path = "zhuye-agent/crates/resources/zhuye-config" }
@@ -40,6 +63,11 @@ zhuye-rollout     = { path = "zhuye-agent/crates/resources/zhuye-rollout" }
 zhuye-telemetry   = { path = "zhuye-agent/crates/resources/zhuye-telemetry" }
 zhuye-sandbox     = { path = "zhuye-agent/crates/resources/zhuye-sandbox" }
 zhuye-ast         = { path = "zhuye-agent/crates/resources/zhuye-ast" }
+zhuye-audit       = { path = "zhuye-agent/crates/resources/zhuye-audit" }
+zhuye-secrets     = { path = "zhuye-agent/crates/resources/zhuye-secrets" }
+zhuye-fs          = { path = "zhuye-agent/crates/resources/zhuye-fs" }
+zhuye-git         = { path = "zhuye-agent/crates/resources/zhuye-git" }
+zhuye-wasm        = { path = "zhuye-agent/crates/resources/zhuye-wasm" }
 
 # integrations 层
 zhuye-mcp         = { path = "zhuye-agent/crates/integrations/zhuye-mcp" }
@@ -60,7 +88,7 @@ zhuye-pipeline    = { path = "zhuye-agent/crates/orchestration/zhuye-pipeline" }
 
 # runtime 层(核心引擎)
 zhuye-core = { path = "zhuye-agent/crates/runtime/zhuye-core" }
-reflect      = { path = "zhuye-agent/crates/runtime/reflect" }
+zhuye      = { path = "zhuye-agent/crates/runtime/zhuye" }
 zhuye-exec = { path = "zhuye-agent/crates/runtime/zhuye-exec" }
 
 # ── 通用外部依赖(与核心 workspace 对齐版本)──
@@ -75,7 +103,7 @@ anyhow             = "1"
 thiserror          = "1"
 clap               = { version = "4", features = ["derive"] }
 pollster           = "0.4"
-reqwest            = { version = "0.12", features = ["json", "stream", "rustls-tls"] }
+reqwest            = { version = "0.12", features = ["json", "stream", "gzip", "rustls-tls"] }
 tracing            = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 futures            = "0.3"
@@ -97,13 +125,25 @@ regex   = "1"
 rankfns = "0.1"
 htmd        = "0.5"
 tiktoken-rs = "0.12"
-pyo3        = "0.23"
+pyo3        = "0.30"
 once_cell   = "1"
 minijinja = "2"
 chrono = { version = "0.4", features = ["serde"] }
 sled = "0.34"
 parking_lot = "0.12"
 filetime    = "0.2"
+rusqlite = { version = "0.37", features = ["bundled"] }
+sha2     = "0.10"
+aes-gcm  = "0.10"
+hkdf     = "0.12"
+wasmtime     = { version = "=30.0.1", default-features = false, features = [
+    "async",
+    "cranelift",
+    "component-model",
+    "runtime",
+] }
+wasmtime-wasi = { version = "=30.0.1", default-features = false }
+proptest = "1"
 opentelemetry         = "0.27"
 opentelemetry_sdk     = { version = "0.27", features = ["rt-tokio"] }
 opentelemetry-otlp    = { version = "0.27", features = ["http-proto", "reqwest-client", "trace"] }
