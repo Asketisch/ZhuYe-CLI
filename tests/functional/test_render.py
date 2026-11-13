@@ -27,7 +27,7 @@ def test_cjk_roundtrip_renders_correctly(tui, mock_script, sandbox) -> None:
         # 回合已收尾,否则慢机器上拿到的是只有用户消息的会话文件。
         txt = s.wait_text("中文回复标记", timeout=30)
         assert "你好,世界" in txt, f"中文回复应完整上屏:\n{txt[-300:]}"
-        s.wait_idle(timeout=30)
+        s.wait_idle(timeout=60)
         assert not s.has_panic()
 
     body = "\n".join(f.read_text() for f in sandbox.session_files())
