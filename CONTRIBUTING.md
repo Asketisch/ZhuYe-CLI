@@ -111,6 +111,7 @@ git add zhuye-agent && git commit            # 指针与代码适配一起提交
 | `bb2eaeb` | Linux CI 全绿（landlock 降级重试 + 环境自适应测试） |
 | `d9b88de` | `/permissions` 弹窗修复 + MCP Prompts 工具接入 |
 | `b625b5e` | `/rewind` 弹窗补齐 + clippy 门槛修复 |
+| `ce57d48` | 核心审批设置用例改用无副作用 Prompt 探针,消除 Windows 无 OS 沙箱后端时的平台耦合;TUI 公开 API 与行为零变更,仅接线测试修复 |
 
 ## 提交 / PR
 
