@@ -119,7 +119,7 @@ git add zhuye-agent && git commit            # 指针与代码适配一起提交
 | `cd4ad54` | 核心 zhuye-lsp / zhuye-mcp stdio 子进程 `env_clear` 后透传 Windows 运行时候选变量(SystemRoot/windir/ComSpec/PATHEXT 等):缺 SystemRoot 时 node.exe 等 CRT 程序在输出任何字节前崩溃,表现为连接 EOF/Cancelled 而非 spawn 错误;本仓库无适配 |
 | `8e72bc4` | 核心 zhuye-shell 会话 kill Windows 整树终止(Job Object)+ env_clear 分支同补运行时变量;`zhuye exec`/常驻 shell 池在 Windows 上 kill 语义与 Unix 对齐;本仓库无适配 |
 | `0cca4c6` | 核心 zhuye-telemetry / zhuye-audit 文件锁与追加句柄带读权限:Windows `LockFileEx` 要求 GENERIC_READ/GENERIC_WRITE,纯 append 句柄加锁直接 ACCESS_DENIED(code 5),`activity.rs` 5 个落盘单测的 Windows 恒红根因(此前被 zhuye-git 树杀卡死掩盖,从未跑到该二进制);与 `1c09f6a4→c728da8e` 的 zhuye-task 等三处同一口径的补漏;本仓库无适配 |
-
+| `8abd4ed` | 核心 zhuye-tools safe_write 原子改名切到 FileRenameInformationEx(类 3 拒绝句柄根→Windows code 87,write/edit/plan_write 落盘恒红)+ plan_write 绝对路径按分量判定;本仓库无适配 |
 ## 提交 / PR
 
 - commit message 用简洁的 `type: 摘要`（feat / fix / docs / test / chore / refactor）。
