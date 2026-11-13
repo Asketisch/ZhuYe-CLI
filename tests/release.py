@@ -30,6 +30,8 @@ def _version() -> str:
         cwd=ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=True,
     ).stdout
     return str(json.loads(output)["packages"][0]["version"])
@@ -114,6 +116,8 @@ def main() -> int:
                 [str(binary), "--version"],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=15,
             )
             report["executable_smoke"] = {
@@ -138,6 +142,8 @@ def main() -> int:
                     ],
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     timeout=120,
                     env={
                         "PATH": f"{install_dir}{os.pathsep}{os.environ.get('PATH', '')}",
