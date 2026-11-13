@@ -70,6 +70,7 @@ def _main() -> int:
 
         screen = pyte.Screen(110, 34)
         stream = pyte.ByteStream(screen)
+        boot_text = ""
         process = PtyProcess.spawn(
             str(BINARY),
             dimensions=(110, 34),
@@ -78,7 +79,7 @@ def _main() -> int:
         )
         try:
             deadline = time.monotonic() + 30
-            boot_text = ""
+            boot_visible = False
             while time.monotonic() < deadline:
                 if not process.isalive():
                     _fail_infrastructure("TUI 在启动完成前退出")
@@ -86,12 +87,14 @@ def _main() -> int:
                 if chunk:
                     stream.feed(chunk.encode("utf-8", errors="replace"))
                     boot_text = "\n".join(screen.display)
-                    if "/help for commands" in boot_text:
+                    # ConPTY 会在 110 列处折行,不能要求提示语在同一行连续出现。
+                    boot_visible = "ZhuYe-CLI" in boot_text and "/help" in boot_text
+                    if boot_visible:
                         break
                 time.sleep(0.05)
             else:
                 print(boot_text[-1000:], file=sys.stderr)
-                _fail_infrastructure("ConPTY 30s 内未出现启动横幅")
+                _fail_infrastructure("ConPTY 30s 内未出现启动横幅关键内容")
 
             process.write("conpty-input-probe\r")
             deadline = time.monotonic() + 20

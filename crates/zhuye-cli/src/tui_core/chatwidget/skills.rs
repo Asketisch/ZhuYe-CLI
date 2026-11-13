@@ -170,7 +170,7 @@ impl ChatWidget {
             if let Some(skill) = self
                 .skills_all
                 .iter()
-                .find(|skill| skill.path.as_path() == path)
+                .find(|skill| skill.path.as_os_str() == path.as_str())
             {
                 *name = format!("{name} ({} skill)", skill.name);
             }

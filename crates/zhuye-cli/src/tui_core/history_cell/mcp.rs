@@ -86,7 +86,7 @@ impl McpToolCallCell {
     }
 
     fn render_content_block(block: &serde_json::Value, width: usize) -> String {
-        let content = match serde_json::from_value::<rmcp::model::Content>(block.clone()) {
+        let content = match serde_json::from_value::<rmcp::model::ContentBlock>(block.clone()) {
             Ok(content) => content,
             Err(_) => {
                 return format_and_truncate_tool_result(
@@ -97,20 +97,22 @@ impl McpToolCallCell {
             }
         };
 
-        match content.raw {
-            rmcp::model::RawContent::Text(text) => {
+        match &content {
+            rmcp::model::ContentBlock::Text(text) => {
                 format_and_truncate_tool_result(&text.text, TOOL_CALL_MAX_LINES, width)
             }
-            rmcp::model::RawContent::Image(_) => "<image content>".to_string(),
-            rmcp::model::RawContent::Audio(_) => "<audio content>".to_string(),
-            rmcp::model::RawContent::Resource(resource) => {
-                let uri = match resource.resource {
+            rmcp::model::ContentBlock::Image(_) => "<image content>".to_string(),
+            rmcp::model::ContentBlock::Audio(_) => "<audio content>".to_string(),
+            rmcp::model::ContentBlock::Resource(resource) => {
+                let uri = match &resource.resource {
                     rmcp::model::ResourceContents::TextResourceContents { uri, .. } => uri,
                     rmcp::model::ResourceContents::BlobResourceContents { uri, .. } => uri,
+                    _ => "[unknown resource]",
                 };
                 format!("embedded resource: {uri}")
             }
-            rmcp::model::RawContent::ResourceLink(link) => format!("link: {}", link.uri),
+            rmcp::model::ContentBlock::ResourceLink(link) => format!("link: {}", link.uri),
+            _ => "[unsupported MCP content]".to_string(),
         }
     }
 }
@@ -280,8 +282,8 @@ fn try_new_completed_mcp_tool_call_with_image_output(
 ///
 /// 当该块不是图像、base64 解码失败、无法推断格式，或图像解码器拒绝这些字节时，返回 `None`。
 fn decode_mcp_image(block: &serde_json::Value) -> Option<DynamicImage> {
-    let content = serde_json::from_value::<rmcp::model::Content>(block.clone()).ok()?;
-    let rmcp::model::RawContent::Image(image) = content.raw else {
+    let content = serde_json::from_value::<rmcp::model::ContentBlock>(block.clone()).ok()?;
+    let rmcp::model::ContentBlock::Image(image) = content else {
         return None;
     };
     let base64_data = if let Some(data_url) = image.data.strip_prefix("data:") {

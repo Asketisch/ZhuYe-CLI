@@ -414,7 +414,7 @@ pub(super) fn format_content_blocks(blocks: &[ContentBlock]) -> String {
                 if unified_diff.len() > 500 {
                     // 必须按 UTF-8 字符边界截断,否则多字节码点(CJK/emoji)中间切片会 panic。
                     // 与下方 2000 字节截断保持一致的 floor_char_boundary 模式。
-                    let cut = unified_diff.floor_char_boundary(500);
+                    let cut = floor_char_boundary(unified_diff, 500);
                     out.push_str(&unified_diff[..cut]);
                     out.push('…');
                 } else {
@@ -432,11 +432,22 @@ pub(super) fn format_content_blocks(blocks: &[ContentBlock]) -> String {
     }
     if out.len() > 2000 {
         let max_len = 2000usize.saturating_sub("…".len());
-        let cut = out.floor_char_boundary(max_len.min(out.len()));
+        let cut = floor_char_boundary(&out, max_len.min(out.len()));
         out.truncate(cut);
         out.push('…');
     }
     out
+}
+
+/// 1.89 MSRV 没有 `str::floor_char_boundary`,按字符边界回退。
+pub(super) fn floor_char_boundary(value: &str, mut index: usize) -> usize {
+    if index >= value.len() {
+        return value.len();
+    }
+    while index > 0 && !value.is_char_boundary(index) {
+        index -= 1;
+    }
+    index
 }
 
 /// 从工具产出的 content blocks 里抽取 unified_diff 原文(不截断)。
