@@ -203,7 +203,9 @@ if $DO_DIST; then
 
     PKG_NAME="${BINARY_NAME}-${VERSION}-${TRIPLE}"
     DIST_DIR="${REPO_ROOT}/dist"
-    STAGING_DIR="$(mktemp -d -t zhuye-cli-dist)"
+    # GNU mktemp(Linux / Windows Git Bash)要求模板自带 X 占位符,否则
+    # 「too few X's in template」直接退出;显式模板三平台(BSD/GNU)通用。
+    STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/zhuye-cli-dist.XXXXXX")"
     PKG_DIR="${STAGING_DIR}/${PKG_NAME}"
     mkdir -p "${PKG_DIR}" "${DIST_DIR}"
 

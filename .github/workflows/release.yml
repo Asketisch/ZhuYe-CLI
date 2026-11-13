@@ -28,10 +28,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macos-14 / macos-13 镜像已退役(macos-13 的 job 会无限排队,
+          # macos-14 报「configuration not supported」)。按官方镜像表用
+          # 显式标签:arm64 = macos-15;x64(Intel)= macos-15-intel,
+          # 避免 -latest 迁移期漂移。
           - os: macos-arm64
-            runner: macos-14
+            runner: macos-15
           - os: macos-x86_64
-            runner: macos-13
+            runner: macos-15-intel
           - os: linux
             runner: ubuntu-22.04
           - os: windows
