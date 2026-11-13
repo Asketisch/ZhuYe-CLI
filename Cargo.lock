@@ -6737,6 +6737,8 @@ dependencies = [
  "zhuye-config",
  "zhuye-core",
  "zhuye-discussion",
+ "zhuye-fs",
+ "zhuye-git",
  "zhuye-goal",
  "zhuye-hooks",
  "zhuye-integration",

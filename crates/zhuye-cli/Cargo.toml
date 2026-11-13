@@ -77,6 +77,10 @@ zhuye-telemetry = { workspace = true }
 zhuye-agent-def = { workspace = true }
 zhuye-plugin   = { workspace = true }
 zhuye-ast      = { workspace = true }
+# v0.1.8-develop 接线:git 能力族(checkpoint / 分支 PR 探测 / 指令解析)
+# 与共享文件系统原语(原子写)由 submodule 提供,本仓库删除本地实现。
+zhuye-git      = { workspace = true }
+zhuye-fs       = { workspace = true }
 # v1.1.0 Phase 6:任务面板 + 团队胶囊 —— 镜像 `zhuye_task` 的 `TaskStatus`
 # 枚举与 `TodoRow`(避免 TUI 反向依赖整个 zhuye_task store 层)。
 zhuye-task     = { workspace = true }

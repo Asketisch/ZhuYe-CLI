@@ -114,6 +114,7 @@ git add zhuye-agent && git commit            # 指针与代码适配一起提交
 | `ce57d48` | 核心审批设置用例改用无副作用 Prompt 探针,消除 Windows 无 OS 沙箱后端时的平台耦合;TUI 公开 API 与行为零变更,仅接线测试修复 |
 | `e383206` | 核心文件任务存储的 Windows 文件锁修复:锁文件原以 `append(true)` 打开,Rust std 会刻意剔除 `FILE_WRITE_DATA`,句柄不带 `GENERIC_READ`,而 Windows 的 `LockFileEx` 要求句柄具备读权限 —— 加锁直接返回 `ACCESS_DENIED`(code 5),表现为文件任务后端在 Windows 上完全不可用。改为 `read + write` 打开后跨进程串行化恢复正常;TUI 公开 API 与行为零变更,仅接线上游 bug 修复 |
 | `c728da8` | 上游补充:锁文件打开方式显式声明 `truncate(false)`(消除 `clippy::suspicious_open_options`,行为不变);本仓库无适配 |
+| `9332aa9` | develop 分支接线(v0.1.8-39,**重叠功能全面改用 submodule**):①`/checkpoint` 的 git 实现收编 —— 删除本地 `git_checkpoint.rs`,改调 `zhuye_git::{create,list,rewind}`(前缀更名 `reflect-checkpoint:`→`zhuye-checkpoint:`、`reflect-cp/`→`zhuye-cp/`,见 COVERAGE.md D15);②分支 / PR 探测收编 —— 删除本地 `branch_summary.rs`(499 行),`zhuye_git::branch` 跑在 `CommandRunnerBridge` 上(本地 `WorkspaceCommandExecutor` app-server 传输边界保留,孤儿规则经借用型 newtype 桥接);③assistant git 指令解析收编 —— 删除本地 `git_action_directives.rs`,改用 `zhuye_git::parse_assistant_markdown`;④home 解析收编 —— 删除 `utils_home_dir.rs`,`find_reflect_home()` 五处消费点改 `zhuye_config::data_dir()` 单一事实源(多 getpwuid 兜底);⑤原子写收编 —— 导出落盘 / 提示词历史 / 主题持久化 / sixel 缓存四处手写 temp+rename 改 `zhuye_fs::write_atomic`(失败保全 + symlink 穿透);⑥协议三事件接线 —— `SideChannelStarted/Finished` 以 Notice 进对话流,`SideChannelStatus` 查询应答丢弃;⑦根 `[workspace.dependencies]` 补 `zhuye-fs`/`zhuye-git` 镜像声明,删除已不存在的 `reflect` crate 声明;新增 side-channel ×3 + 桥接 ×2 Rust 单测 |
 
 ## 提交 / PR
 

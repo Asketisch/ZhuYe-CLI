@@ -19,7 +19,6 @@
 //! 追加写走 temp + rename:直接 `fs::write` 截断原文件时若进程崩溃,用户会丢掉
 //! **全部**历史而不是最后一条(与 submodule 8564f66 修 permissions.toml 同类)。
 
-use std::io::Write;
 use std::path::{Path, PathBuf};
 
 /// 保留的最大条目数。超出后从最旧的开始丢。
@@ -142,7 +141,8 @@ impl PromptHistory {
 
 /// 历史文件路径:`<reflect home>/prompt_history.jsonl`。
 pub fn default_path() -> Option<PathBuf> {
-    crate::utils_home_dir::find_reflect_home().map(|h| h.join("prompt_history.jsonl"))
+    // v0.1.8-develop:home 解析收编为 zhuye-config 的 data_dir 单一事实源
+    zhuye_config::data_dir().map(|h| h.join("prompt_history.jsonl"))
 }
 
 /// 解析 JSONL:每行一个 JSON 字符串。坏行跳过(不因一行损坏丢全部)。
@@ -164,8 +164,9 @@ fn parse_entries(text: &str) -> Vec<String> {
     out
 }
 
-/// 原子落盘:同目录 temp + rename。直接写原文件会在崩溃时截断成空,
-/// 让用户丢掉**全部**历史而不是最后一条。
+/// 原子落盘:直接写原文件会在崩溃时截断成空,让用户丢掉**全部**历史
+/// 而不是最后一条。v0.1.8-develop 起走框架的 zhuye_fs::write_atomic
+/// (同目录临时文件 + sync + persist,失败保全原文件)。
 fn persist(path: &Path, entries: &[String]) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -177,15 +178,7 @@ fn persist(path: &Path, entries: &[String]) -> std::io::Result<()> {
         body.push_str(&serde_json::to_string(e).unwrap_or_else(|_| "\"\"".to_string()));
         body.push('\n');
     }
-    // temp 名带 pid,避免同机多实例并发写互相覆盖。
-    let tmp = path.with_extension(format!("jsonl.tmp.{}", std::process::id()));
-    {
-        let mut f = std::fs::File::create(&tmp)?;
-        f.write_all(body.as_bytes())?;
-        f.sync_all()?;
-    }
-    std::fs::rename(&tmp, path)?;
-    Ok(())
+    zhuye_fs::write_atomic(path, body.as_bytes())
 }
 
 /// 反向历史搜索(Ctrl+R)的纯逻辑状态机。

@@ -134,7 +134,8 @@ pub fn resolve(theme_id: &str) -> Palette {
 
 /// 主题持久化文件:`<reflect home>/theme`(内容是主题 id,如 `light`)。
 pub fn persisted_path() -> Option<std::path::PathBuf> {
-    crate::utils_home_dir::find_reflect_home().map(|h| h.join("theme"))
+    // v0.1.8-develop:home 解析收编为 zhuye-config 的 data_dir 单一事实源
+    zhuye_config::data_dir().map(|h| h.join("theme"))
 }
 
 /// 读取上次 `/theme` 选中的主题 id。文件不存在 / 读失败 → `None`。
@@ -164,14 +165,13 @@ pub fn persist(theme_id: &str) -> std::io::Result<()> {
 /// 原子写主题 id 到指定路径。
 ///
 /// 直接 `fs::write` 会在崩溃时留下空文件,下次启动读成空串 —— 退化到默认
-/// 主题,用户的选择静默丢失。同目录 temp + rename。
+/// 主题,用户的选择静默丢失。v0.1.8-develop 起走框架的
+/// zhuye_fs::write_atomic(失败保全 + symlink 穿透)。
 pub fn persist_to(path: &std::path::Path, theme_id: &str) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let tmp = path.with_extension(format!("theme.tmp.{}", std::process::id()));
-    std::fs::write(&tmp, format!("{theme_id}\n"))?;
-    std::fs::rename(&tmp, path)
+    zhuye_fs::write_atomic(path, format!("{theme_id}\n").as_bytes())
 }
 
 /// 启动时的调色板。优先级:`NO_COLOR` > `ZHUYE_CLI_THEME` > 上次持久化 > 深色默认。

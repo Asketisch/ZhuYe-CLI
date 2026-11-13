@@ -128,6 +128,62 @@ impl std::fmt::Display for WorkspaceCommandError {
 
 impl std::error::Error for WorkspaceCommandError {}
 
+/// [`zhuye_git::runner::CommandRunner`] 的 TUI 桥接句柄(借用型,零分配)。
+///
+/// 孤儿规则不允许为 `Arc<dyn WorkspaceCommandExecutor>` 直接实现外部
+/// trait,包一层本地 newtype;探测调用点用
+/// `&CommandRunnerBridge(&runner)` 临时包装即可。
+pub(crate) struct CommandRunnerBridge<'a>(pub(crate) &'a WorkspaceCommandRunner);
+
+/// 桥接:让 submodule `zhuye-git` 的分支 / PR 探测逻辑直接跑在 TUI 的
+/// app-server 执行端上。
+///
+/// develop 起 `tui_core/branch_summary.rs` 的探测实现(499 行)整体收编进
+/// `zhuye_git::branch`,它只依赖框架侧的 [`zhuye_git::runner::CommandRunner`]
+/// 抽象;本仓库保留自己的 [`WorkspaceCommandExecutor`] 传输边界(内嵌 /
+/// 远程 app-server 皆可),这里把两边接起来:框架命令描述 → TUI 命令描述,
+/// 执行后映射回框架输出。框架的截断 / 超时标志由执行端超时与输出上限
+/// 语义吸收,不单独透传。
+impl zhuye_git::runner::CommandRunner for CommandRunnerBridge<'_> {
+    fn run<'a>(
+        &'a self,
+        cmd: &'a zhuye_git::runner::WorkspaceCommand,
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = Result<
+                        zhuye_git::runner::CommandOutput,
+                        zhuye_git::runner::WorkspaceCommandError,
+                    >,
+                > + Send
+                + 'a,
+        >,
+    > {
+        let mut command = WorkspaceCommand::new(cmd.argv.iter().cloned());
+        command = command.cwd(cmd.cwd.clone());
+        for (key, value) in &cmd.env {
+            command = command.env(key.clone(), value.clone());
+        }
+        command = command.timeout(cmd.timeout);
+        command.output_bytes_cap = cmd.max_output_bytes;
+        Box::pin(async move {
+            // 全限定调用:两个 trait 都叫 `run`,避免方法解析歧义。
+            let out = WorkspaceCommandExecutor::run(self.0.as_ref(), command)
+                .await
+                .map_err(|e| zhuye_git::runner::WorkspaceCommandError::Failed(e.to_string()))?;
+            Ok(zhuye_git::runner::CommandOutput {
+                exit_code: out.exit_code,
+                stdout: out.stdout,
+                stderr: out.stderr,
+                // app-server 执行端不回报截断 / 超时明细;探测逻辑只把它当
+                // 「尽力而为的元数据缺失」处理,这里如实给否。
+                truncated: false,
+                timed_out: false,
+            })
+        })
+    }
+}
+
 /// 通过当前活动的 TUI app-server 会话执行非交互式工作区命令。
 ///
 /// 由具体实现决定工作区所在的位置。调用方提供 argv/cwd/env，
@@ -214,5 +270,102 @@ impl WorkspaceCommandExecutor for AppServerWorkspaceCommandRunner {
                 stderr: response.stderr,
             })
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Mutex;
+
+    /// 记录桥接层构造出的 TUI 命令描述,返回固定成功输出。
+    struct RecordingExecutor(Mutex<Option<WorkspaceCommand>>);
+
+    impl WorkspaceCommandExecutor for RecordingExecutor {
+        fn run(
+            &self,
+            command: WorkspaceCommand,
+        ) -> Pin<
+            Box<
+                dyn Future<Output = Result<WorkspaceCommandOutput, WorkspaceCommandError>>
+                    + Send
+                    + '_,
+            >,
+        > {
+            *self.0.lock().unwrap() = Some(command);
+            Box::pin(async move {
+                Ok(WorkspaceCommandOutput {
+                    exit_code: 0,
+                    stdout: "main".into(),
+                    stderr: String::new(),
+                })
+            })
+        }
+    }
+
+    #[tokio::test]
+    async fn bridge_maps_framework_command_to_tui_executor() {
+        // develop 接线回归:zhuye_git::branch 的探测只认框架的
+        // CommandRunner;桥接必须把 argv / cwd / env / 超时 / 输出上限
+        // 如实映射到 TUI 的 app-server 执行端。
+        let executor = std::sync::Arc::new(RecordingExecutor(Mutex::new(None)));
+        let runner: WorkspaceCommandRunner = executor.clone();
+        let bridge = CommandRunnerBridge(&runner);
+        let cmd = zhuye_git::runner::WorkspaceCommand::new(
+            vec![
+                "git".to_string(),
+                "branch".to_string(),
+                "--show-current".to_string(),
+            ],
+            "/tmp/repo",
+        )
+        .with_env(vec![("GIT_DIR".to_string(), "/tmp/repo/.git".to_string())])
+        .with_timeout(Duration::from_secs(9));
+        let out = zhuye_git::runner::CommandRunner::run(&bridge, &cmd)
+            .await
+            .expect("桥接应返回成功输出");
+        assert_eq!(out.exit_code, 0);
+        assert_eq!(out.stdout, "main");
+        assert!(!out.truncated && !out.timed_out);
+
+        let sent = executor.0.lock().unwrap().take().expect("执行端应收到命令");
+        assert_eq!(sent.argv, vec!["git", "branch", "--show-current"]);
+        assert_eq!(sent.cwd, Some(std::path::PathBuf::from("/tmp/repo")));
+        assert_eq!(
+            sent.env.get("GIT_DIR"),
+            Some(&Some("/tmp/repo/.git".into()))
+        );
+        assert_eq!(sent.timeout, Duration::from_secs(9));
+        assert_eq!(sent.output_bytes_cap, cmd.max_output_bytes);
+    }
+
+    #[tokio::test]
+    async fn bridge_maps_executor_failure_to_framework_error() {
+        struct FailingExecutor;
+        impl WorkspaceCommandExecutor for FailingExecutor {
+            fn run(
+                &self,
+                _command: WorkspaceCommand,
+            ) -> Pin<
+                Box<
+                    dyn Future<Output = Result<WorkspaceCommandOutput, WorkspaceCommandError>>
+                        + Send
+                        + '_,
+                >,
+            > {
+                Box::pin(async move { Err(WorkspaceCommandError::new("transport down")) })
+            }
+        }
+        let runner: WorkspaceCommandRunner = std::sync::Arc::new(FailingExecutor);
+        let bridge = CommandRunnerBridge(&runner);
+        let cmd = zhuye_git::runner::WorkspaceCommand::new(vec!["git".into()], ".");
+        let err = zhuye_git::runner::CommandRunner::run(&bridge, &cmd)
+            .await
+            .expect_err("执行端失败应映射为框架错误");
+        // 映射口径:执行端基础设施故障 → 框架的 Failed(探测按尽力而为处理)。
+        assert!(
+            matches!(err, zhuye_git::runner::WorkspaceCommandError::Failed(ref m) if m.contains("transport down")),
+            "实际错误:{err}"
+        );
     }
 }

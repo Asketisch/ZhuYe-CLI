@@ -323,10 +323,8 @@ impl ChatWidget {
             let cwd = PathBuf::from(cwd);
             let tx = self.app_event_tx.clone();
             tokio::spawn(async move {
-                if let Some(branch) =
-                    crate::tui_core::branch_summary::current_branch_name(runner.as_ref(), &cwd)
-                        .await
-                {
+                let runner = crate::tui_core::workspace_command::CommandRunnerBridge(&runner);
+                if let Some(branch) = zhuye_git::current_branch_name(&runner, &cwd).await {
                     tx.send(AppEvent::SyncThreadGitBranch { thread_id, branch });
                 }
             });

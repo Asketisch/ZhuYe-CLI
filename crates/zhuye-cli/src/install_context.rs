@@ -8,7 +8,6 @@
 use std::path::Path;
 
 use crate::utils_absolute_path::AbsolutePathBuf;
-use crate::utils_home_dir::find_reflect_home;
 
 const STANDALONE_PACKAGES_DIRNAME: &str = "standalone";
 const RELEASES_DIRNAME: &str = "releases";
@@ -102,7 +101,7 @@ fn install_method_from_exe(exe_path: &Path) -> InstallMethod {
 }
 
 fn standalone_install_method(exe_path: &Path) -> Option<InstallMethod> {
-    let zhuye_home = find_reflect_home()?;
+    let zhuye_home = zhuye_config::data_dir()?;
     let release_dir = exe_path.parent()?;
     let releases_root = zhuye_home
         .join("packages")

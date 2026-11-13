@@ -312,10 +312,8 @@ pub fn sixel_frame(frame_path: &Path, cache_dir: &Path, height_px: u16) -> Resul
 
     // 原子落盘:直接 fs::write 会在崩溃时留下截断的 .six 缓存条目,而上面的
     // `path.exists()` 快路径不校验内容,下次读取就把损坏数据当有效缓存用。
-    // 同目录 temp + rename 保证要么完整要么不存在。
-    let tmp = path.with_extension(format!("six.tmp.{}", std::process::id()));
-    fs::write(&tmp, &sixel).with_context(|| format!("write {}", tmp.display()))?;
-    fs::rename(&tmp, &path).with_context(|| format!("rename to {}", path.display()))?;
+    // v0.1.8-develop 起走框架的 zhuye_fs::write_atomic(失败不残留临时文件)。
+    zhuye_fs::write_atomic(&path, &sixel).with_context(|| format!("write {}", path.display()))?;
     Ok(path)
 }
 
