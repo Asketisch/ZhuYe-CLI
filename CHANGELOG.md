@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+(无)
+
+## [0.1.0] — 初始公开版本
+
 ### submodule 修复批次接线
 
 submodule 指针更新到 `e4560bc`(D1–D7 缺陷收口批次)后,把会话恢复链路
@@ -295,7 +299,6 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
 
 - CI 增加 Windows 测试 job（发布产物已含 Windows 包）。
 
-## [0.1.0] — 初始公开版本
 
 - TUI 表现层（ratatui / crossterm fork）：流式 markdown 渲染、60+ slash 命令、
   审批弹窗、Plan mode 闭环、fork/rewind/checkpoint、会话/任务/技能/主题面板、
