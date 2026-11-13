@@ -112,6 +112,7 @@ git add zhuye-agent && git commit            # 指针与代码适配一起提交
 | `d9b88de` | `/permissions` 弹窗修复 + MCP Prompts 工具接入 |
 | `b625b5e` | `/rewind` 弹窗补齐 + clippy 门槛修复 |
 | `ce57d48` | 核心审批设置用例改用无副作用 Prompt 探针,消除 Windows 无 OS 沙箱后端时的平台耦合;TUI 公开 API 与行为零变更,仅接线测试修复 |
+| `e383206` | 核心文件任务存储的 Windows 文件锁修复:锁文件原以 `append(true)` 打开,Rust std 会刻意剔除 `FILE_WRITE_DATA`,句柄不带 `GENERIC_READ`,而 Windows 的 `LockFileEx` 要求句柄具备读权限 —— 加锁直接返回 `ACCESS_DENIED`(code 5),表现为文件任务后端在 Windows 上完全不可用。改为 `read + write` 打开后跨进程串行化恢复正常;TUI 公开 API 与行为零变更,仅接线上游 bug 修复 |
 
 ## 提交 / PR
 
