@@ -219,6 +219,12 @@ jobs:
       - name: Build release binary
         run: cargo build --release -p zhuye-cli --locked
 
+      # performance.py / soak.py 经 tests/functional/tui_pty.py 起真 pty,
+      # 依赖 pyte —— functional-suite job 有安装步骤,这里此前漏了,
+      # 夜间 quality 两个平台在 import 阶段直接 ModuleNotFoundError。
+      - name: Install test dependencies
+        run: python3 -m pip install --upgrade pip pyte
+
       - name: Run performance baseline
         run: python3 tests/performance.py
 
