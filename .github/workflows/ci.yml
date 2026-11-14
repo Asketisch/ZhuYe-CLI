@@ -222,8 +222,15 @@ jobs:
       # performance.py / soak.py 经 tests/functional/tui_pty.py 起真 pty,
       # 依赖 pyte —— functional-suite job 有安装步骤,这里此前漏了,
       # 夜间 quality 两个平台在 import 阶段直接 ModuleNotFoundError。
+      # macOS runner 的系统 python 是 Homebrew 的(PEP 668 外部管理),
+      # 裸 pip install 被拒 —— 与 functional-suite 一致用 setup-python。
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Install test dependencies
-        run: python3 -m pip install --upgrade pip pyte
+        run: python -m pip install --upgrade pip pyte
 
       - name: Run performance baseline
         run: python3 tests/performance.py
