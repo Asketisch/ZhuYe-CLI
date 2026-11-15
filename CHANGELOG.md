@@ -7,6 +7,20 @@
 
 (无)
 
+## [0.1.1] — 2026-11-15
+
+### submodule 接线:引擎 v1.11 + Claude Code 插件
+
+`zhuye-agent` 指针从 v0.1.13 起步跟进到 `771d8efa`(引擎 v0.1.14):
+Claude Code 格式插件可启用(JSON 清单 / `mcpServers` 别名 / 能力快照)、
+v1.11 十二项差距落地、CI 稳定性批次(Windows spill 断言、resume 隔离、
+Rust 1.100 Clippy 适配)。
+
+### boot 用例环境隔离
+
+`test_boot` / pty 沙箱补环境隔离(`ZHUYE_MODEL` 以删除语义下发),
+无 provider 冒烟用例不再被统一 runner 注入的 mock 模型污染。
+
 ## [0.1.0] — 初始公开版本
 
 ### submodule 修复批次接线
