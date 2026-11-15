@@ -11,10 +11,10 @@
 
 ### submodule 接线:引擎 v1.11 + Claude Code 插件
 
-`zhuye-agent` 指针从 v0.1.13 起步跟进到 `771d8efa`(引擎 v0.1.14):
+`zhuye-agent` 指针从 v0.1.13 起步跟进到 `72d7d972`(引擎 v0.1.14):
 Claude Code 格式插件可启用(JSON 清单 / `mcpServers` 别名 / 能力快照)、
 v1.11 十二项差距落地、CI 稳定性批次(Windows spill 断言、resume 隔离、
-Rust 1.100 Clippy 适配)。
+Rust 1.100 Clippy 适配、TaskOutput block=true 只认非空内容)。
 
 ### boot 用例环境隔离
 
