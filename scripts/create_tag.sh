@@ -12,7 +12,7 @@
 #   1. 前置校验:main 分支 + 工作区干净 + 不落后远端 + submodule 指针已提交
 #      且其 HEAD 已推上 ZhuYe 远端(否则全新 clone 取不到指针,CI 必红)
 #   2. 计算目标版本(无参数时当前版本末位 +1;预发布后缀版本必须显式指定)
-#   3. Cargo.toml [package] 版本 bump + cargo check 刷新 Cargo.lock + 事后复核
+#   3. Cargo.toml [workspace.package] 版本 bump + cargo check 刷新 Cargo.lock + 事后复核
 #   4. CHANGELOG 转正:[Unreleased] 段内容移入新版本段并重置
 #   5. 提交 chore(release): v<ver> 并打 annotated tag,连同 main 一起推送
 #
@@ -28,9 +28,9 @@ SUBMODULE="$ROOT/zhuye-agent"
 
 die() { echo "FAIL: $*" >&2; exit 1; }
 
-# ── 版本号读取([package] 段;根清单里依赖版本行不得误伤)──────────────────
+# ── 版本号读取([workspace.package] 段,根清单是虚 manifest;依赖版本行不得误伤)──
 cargo_version() {
-  awk '/^\[package\]$/{f=1;next} /^\[/{f=0} f && /^version = /{print; exit}' \
+  awk '/^\[workspace\.package\]/{f=1;next} /^\[/{f=0} f && /^version = /{print; exit}' \
     "$CARGO_TOML" | cut -d'"' -f2
 }
 
@@ -82,7 +82,7 @@ else
 fi
 
 CUR="$(cargo_version)"
-[ -n "$CUR" ] || die "Cargo.toml [package] 段读不到版本号。"
+[ -n "$CUR" ] || die "Cargo.toml [workspace.package] 段读不到版本号。"
 
 # ── 2. 计算目标版本 ------------------------------------------------------
 if [ -n "$VER_ARG" ]; then
@@ -106,7 +106,7 @@ echo "发版计划:$CUR → $NEW,tag v$NEW(分支 $BRANCH)"
 if $DRY_RUN; then
   echo
   echo "── dry-run:将执行以下动作 ──"
-  echo "  1. bump $CARGO_TOML([package] 段)"
+  echo "  1. bump $CARGO_TOML([workspace.package] 段)"
   echo "  2. cargo check --workspace 刷新 Cargo.lock"
   echo "  3. CHANGELOG [Unreleased] 段转正为 [$NEW]"
   echo "  4. git commit + git tag -a v$NEW"
@@ -124,16 +124,16 @@ import pathlib, sys
 
 cargo, changelog, old, new, today = sys.argv[1:6]
 
-# ── Cargo.toml:仅 [package] 段内的版本行 ──
+# ── Cargo.toml:仅 [workspace.package] 段内的版本行(虚 manifest)──
 p = pathlib.Path(cargo)
 lines, inside, done, out = p.read_text(encoding="utf-8").splitlines(keepends=True), False, False, []
 for ln in lines:
     if ln.startswith("["):
-        inside = ln.rstrip("\n") == "[package]"
+        inside = ln.rstrip("\n") == "[workspace.package]"
     if inside and not done and ln.rstrip("\n") == f'version = "{old}"':
         ln, done = f'version = "{new}"\n', True
     out.append(ln)
-assert done, f"{cargo} 的 [package] 段中未找到 version = \"{old}\""
+assert done, f"{cargo} 的 [workspace.package] 段中未找到 version = \"{old}\""
 p.write_text("".join(out), encoding="utf-8")
 
 # ── CHANGELOG:[Unreleased] 段体移入新版本段 ──
