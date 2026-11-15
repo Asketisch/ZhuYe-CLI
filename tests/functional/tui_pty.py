@@ -141,8 +141,15 @@ class Sandbox:
         )
         return cls(home=home, cwd=cwd)
 
-    def env(self, extra: dict[str, str] | None = None) -> dict[str, str]:
-        """派生子进程 env:HOME 指向隔离目录,其余继承当前进程。"""
+    def env(self, extra: dict[str, str | None] | None = None) -> dict[str, str]:
+        """派生子进程 env:HOME 指向隔离目录,其余继承当前进程。
+
+        extra 值为 `None` 表示从继承环境中**剔除**该键 —— 统一 runner 会给
+        每个任务 `setdefault ZHUYE_MODEL=mock`(tests/runner.py,离线约定),
+        而 `TuiSession` 的 `env` 参数是**合并语义**(以 os.environ 为底),
+        boot 类用例要测「无 provider / TOML 说了算」必须真正删掉该键,
+        仅在传入副本上 pop 无效。
+        """
         env = dict(os.environ)
         env["HOME"] = str(self.home)
         # 屏蔽启动期 GitHub releases 探测 —— 离线环境不卡启动。
@@ -151,7 +158,11 @@ class Sandbox:
         if not env.get("TERM") or env["TERM"] == "dumb":
             env["TERM"] = "xterm-256color"
         if extra:
-            env.update(extra)
+            for key, value in extra.items():
+                if value is None:
+                    env.pop(key, None)
+                else:
+                    env[key] = value
         return env
 
     def mock_env(self, script: Path | None = None, **extra: str) -> dict[str, str]:

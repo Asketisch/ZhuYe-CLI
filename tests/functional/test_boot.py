@@ -116,10 +116,13 @@ def test_missing_provider_exits_with_error(sandbox: Sandbox) -> None:
     from tui_pty import TuiSession
 
     # 显式清掉 provider 变量:boot 需要 provider,缺配置应快速失败而不是挂死。
-    env = sandbox.env()
-    env.pop("ZHUYE_MODEL", None)
-    env.pop("OPENAI_API_KEY", None)
-    env.pop("ANTHROPIC_API_KEY", None)
+    # 剔除语义(值 None)—— 合并语义下 pop 删不掉 runner 注入的底座键,
+    # 见 `Sandbox.env` 注释。
+    env: dict[str, str | None] = {
+        "ZHUYE_MODEL": None,
+        "OPENAI_API_KEY": None,
+        "ANTHROPIC_API_KEY": None,
+    }
     with TuiSession(sandbox, env=env, cols=100, rows=30) as s:
         import time
 
@@ -168,12 +171,20 @@ def _write_config(sandbox: Sandbox, body: str) -> None:
     (sandbox.home / ".zhuye" / "config.toml").write_text(body)
 
 
-def _boot_env(sandbox: Sandbox) -> dict[str, str]:
-    """启动 env:清掉 provider/model 相关变量,让 TOML 说了算。"""
-    env = sandbox.env()
-    for key in ("ZHUYE_MODEL", "ZHUYE_PROVIDER", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"):
-        env.pop(key, None)
-    return env
+def _boot_env(sandbox: Sandbox) -> dict[str, str | None]:
+    """启动 env:清掉 provider/model 相关变量,让 TOML 说了算。
+
+    用**剔除语义**(值为 None):`TuiSession` 的 env 参数是合并语义,
+    runner 门禁恒注入 `ZHUYE_MODEL=mock`(tests/runner.py 离线约定),
+    仅在传入副本上 pop 删不掉底座环境里的该键 —— 详见 `Sandbox.env` 注释。
+    """
+    _ = sandbox  # 保留签名便于调用方统一;剔除语义不再需要读 sandbox
+    return {
+        "ZHUYE_MODEL": None,
+        "ZHUYE_PROVIDER": None,
+        "OPENAI_API_KEY": None,
+        "ANTHROPIC_API_KEY": None,
+    }
 
 
 def _await_exit(s, timeout: float = 30.0) -> int | None:
