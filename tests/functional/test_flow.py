@@ -66,9 +66,13 @@ def _seed_session(sandbox: Sandbox, sid: str, msg: str) -> Path:
 
 
 def test_approval_grant_executes_tool(tui, mock_script) -> None:
-    """W1 审批批准:tool_call(bash) 弹审批条,y 后工具执行、输出上屏。"""
+    """W1 审批批准:tool_call(bash) 弹审批条,y 后工具执行、输出上屏。
+
+    F04 起纯读命令(echo/ls)自动放行不弹审批 —— 本测试改用写命令
+    `touch`(always-write)验证审批流。
+    """
     script = mock_script(
-        [tool_call("bash", {"command": "echo W1_PROBE_OK"}), text_reply("W1_AFTER")]
+        [tool_call("bash", {"command": "touch W1_PROBE_OK"}), text_reply("W1_AFTER")]
     )
     with tui(script=script) as s:
         s.wait_boot(timeout=30)
@@ -79,17 +83,18 @@ def test_approval_grant_executes_tool(tui, mock_script) -> None:
         assert "[Y]es" in txt and "[N]o" in txt, "应给出 y/n 按键提示"
 
         s.type_text("y")
-        # 审批条本身展示命令文本(`echo W1_PROBE_OK`),不能等输出子串 ——
+        # 审批条本身展示命令文本(`touch W1_PROBE_OK`),不能等输出子串 ——
         # 专等只有执行后才会出现的 `✓ bash` 工具成功行。
         txt = s.wait(lambda t: "✓ bash" in t, timeout=20, label="✓ bash")
-        assert "W1_PROBE_OK" in txt, f"批准后工具输出应上屏:\n{txt[-300:]}"
+        # touch 无 stdout —— 工具成功行(✓ bash)出现即证明批准后已执行。
+        # 命令文本由审批条展示(touch W1_PROBE_OK),不在此断言。
         assert not s.has_panic()
 
 
 def test_approval_deny_rejects_tool(tui, mock_script) -> None:
-    """W2 审批拒绝:n 后工具不执行,给出拒绝原因。"""
+    """W2 审批拒绝:n 后工具不执行,给出拒绝原因。F04 起用写命令触发审批。"""
     script = mock_script(
-        [tool_call("bash", {"command": "echo W2_SHOULD_NOT_RUN"}), text_reply("W2_AFTER")]
+        [tool_call("bash", {"command": "touch W2_SHOULD_NOT_RUN"}), text_reply("W2_AFTER")]
     )
     with tui(script=script) as s:
         s.wait_boot(timeout=30)
