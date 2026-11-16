@@ -2558,6 +2558,8 @@ fn handle_key(
                 zhuye_protocol::ReviewDecision::Approve => "Approved",
                 zhuye_protocol::ReviewDecision::Deny { .. } => "Denied",
                 zhuye_protocol::ReviewDecision::ApproveForSession => "Always allow",
+                // F06:拒绝且本会话不再问。
+                zhuye_protocol::ReviewDecision::RejectForSession { .. } => "Never ask again",
             };
             state.history.push(adapter::UiHistoryItem::Notice(format!(
                 "{label}: {}",
