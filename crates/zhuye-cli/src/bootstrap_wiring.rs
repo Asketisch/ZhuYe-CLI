@@ -863,6 +863,9 @@ mod tests {
             marker: None,
             disable_default_patterns: None,
             extra_patterns: Some(vec!["(unclosed".to_string()]),
+            // F03 起 SanitizeSection 增加 `pii` 档位(子模块 86f75e3),
+            // 此处只测非法 regex 回退,显式 None 即关闭 PII 脱敏。
+            pii: None,
         };
         let _ = build_sanitizer(Some(&section));
     }
