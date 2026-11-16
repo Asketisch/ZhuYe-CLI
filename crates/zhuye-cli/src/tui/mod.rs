@@ -3399,6 +3399,9 @@ fn handle_key(
                         }
                         state.history.push(adapter::UiHistoryItem::Notice(detail));
                     }
+                    // F01:安全段 —— 查 prompt_guard 裁决统计,应答事件经
+                    // 事件泵送达后在对话流渲染(见 conversion::GuardStats)。
+                    emit_op(thread, event_tx, zhuye_protocol::Op::QueryGuardStats);
                     return Ok(false);
                 }
                 // ── v1.x Tier 4: 新增 slash 命令派发 ───────────────────

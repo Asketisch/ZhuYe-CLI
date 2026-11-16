@@ -335,6 +335,20 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
                 "未接线"
             },
         )),
+        // F01 `Op::QueryGuardStats` 的应答:prompt_guard 裁决统计(安全段)。
+        // `/status` 触发后由事件泵送达;guard 关闭时 enabled=false 计数全零。
+        GuardStats(gs) => UiEventKind::Notice(format!(
+            "🛡 prompt_guard: {} · 定义拦 {}/{} · 输出拦 {}/{}",
+            if gs.enabled {
+                "已开启(默认)"
+            } else {
+                "已关闭"
+            },
+            gs.definitions_blocked,
+            gs.definitions_reviewed,
+            gs.outputs_blocked,
+            gs.outputs_reviewed,
+        )),
     };
     Some(UiEvent { kind })
 }
@@ -933,5 +947,45 @@ mod tests {
             }
             other => panic!("expected AskUserRequested, got {other:?}"),
         }
+    }
+
+    /// F01:`guard_stats` 应答 → 一行安全段 Notice(开启态 + 四计数)。
+    #[test]
+    fn guard_stats_becomes_visible_notice() {
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            zhuye_protocol::event_msg::EventMsg::GuardStats(zhuye_protocol::GuardStatsEvent {
+                enabled: true,
+                definitions_blocked: 2,
+                definitions_reviewed: 1,
+                outputs_blocked: 5,
+                outputs_reviewed: 3,
+            }),
+        );
+        let out = convert_event(ev).expect("应转换为 UiEvent");
+        let text = match &out.kind {
+            UiEventKind::Notice(t) => t.clone(),
+            other => panic!("期望 Notice,得到 {other:?}"),
+        };
+        assert!(text.contains("prompt_guard"), "{text}");
+        assert!(text.contains("已开启"), "{text}");
+        assert!(text.contains('2') && text.contains('5'), "{text}");
+    }
+
+    /// F01:guard 关闭态文案 —— 不能把「关闭」渲染成「已开启」。
+    #[test]
+    fn guard_stats_disabled_says_so() {
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            zhuye_protocol::event_msg::EventMsg::GuardStats(
+                zhuye_protocol::GuardStatsEvent::default(),
+            ),
+        );
+        let out = convert_event(ev).expect("应转换为 UiEvent");
+        let text = match &out.kind {
+            UiEventKind::Notice(t) => t.clone(),
+            other => panic!("期望 Notice,得到 {other:?}"),
+        };
+        assert!(text.contains("已关闭"), "{text}");
     }
 }
