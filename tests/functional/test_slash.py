@@ -79,6 +79,9 @@ MATRIX: list[tuple[str, str, str, str]] = [
     ("?", "", "panel", "Transcript (Esc / Ctrl+T to close)"),
     ("tasks", "", "panel", "Tasks & Agents (Esc / Ctrl+T to close"),
     ("agents", "", "panel", "Tasks & Agents (Esc / Ctrl+T to close"),
+    # F49 快照分屏:打开 transcript pager 覆盖层,断言恒定渲染的 pager
+    # 标题(notice 被 overlay 遮挡,不可作为断言目标)。
+    ("split", "", "panel", "Subagent split view (SNAPSHOT"),
     ("exit", "", "exit", ""),
     ("quit", "", "exit", ""),
     # ── placeholder:被识别但本构建未接入 ─────────────────────────────
