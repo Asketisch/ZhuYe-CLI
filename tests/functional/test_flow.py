@@ -91,8 +91,14 @@ def test_approval_grant_executes_tool(tui, mock_script) -> None:
         assert not s.has_panic()
 
 
-def test_approval_deny_rejects_tool(tui, mock_script) -> None:
-    """W2 审批拒绝:n 后工具不执行,给出拒绝原因。F04 起用写命令触发审批。"""
+def test_approval_deny_rejects_tool(tui, mock_script, sandbox) -> None:
+    """W2 审批拒绝:n 后工具不执行,给出拒绝原因。F04 起用写命令触发审批。
+
+    断言口径:被拒命令是否执行**只看文件系统**(工作区不应出现该文件)与
+    工具行状态(无成功行)。不在屏幕上断言命令文本缺席 —— 审批条与工具
+    失败行(核心 M5a 起 `ToolCallEnd` 带完整参数)都会展示命令文本,
+    按子串缺席判定会假红。
+    """
     script = mock_script(
         [tool_call("bash", {"command": "touch W2_SHOULD_NOT_RUN"}), text_reply("W2_AFTER")]
     )
@@ -105,7 +111,8 @@ def test_approval_deny_rejects_tool(tui, mock_script) -> None:
         txt = s.wait_text("Approval denied", timeout=20)
         assert "denied by user" in txt, f"应给出用户拒绝原因:\n{txt[-300:]}"
         assert "✗ bash" in txt, "应有工具失败行"
-        assert "W2_SHOULD_NOT_RUN" not in txt, "被拒命令不应执行"
+        assert "✓ bash" not in txt, "被拒命令不应产生成功工具行"
+    assert not sandbox.workspace_files("W2_SHOULD_NOT_RUN"), "被拒命令不应执行(工作区不应留下文件)"
 
 
 # ── AskUser 面板 ──────────────────────────────────────────────────────────
