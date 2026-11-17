@@ -23,7 +23,7 @@ use crate::tui_core::tui::FrameRequester;
 use crate::viewport::live_region_height;
 use crate::viewport::prepare_bottom_viewport;
 use crossterm::SynchronizedUpdate;
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent};
 use crossterm::terminal::size as term_size;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Style};
@@ -709,6 +709,28 @@ fn handle_event(
         }
     }
 
+    // F49:鼠标事件(仅在 mouse 开关开启时终端才会发 Event::Mouse ——
+    // TerminalGuard 只在开关启用时 EnableMouseCapture)。滚轮/审批区点击
+    // 统一转成合成 KeyEvent,复用现有键盘路径(overlay 翻页 / 全屏历史
+    // 滚动 / 审批 y/n/a/s),不引入第二套滚动或审批逻辑。
+    if let Event::Mouse(mouse) = &event {
+        let viewport = guard.terminal().viewport_area;
+        let screen = guard.terminal().last_known_screen_size;
+        return match mouse_to_synthetic_key(mouse, state, viewport, (screen.width, screen.height)) {
+            Some(synthetic) => handle_event(
+                synthetic,
+                state,
+                guard,
+                thread,
+                event_tx,
+                history_tail,
+                frame_requester,
+                fullscreen,
+            ),
+            None => Ok(false),
+        };
+    }
+
     // Overlay(transcript / diff / tasks / session)独占键位。
     let overlay_open = state.transcript.is_some()
         || state.diff_overlay.is_some()
@@ -730,35 +752,7 @@ fn handle_event(
                 return Ok(false);
             }
             Event::Key(key) => {
-                let page = 10usize;
-                // transcript/diff 用 TranscriptPager;tasks 用 TasksPager。
-                if let Some(ref mut pager) =
-                    state.transcript.as_mut().or(state.diff_overlay.as_mut())
-                {
-                    match key.code {
-                        KeyCode::Up | KeyCode::Char('k') => pager.scroll_up(1),
-                        KeyCode::Down | KeyCode::Char('j') => pager.scroll_down(1, page),
-                        KeyCode::PageUp => pager.page_up(page),
-                        KeyCode::PageDown | KeyCode::Char(' ') => pager.page_down(page),
-                        KeyCode::Home => pager.jump_top(),
-                        KeyCode::End => pager.jump_bottom(page),
-                        _ => {}
-                    }
-                } else if let Some(ref mut pager) = state
-                    .tasks_overlay
-                    .as_mut()
-                    .or(state.session_overlay.as_mut())
-                {
-                    match key.code {
-                        KeyCode::Up | KeyCode::Char('k') => pager.page_up(1),
-                        KeyCode::Down | KeyCode::Char('j') => pager.page_down(1, usize::MAX),
-                        KeyCode::PageUp => pager.page_up(page),
-                        KeyCode::PageDown | KeyCode::Char(' ') => pager.page_down(page, usize::MAX),
-                        KeyCode::Home => pager.jump_top(),
-                        KeyCode::End => pager.jump_bottom(usize::MAX),
-                        _ => {}
-                    }
-                }
+                overlay_scroll_key(state, key.code);
                 return Ok(false);
             }
             _ => return Ok(false),
@@ -999,6 +993,175 @@ fn emit_op(
             }
         }
     });
+}
+
+// ── F49:鼠标支持 ─────────────────────────────────────────────────────
+//
+// 设计:鼠标事件**不**引入第二套滚动/审批逻辑,全部转成合成 KeyEvent 走
+// 既有键盘路径(handle_event 递归一次;合成键是 Key 事件,不会再进鼠标
+// 分支,递归深度恒为 1)。
+//
+// 覆盖面(有意收窄,避免任意坐标点击的复杂度):
+// - 滚轮 → PageUp/PageDown:overlay 内翻页、全屏模式滚历史;inline 主屏
+//   无应用内滚动机制(PageUp/PageDown 本就无操作),原生 scrollback 滚轮
+//   行为在启用捕获后由终端让渡给应用 —— 如需翻历史请用 Ctrl+T overlay
+//   或 --fullscreen,这是启用鼠标的已知代价。
+// - 左键点击 → 仅当命中审批条 `[Y]es / [N]o / [A]ll / [S]cope` 快捷键区
+//   才注入对应按键;其余坐标一律忽略。
+
+/// 鼠标事件 → 合成 KeyEvent(不命中任何受支持区域 → None,事件被忽略)。
+fn mouse_to_synthetic_key(
+    mouse: &MouseEvent,
+    state: &UiState,
+    viewport: Rect,
+    screen: (u16, u16),
+) -> Option<Event> {
+    use crossterm::event::MouseEventKind;
+    // checkpoint rewind 确认 modal 独占:鼠标不注入任何键(与键盘路径
+    // 「modal 独占键位」的优先级一致)。
+    if state.checkpoint_rewind_sha.is_some() {
+        return None;
+    }
+    match mouse.kind {
+        MouseEventKind::ScrollUp => Some(synthetic_key(KeyCode::PageUp)),
+        MouseEventKind::ScrollDown => Some(synthetic_key(KeyCode::PageDown)),
+        MouseEventKind::Up(MouseButton::Left) => {
+            if viewport.is_empty() {
+                return None;
+            }
+            let ch = approval_hint_hit(state, viewport, screen, mouse.column, mouse.row)?;
+            Some(synthetic_key(KeyCode::Char(ch)))
+        }
+        _ => None,
+    }
+}
+
+/// 构造无修饰符的合成 KeyEvent。
+fn synthetic_key(code: KeyCode) -> Event {
+    Event::Key(KeyEvent::new(code, KeyModifiers::NONE))
+}
+
+/// 审批 hint 行的快捷键命中区(字符偏移,与 `approval_hint` 渲染的文本一致)。
+///
+/// 返回 `(注入按键, 起始列, 结束列 exclusive)`,按 hint 行内字符序排列。
+/// 文本由 `approval_scope::approval_hint` 拼接而来,此处只做 token 定位,
+/// 保证渲染与命中永远同源。
+fn approval_hint_targets(is_bash: bool) -> Vec<(char, usize, usize)> {
+    let line = crate::approval_scope::approval_hint(is_bash);
+    let text: String = line.spans.iter().map(|s| s.content.to_string()).collect();
+    let locate = |needle: &str| -> Option<(usize, usize)> {
+        let byte_start = text.find(needle)?;
+        let start = text[..byte_start].chars().count();
+        Some((start, start + needle.chars().count()))
+    };
+    let mut targets = Vec::new();
+    if let Some(range) = locate("[Y]es") {
+        targets.push(('y', range.0, range.1));
+    }
+    if let Some(range) = locate("[N]o") {
+        targets.push(('n', range.0, range.1));
+    }
+    // `[A]ll`([A]lways 的前缀冲突安全:`[A]lways` 不含字面 `[A]ll`)。
+    if is_bash {
+        if let Some(range) = locate("[A]ll") {
+            targets.push(('a', range.0, range.1));
+        }
+        if let Some(range) = locate("[S]cope") {
+            targets.push(('s', range.0, range.1));
+        }
+    } else if let Some(range) = locate("[A]lways") {
+        targets.push(('a', range.0, range.1));
+    }
+    targets
+}
+
+/// 审批条快捷键区命中测试:点击坐标 → 对应按键字符(y/n/a/s)。
+///
+/// 布局与 `draw` / `draw_fullscreen` 的底部锚定堆叠一致(自下而上:
+/// status → composer → ask_user → question → approval);视口高度不足以
+/// 完整容纳审批块时(期望高度被钳制的极小屏)保守放弃,防误点。
+fn approval_hint_hit(
+    state: &UiState,
+    viewport: Rect,
+    screen: (u16, u16),
+    col: u16,
+    row: u16,
+) -> Option<char> {
+    let pending = state.pending_approval.as_ref()?;
+    let is_bash = crate::approval_scope::is_bash_approval(pending);
+    let approval_h = adapter::approval_block_height(pending);
+    let composer_h = state.composer.desired_height(viewport.width);
+    let question_h = state
+        .pending_question
+        .as_ref()
+        .map(adapter::question_panel_height)
+        .unwrap_or(0);
+    let ask_user_h = if state.pending_ask_user.is_some() {
+        adapter::ask_user_bar_height()
+    } else {
+        0
+    };
+    let status_h = history_render::statusline::hud_height(screen.1);
+
+    let below = status_h
+        .saturating_add(composer_h)
+        .saturating_add(ask_user_h)
+        .saturating_add(question_h);
+    // hint 是审批块(带边框)的最后一条内行:块底往上第 2 行。
+    let hint_row = viewport.bottom().saturating_sub(below + 2);
+    // 极小屏钳制防御:hint 行必须仍在视口内,且审批块没有被截断。
+    if hint_row < viewport.y + 1 || (below + approval_h) > viewport.height {
+        return None;
+    }
+    if row != hint_row {
+        return None;
+    }
+    // hint 行渲染在边框内:内容从 viewport.x + 1 开始(Paragraph 无 wrap,
+    // hint 文本是纯 ASCII,列号即字符偏移)。
+    let inner_x = viewport.x + 1;
+    let char_index = col.saturating_sub(inner_x) as usize;
+    approval_hint_targets(is_bash)
+        .into_iter()
+        .find(|(_, start, end)| char_index >= *start && char_index < *end)
+        .map(|(ch, _, _)| ch)
+}
+
+/// overlay(transcript / diff / tasks / session)打开时的翻页键映射。
+///
+/// transcript/diff 用 TranscriptPager(行级滚动);tasks/session 用
+/// TasksPager(页级滚动)。返回 true 表示事件已被消费。
+fn overlay_scroll_key(state: &mut UiState, code: KeyCode) -> bool {
+    let page = 10usize;
+    // transcript/diff 用 TranscriptPager;tasks 用 TasksPager。
+    if let Some(ref mut pager) = state.transcript.as_mut().or(state.diff_overlay.as_mut()) {
+        match code {
+            KeyCode::Up | KeyCode::Char('k') => pager.scroll_up(1),
+            KeyCode::Down | KeyCode::Char('j') => pager.scroll_down(1, page),
+            KeyCode::PageUp => pager.page_up(page),
+            KeyCode::PageDown | KeyCode::Char(' ') => pager.page_down(page),
+            KeyCode::Home => pager.jump_top(),
+            KeyCode::End => pager.jump_bottom(page),
+            _ => {}
+        }
+        return true;
+    }
+    if let Some(ref mut pager) = state
+        .tasks_overlay
+        .as_mut()
+        .or(state.session_overlay.as_mut())
+    {
+        match code {
+            KeyCode::Up | KeyCode::Char('k') => pager.page_up(1),
+            KeyCode::Down | KeyCode::Char('j') => pager.page_down(1, usize::MAX),
+            KeyCode::PageUp => pager.page_up(page),
+            KeyCode::PageDown | KeyCode::Char(' ') => pager.page_down(page, usize::MAX),
+            KeyCode::Home => pager.jump_top(),
+            KeyCode::End => pager.jump_bottom(usize::MAX),
+            _ => {}
+        }
+        return true;
+    }
+    false
 }
 
 /// 插件 slash 命令展开(镜像 zhuye-exec serve 的 `expand_plugin_submission`):
@@ -2257,6 +2420,36 @@ fn format_lsp_diagnostics(state: &UiState) -> String {
         "/lsp: {}\n  诊断文档: {docs} · 诊断条数: {diags}",
         reg.status_line()
     )
+}
+
+/// `/ide` 命令的本地实现:IDE/LSP 集成状态快照(诚实版,无开关)。
+///
+/// 引擎没有「运行时启停 LSP」的 Op —— server 由 `[lsp_servers]` 配置在
+/// 启动期拉起,生命周期事件实时进对话流。这里只汇总当前快照 + 指引;
+/// 诊断详情指向 `/lsp`,配置入口指向 `~/.zhuye/config.toml`。
+fn format_ide_snapshot(state: &UiState) -> String {
+    match state.lsp_diagnostics.as_ref() {
+        Some(reg) => format!(
+            "/ide: IDE integration status\n  servers: launched from [lsp_servers] config at startup (runtime start/stop is not supported by the engine)\n  lifecycle: started/failed events stream into this session as notices\n  diagnostics: {} docs, {} entries cached\n  tips: /lsp shows diagnostic details; edit [lsp_servers] in ~/.zhuye/config.toml and restart to change servers",
+            reg.document_count(),
+            reg.diagnostic_count()
+        ),
+        None => "/ide: no language server connected (LSP not configured or not started).\n  servers come from the [lsp_servers] section of ~/.zhuye/config.toml at startup;\n  runtime start/stop is not supported by the engine. /lsp shows diagnostics once a server is connected.".to_string(),
+    }
+}
+
+/// `/personality <name>` → 提示词库层名(`.zhuye/prompts/<layer>.md` 的 stem)。
+///
+/// 归一化:trim + 小写 + 空白折叠为 `-`,让 `My Style` → `personality-my-style`
+/// 这类输入能对上文件命名惯例。层内容仍以磁盘文件为准。
+fn personality_layer_name(name: &str) -> String {
+    let normalized = name
+        .trim()
+        .to_ascii_lowercase()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join("-");
+    format!("personality-{normalized}")
 }
 
 /// M3:`/model` 输入 → 完整 `provider/model` spec 并经 registry 校验。
@@ -3755,11 +3948,40 @@ fn handle_key(
                     return Ok(false);
                 }
                 SlashOutcome::Personality { arg } => {
+                    // F49:/personality 接通引擎 prompt 层(Op::PromptCommand)。
+                    // - 无参 → List:引擎回 PromptList(可用层 + 当前模型生效层),
+                    //   经会话泵/conversion 渲染成 Notice(与 /prompt list 同款)。
+                    // - 带参 → Switch { layer: "personality-<name>" }:映射到
+                    //   `.zhuye/prompts/personality-<name>.md` 层文件名。
+                    //   应答事件经 per-submission 通道 + 会话扇出双路发送,这里
+                    //   与 SlashOutcome::Prompt 一致立即 drop handle,交给会话泵
+                    //   渲染,避免同一条 Notice 重复入列。
+                    //
+                    // 诚实边界:引擎当前把 Switch 的 layer 槽位当全量重扫用
+                    // (聚焦切换是预留槽位,尚未实现),应答 PromptSwitched 会
+                    // 回显 action 名并带最新生效层。真正聚焦还需引擎侧支持,
+                    // 此处如实提示,不伪造"已切换"。
+                    use zhuye_protocol::{Op, Submission};
+                    let action = match arg.as_deref() {
+                        None => zhuye_protocol::PromptAction::List,
+                        Some(name) => zhuye_protocol::PromptAction::Switch {
+                            layer: Some(personality_layer_name(name)),
+                        },
+                    };
+                    let thread = Arc::clone(thread);
+                    tokio::spawn(async move {
+                        let sub = Submission::with_id(
+                            uuid::Uuid::new_v4().to_string(),
+                            Op::PromptCommand { action },
+                        );
+                        drop(thread.submit(sub).await);
+                    });
                     let msg = match arg.as_deref() {
-                        None => {
-                            "/personality: Open personality picker (not yet wired).".to_string()
-                        }
-                        Some(name) => format!("/personality: set to '{name}' (not yet wired)."),
+                        None => "/personality: querying prompt layers — available + active layers follow as a notice.".to_string(),
+                        Some(name) => format!(
+                            "/personality: requested layer '{}' — engine rescanned the prompt library; the layer focuses only once the engine honors the switch slot (see /prompt list for available + active layers).",
+                            personality_layer_name(name)
+                        ),
                     };
                     state.history.push(adapter::UiHistoryItem::Notice(msg));
                     return Ok(false);
@@ -3801,9 +4023,15 @@ fn handle_key(
                     return Ok(false);
                 }
                 SlashOutcome::ToggleIde => {
-                    state.history.push(adapter::UiHistoryItem::Notice(
-                        "/ide: IDE integration toggle (not yet wired).".into(),
-                    ));
+                    // F49:/ide → IDE/LSP 集成状态快照(诚实版)。
+                    //
+                    // 引擎侧没有「运行时启停 LSP」的 Op:server 由 `[lsp_servers]`
+                    // 配置在启动期拉起,生命周期事件(lsp_server_started/failed)
+                    // 经 conversion 实时进对话流,诊断缓存在
+                    // state.lsp_diagnostics(DiagnosticRegistry)。因此本命令只
+                    // 显示快照 + 指引,不伪造开关 —— 切换只能改配置后重启。
+                    let snapshot = format_ide_snapshot(state);
+                    state.history.push(adapter::UiHistoryItem::Notice(snapshot));
                     return Ok(false);
                 }
                 SlashOutcome::OpenRewindSelect => {
@@ -5918,5 +6146,341 @@ mod draw_tests {
             QuestionPanelAction::None
         ));
         assert!(state.pending_question.as_ref().unwrap().selections[0].is_empty());
+    }
+}
+
+#[cfg(test)]
+mod mouse_tests {
+    use super::*;
+    use crate::events::PendingApproval;
+
+    fn mouse(kind: crossterm::event::MouseEventKind, column: u16, row: u16) -> MouseEvent {
+        MouseEvent {
+            kind,
+            column,
+            row,
+            modifiers: KeyModifiers::NONE,
+        }
+    }
+
+    fn bash_approval() -> PendingApproval {
+        PendingApproval {
+            id: "ap-1".into(),
+            summary: "bash: rm -rf /".into(),
+            kind: zhuye_protocol::ApprovalKind::Tool {
+                tool_name: "bash".into(),
+                args: serde_json::json!({ "command": "rm -rf /" }),
+            },
+        }
+    }
+
+    fn plain_approval() -> PendingApproval {
+        PendingApproval {
+            id: "ap-2".into(),
+            summary: "web_fetch https://example.com".into(),
+            kind: zhuye_protocol::ApprovalKind::Tool {
+                tool_name: "web_fetch".into(),
+                args: serde_json::json!({ "url": "https://example.com" }),
+            },
+        }
+    }
+
+    /// 审批 hint 行在视口中的绝对行号(与 draw 的底部锚定堆叠一致)。
+    fn hint_row_for(state: &UiState, viewport: Rect, screen: (u16, u16)) -> u16 {
+        let status_h = history_render::statusline::hud_height(screen.1);
+        let composer_h = state.composer.desired_height(viewport.width);
+        let question_h = state
+            .pending_question
+            .as_ref()
+            .map(adapter::question_panel_height)
+            .unwrap_or(0);
+        let ask_user_h = if state.pending_ask_user.is_some() {
+            adapter::ask_user_bar_height()
+        } else {
+            0
+        };
+        viewport
+            .bottom()
+            .saturating_sub(status_h + composer_h + ask_user_h + question_h + 2)
+    }
+
+    #[test]
+    fn mouse_scroll_translates_to_paging_keys() {
+        // 滚轮 → PageUp/PageDown:overlay 翻页与全屏历史滚动共用这一转换。
+        let state = UiState::default();
+        let viewport = Rect::new(0, 0, 80, 24);
+        let up = mouse_to_synthetic_key(
+            &mouse(crossterm::event::MouseEventKind::ScrollUp, 0, 0),
+            &state,
+            viewport,
+            (80, 24),
+        );
+        assert!(
+            matches!(&up, Some(Event::Key(k)) if k.code == KeyCode::PageUp),
+            "ScrollUp → PageUp, 实为 {up:?}"
+        );
+        let down = mouse_to_synthetic_key(
+            &mouse(crossterm::event::MouseEventKind::ScrollDown, 0, 0),
+            &state,
+            viewport,
+            (80, 24),
+        );
+        assert!(
+            matches!(&down, Some(Event::Key(k)) if k.code == KeyCode::PageDown),
+            "ScrollDown → PageDown, 实为 {down:?}"
+        );
+        // 移动/拖拽等其余鼠标事件一律忽略(不做任意坐标点击)。
+        assert!(
+            mouse_to_synthetic_key(
+                &mouse(crossterm::event::MouseEventKind::Moved, 5, 5),
+                &state,
+                viewport,
+                (80, 24)
+            )
+            .is_none()
+        );
+        assert!(
+            mouse_to_synthetic_key(
+                &mouse(
+                    crossterm::event::MouseEventKind::Drag(crossterm::event::MouseButton::Left),
+                    5,
+                    5
+                ),
+                &state,
+                viewport,
+                (80, 24)
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn mouse_wheel_scrolls_transcript_overlay() {
+        // 鼠标事件 → 滚动结果(端到端:合成键 + overlay 翻页映射)。
+        let lines: Vec<Line<'static>> = (0..60).map(|i| Line::from(format!("line {i}"))).collect();
+        let mut state = UiState::default();
+        state.transcript = Some(TranscriptPager::new(lines));
+        let viewport = Rect::new(0, 0, 80, 24);
+        let screen = (80u16, 24u16);
+
+        let bottom = state.transcript.as_ref().unwrap().scroll_offset;
+        // 滚轮上 → PageUp → pager 上翻 10 行。
+        let ev = mouse_to_synthetic_key(
+            &mouse(crossterm::event::MouseEventKind::ScrollUp, 0, 0),
+            &state,
+            viewport,
+            screen,
+        )
+        .expect("ScrollUp 必须转成合成键");
+        let Event::Key(k) = ev else {
+            panic!("应为 Key 事件");
+        };
+        assert!(overlay_scroll_key(&mut state, k.code));
+        let after_up = state.transcript.as_ref().unwrap().scroll_offset;
+        assert_eq!(after_up, bottom.saturating_sub(10), "滚轮上翻 10 行");
+
+        // 滚轮下 → PageDown → pager 下翻(page_down 钳到可视窗口上限,
+        // 不会越过 len-page)。
+        let ev = mouse_to_synthetic_key(
+            &mouse(crossterm::event::MouseEventKind::ScrollDown, 0, 0),
+            &state,
+            viewport,
+            screen,
+        )
+        .expect("ScrollDown 必须转成合成键");
+        let Event::Key(k) = ev else {
+            panic!("应为 Key 事件");
+        };
+        assert!(overlay_scroll_key(&mut state, k.code));
+        assert!(
+            state.transcript.as_ref().unwrap().scroll_offset > after_up,
+            "滚轮下翻应回滚(offset {after_up} → {})",
+            state.transcript.as_ref().unwrap().scroll_offset
+        );
+        // 底部锚点记录仍在(未消耗)。
+        assert_eq!(bottom, 59);
+    }
+
+    #[test]
+    fn mouse_ignored_while_rewind_confirm_modal_open() {
+        // checkpoint rewind 确认 modal 独占:滚轮也不注入键。
+        let mut state = UiState::default();
+        state.checkpoint_rewind_sha = Some("deadbeef".into());
+        assert!(
+            mouse_to_synthetic_key(
+                &mouse(crossterm::event::MouseEventKind::ScrollUp, 0, 0),
+                &state,
+                Rect::new(0, 0, 80, 24),
+                (80, 24)
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn approval_hint_targets_cover_yes_no_and_always() {
+        // 非 bash 审批: [Y]es / [N]o / [A]lways allow。
+        // 渲染文本为 " [Y]es /  [N]o /  [A]lways allow "。
+        let targets = approval_hint_targets(false);
+        assert_eq!(
+            targets,
+            vec![('y', 1, 6), ('n', 10, 14), ('a', 18, 26)],
+            "实际 {targets:?}"
+        );
+    }
+
+    #[test]
+    fn approval_hint_targets_cover_bash_all_and_scope() {
+        // bash 审批: [Y]es / [N]o / [A]ll / [S]cope (this cmd only)。
+        let targets = approval_hint_targets(true);
+        assert_eq!(
+            targets,
+            vec![('y', 1, 6), ('n', 10, 14), ('a', 18, 23), ('s', 27, 34)],
+            "实际 {targets:?}"
+        );
+    }
+
+    #[test]
+    fn approval_hint_hit_clicks_yes_no_always() {
+        let mut state = UiState::default();
+        state.pending_approval = Some(plain_approval());
+        let viewport = Rect::new(0, 0, 80, 24);
+        let screen = (80u16, 24u16);
+        let hint_row = hint_row_for(&state, viewport, screen);
+
+        // [Y]es 的 '[' 在 hint 行内偏移 1(内容从 viewport.x+1 起渲染)。
+        assert_eq!(
+            approval_hint_hit(&state, viewport, screen, 2, hint_row),
+            Some('y'),
+            "点 [Y]es → 注入 y"
+        );
+        assert_eq!(
+            approval_hint_hit(&state, viewport, screen, 11, hint_row),
+            Some('n'),
+            "点 [N]o → 注入 n"
+        );
+        assert_eq!(
+            approval_hint_hit(&state, viewport, screen, 19, hint_row),
+            Some('a'),
+            "点 [A]lways → 注入 a"
+        );
+        // 非 bash 审批没有 [S]cope。
+        assert_eq!(
+            approval_hint_hit(&state, viewport, screen, 28, hint_row),
+            None
+        );
+        // hint 行之外(内容区 / 边框)不命中。
+        assert_eq!(
+            approval_hint_hit(&state, viewport, screen, 2, hint_row - 1),
+            None
+        );
+        assert_eq!(
+            approval_hint_hit(&state, viewport, screen, 0, hint_row),
+            None
+        );
+    }
+
+    #[test]
+    fn approval_hint_hit_bash_scope_column() {
+        let mut state = UiState::default();
+        state.pending_approval = Some(bash_approval());
+        let viewport = Rect::new(0, 0, 80, 24);
+        let screen = (80u16, 24u16);
+        let hint_row = hint_row_for(&state, viewport, screen);
+        assert_eq!(
+            approval_hint_hit(&state, viewport, screen, 28, hint_row),
+            Some('s')
+        );
+    }
+
+    #[test]
+    fn mouse_click_on_approval_injects_key_event() {
+        let mut state = UiState::default();
+        state.pending_approval = Some(plain_approval());
+        let viewport = Rect::new(0, 0, 80, 24);
+        let screen = (80u16, 24u16);
+        let hint_row = hint_row_for(&state, viewport, screen);
+
+        let ev = mouse_to_synthetic_key(
+            &mouse(
+                crossterm::event::MouseEventKind::Up(crossterm::event::MouseButton::Left),
+                2,
+                hint_row,
+            ),
+            &state,
+            viewport,
+            screen,
+        )
+        .expect("命中 [Y]es 必须产出合成键");
+        let Event::Key(k) = ev else {
+            panic!("应为 Key 事件");
+        };
+        assert_eq!(k.code, KeyCode::Char('y'));
+        assert_eq!(k.modifiers, KeyModifiers::NONE, "合成键无修饰符");
+
+        // 没有审批时点击任何位置都忽略。
+        let mut empty = UiState::default();
+        empty.pending_approval = None;
+        assert!(
+            mouse_to_synthetic_key(
+                &mouse(
+                    crossterm::event::MouseEventKind::Up(crossterm::event::MouseButton::Left),
+                    2,
+                    hint_row
+                ),
+                &empty,
+                viewport,
+                screen
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn approval_hint_hit_skips_when_viewport_too_small() {
+        // 极小屏:审批块放不下(期望高度被钳制)时保守放弃,防误点。
+        let mut state = UiState::default();
+        state.pending_approval = Some(plain_approval());
+        let screen = (80u16, 10u16);
+        let viewport = Rect::new(0, 0, 80, 3);
+        let composer_h = state.composer.desired_height(viewport.width);
+        let hint_row = viewport
+            .bottom()
+            .saturating_sub(history_render::statusline::hud_height(screen.1) + composer_h + 2);
+        // hint_row 落在视口顶部边框之内 → 直接放弃(布局已失真)。
+        assert_eq!(
+            approval_hint_hit(&state, viewport, screen, 2, hint_row),
+            None
+        );
+    }
+
+    #[test]
+    fn personality_layer_name_normalizes_input() {
+        assert_eq!(personality_layer_name("concise"), "personality-concise");
+        assert_eq!(personality_layer_name("  Concise "), "personality-concise");
+        assert_eq!(personality_layer_name("My Style"), "personality-my-style");
+        assert_eq!(
+            personality_layer_name("Terminal  Professional"),
+            "personality-terminal-professional"
+        );
+    }
+
+    #[test]
+    fn ide_snapshot_without_lsp_mentions_config_and_no_fake_toggle() {
+        // 诚实原则:引擎没有运行时启停 LSP 的 Op,/ide 不得伪造开关。
+        let state = UiState::default();
+        let text = format_ide_snapshot(&state);
+        assert!(text.contains("not supported"), "{text}");
+        assert!(text.contains("[lsp_servers]"), "{text}");
+        assert!(text.contains("/lsp"), "{text}");
+    }
+
+    #[test]
+    fn ide_snapshot_with_registry_shows_diagnostics() {
+        let mut state = UiState::default();
+        state.lsp_diagnostics = Some(std::sync::Arc::new(zhuye_lsp::DiagnosticRegistry::new()));
+        let text = format_ide_snapshot(&state);
+        assert!(text.contains("0 docs, 0 entries cached"), "{text}");
+        assert!(text.contains("not supported"), "{text}");
     }
 }

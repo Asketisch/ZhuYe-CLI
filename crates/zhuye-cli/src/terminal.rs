@@ -31,6 +31,9 @@ pub struct TerminalGuard {
     alt_screen: bool,
     /// 是否全屏模式：启动即进备用屏且不再退回主屏（overlay 与之共享同一屏）。
     fullscreen: bool,
+    /// F49:本会话是否启用了鼠标捕获（由 [`mouse_capture_enabled`] 决定）。
+    /// 记下来供 Drop 精确恢复 —— 未启用时不该多发 DisableMouseCapture。
+    mouse: bool,
 }
 
 impl TerminalGuard {
@@ -42,6 +45,15 @@ impl TerminalGuard {
         // 主屏 + bracketed paste；不启 alternate scroll（与 Reflect 主界面一致）。
         crossterm::execute!(stdout, crossterm::event::EnableBracketedPaste)?;
 
+        // F49:鼠标捕获是 opt-in（默认关,防止改变现有用户的滚轮行为）。
+        // 开启后滚轮事件以 Event::Mouse 到达,tui/mod.rs 的 handle_event
+        // 负责把它转成翻页/审批点击。
+        let mouse = mouse_capture_enabled();
+        if mouse {
+            crossterm::execute!(stdout, crossterm::event::EnableMouseCapture)?;
+            install_mouse_panic_hook();
+        }
+
         // 启动时探测默认前景/背景色，供 user_message_style / TextArea 可见性使用。
         probe_and_cache_default_colors();
 
@@ -52,6 +64,7 @@ impl TerminalGuard {
             terminal,
             alt_screen: false,
             fullscreen,
+            mouse,
         };
         if fullscreen {
             // 全屏模式启动即进备用屏，后续 overlay 共享此屏。
@@ -127,12 +140,78 @@ impl Drop for TerminalGuard {
         // 退出时始终真正离开备用屏（全屏模式也恢复主屏，避免终端残留）。
         let _ = self.leave_alt_screen_inner();
         let _ = self.terminal.show_cursor();
+        // F49:只在本会话确实启用过鼠标捕获时才发恢复序列(幂等,但少写
+        // 无意义转义)。panic 路径另有 install_mouse_panic_hook 兜底。
+        if self.mouse {
+            let _ = crossterm::execute!(
+                self.terminal.backend_mut(),
+                crossterm::event::DisableMouseCapture,
+            );
+        }
         let _ = crossterm::execute!(
             self.terminal.backend_mut(),
             crossterm::event::DisableBracketedPaste,
         );
         let _ = crossterm::terminal::disable_raw_mode();
     }
+}
+
+/// F49:鼠标捕获是否启用（默认关 —— 硬要求,防止改变现有用户的滚轮行为）。
+///
+/// 优先级：
+/// 1. 环境变量 `ZHUYE_TUI_MOUSE`：`1`/`true` 强制开，`0`/`false` 强制关；
+/// 2. 配置 `~/.zhuye/config.toml` 的 `[tui] mouse = true`；
+/// 3. 缺省关。
+///
+/// 引擎 schema（zhuye-config `ReflectConfig`）还没有 `[tui]` 段 —— serde 忽略
+/// 未知键,所以用户写了该段不会破坏加载;TUI 侧直接读原始 TOML 消费,等引擎
+/// schema 收编该段后可平滑迁移。
+pub fn mouse_capture_enabled() -> bool {
+    let env = std::env::var("ZHUYE_TUI_MOUSE").ok();
+    let cfg = config_tui_mouse();
+    resolve_mouse_flag(env.as_deref(), cfg)
+}
+
+/// 纯函数版开关解析（供单测）。
+fn resolve_mouse_flag(env: Option<&str>, cfg_mouse: Option<bool>) -> bool {
+    match env.map(str::trim).filter(|s| !s.is_empty()) {
+        Some("1" | "true" | "TRUE" | "True") => true,
+        Some("0" | "false" | "FALSE" | "False") => false,
+        // 未知值按关（保守）。
+        Some(_) => false,
+        None => cfg_mouse.unwrap_or(false),
+    }
+}
+
+/// 读 `~/.zhuye/config.toml` 原始 TOML 里的 `[tui] mouse` 布尔值。
+///
+/// 读失败 / 未配置 / 类型不对 → `None`（调用方按缺省关处理）。文件不存在是
+/// 常态（首次运行）,静默返回 None,不产生任何告警。
+fn config_tui_mouse() -> Option<bool> {
+    let path = zhuye_config::default_config_path()?;
+    let text = std::fs::read_to_string(path).ok()?;
+    let value: toml::Value = toml::from_str(&text).ok()?;
+    value
+        .get("tui")
+        .and_then(|tui| tui.get("mouse"))
+        .and_then(|m| m.as_bool())
+}
+
+/// F49:安装 panic hook,崩溃路径也恢复终端（禁用鼠标捕获 + 显示光标）。
+///
+/// 链式调用先前 hook：先恢复终端,再把 panic 信息交给原有处理（标准错误
+/// 输出 / Sentry 等既有行为不被吞掉）。多次进入 TUI 时重复安装也无害 ——
+/// 每次都把"当前 hook"包进新 hook,形成链,恢复序列幂等。
+fn install_mouse_panic_hook() {
+    let prev = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let _ = crossterm::execute!(
+            io::stdout(),
+            crossterm::event::DisableMouseCapture,
+            crossterm::cursor::Show
+        );
+        prev(info);
+    }));
 }
 
 /// 写入 OSC 序列(如 `ESC]0;titleBEL`)。
@@ -267,5 +346,43 @@ mod terminal_title_tests {
             .take(80)
             .collect();
         assert_eq!(sanitized.len(), 80, "should be truncated to 80 chars");
+    }
+}
+
+#[cfg(test)]
+mod mouse_flag_tests {
+    use super::resolve_mouse_flag;
+
+    /// F49:鼠标捕获默认必须关 —— 硬要求,防止改变现有用户的滚轮行为。
+    #[test]
+    fn mouse_flag_defaults_off() {
+        assert!(!resolve_mouse_flag(None, None));
+        assert!(!resolve_mouse_flag(None, Some(false)));
+    }
+
+    /// 配置 `[tui] mouse = true` 单独生效;env 未设置时是唯一事实来源。
+    #[test]
+    fn mouse_flag_config_enables() {
+        assert!(resolve_mouse_flag(None, Some(true)));
+        // env 显式关可以压过配置开(逃生舱)。
+        assert!(!resolve_mouse_flag(Some("0"), Some(true)));
+        assert!(!resolve_mouse_flag(Some("false"), Some(true)));
+    }
+
+    /// env 显式开/关优先于配置。
+    #[test]
+    fn mouse_flag_env_overrides_config() {
+        assert!(resolve_mouse_flag(Some("1"), Some(false)));
+        assert!(resolve_mouse_flag(Some("true"), None));
+        assert!(resolve_mouse_flag(Some("1"), Some(true)));
+    }
+
+    /// 未知 env 值按关(保守),空串视为未设置(回落配置)。
+    #[test]
+    fn mouse_flag_unknown_env_values_are_off() {
+        assert!(!resolve_mouse_flag(Some("yes"), None));
+        assert!(!resolve_mouse_flag(Some("on"), None));
+        assert!(resolve_mouse_flag(Some(""), Some(true)), "空串=未设置");
+        assert!(resolve_mouse_flag(Some(" 1 "), None), "值两侧空白被 trim");
     }
 }
