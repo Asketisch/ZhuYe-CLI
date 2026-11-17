@@ -1908,7 +1908,7 @@ fn dispatch_slash_command(
             ));
         }
         SlashCommand::Permissions => {
-            // /permissions — 循环切换权限模式（Plan → Prompt → AcceptEdits → Auto）。
+            // /permissions — 循环切换权限模式(三段:默认 Auto → Ask Prompt → Plan → Auto)。
             emit_op(thread, event_tx, zhuye_protocol::Op::CyclePermissionMode);
         }
         _ => {

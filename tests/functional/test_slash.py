@@ -68,7 +68,8 @@ MATRIX: list[tuple[str, str, str, str]] = [
     ("rm-session", "", "wired", "Permanently delete current session files"),
     ("plan", "refactor the auth module", "wired", "Plan request:"),
     ("mode", "plan", "wired", "[plan]"),
-    ("permissions", "", "wired", "[accept_edits]"),
+    # 三段工作模式轮换第一步:默认(Auto)→ Ask(Prompt)。
+    ("permissions", "", "wired", "[prompt]"),
     ("exit-plan", "", "wired", "[1] Auto / [2] Manual / [3]/[Esc] Revise"),
     ("exitplan", "", "wired", "[1] Auto / [2] Manual / [3]/[Esc] Revise"),
     ("ref", "", "wired", "switch search modes"),

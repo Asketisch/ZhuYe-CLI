@@ -546,7 +546,7 @@ pub fn dispatch_slash(text: &str) -> SlashOutcome {
                     Some(mode) => SlashOutcome::SetMode { mode },
                     None => SlashOutcome::Handled {
                         notice: Some(format!(
-                            "/mode: unknown mode '{arg}'. Try: auto / prompt / plan / accept_edits / bypass"
+                            "/mode: unknown mode '{arg}'. Try: auto(默认) / prompt(Ask) / plan;已弃用: accept_edits / bubble / deny / bypass(仍可直达)"
                         )),
                     },
                 }
