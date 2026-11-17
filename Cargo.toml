@@ -108,6 +108,8 @@ thiserror          = "1"
 clap               = { version = "4", features = ["derive"] }
 pollster           = "0.4"
 reqwest            = { version = "0.12", features = ["json", "stream", "gzip", "rustls-tls"] }
+# M5a:zhuye-memory 的 SQLite 条目版本库(FTS5)以 workspace 继承引用
+rusqlite           = { version = "0.41", features = ["bundled"] }
 tracing            = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 futures            = "0.3"

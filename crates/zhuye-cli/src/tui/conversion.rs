@@ -787,6 +787,8 @@ mod tests {
             is_error: false,
             elapsed_ms: 5,
             child_id: None,
+            // Protocol v0 additive:本轮不涉及参数回填,置 None。
+            args: None,
         };
         let ev =
             zhuye_protocol::Event::new("id", zhuye_protocol::event_msg::EventMsg::ToolCallEnd(te));
