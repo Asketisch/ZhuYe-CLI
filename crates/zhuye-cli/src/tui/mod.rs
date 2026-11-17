@@ -449,6 +449,7 @@ pub async fn run_async(
             state.vim_enabled,
             state.permission_mode,
             state.plan_enter_request.is_some(),
+            crate::terminal::screen_reader_enabled(),
         ));
         state.metrics_line = Some(history_render::statusline::render_metrics_line(
             &state.palette,
@@ -748,6 +749,8 @@ fn handle_event(
                 state.diff_overlay = None;
                 state.tasks_overlay = None;
                 state.session_overlay = None;
+                // F49:transcript 槽可能被 /split 快照占用,Esc 关闭即失效。
+                state.split_view_active = false;
                 guard.leave_alt_screen()?;
                 return Ok(false);
             }
@@ -2190,6 +2193,31 @@ fn open_tasks_overlay(state: &mut UiState) {
     state.tasks_overlay = Some(crate::tasks_pager::TasksPager::default());
 }
 
+/// F49:打开 `/split` 快照分屏 —— 最近 2 个活跃子代理的最近输出,左右两栏
+/// 渲染进 transcript pager(复用 [`TranscriptPager`],每行截断到半宽)。
+///
+/// 诚实标注:这是**快照分屏**(按下命令那一刻的数据),不是实时双流;
+/// 再按一次 `/split` 重新快照,`/split off` 关闭。没有子代理活动时给出
+/// 空态说明行(不伪造双栏)。
+fn open_split_overlay(state: &mut UiState) {
+    // 宽度减 2(与 wrap_width 同款余量),钳到至少 8 列防极窄分屏下溢。
+    let width = term_size()
+        .map(|(w, _)| w as usize)
+        .unwrap_or(80)
+        .saturating_sub(2)
+        .max(8);
+    let feeds = state.split_feeds.recent_active(2);
+    let lines = crate::split_view::render_snapshot_lines(&feeds, width);
+    let mut pager = TranscriptPager::new(lines);
+    // 快照是短内容,从头读更自然(与 /plugin overlay 同款)。
+    pager.scroll_offset = 0;
+    state.transcript = Some(pager);
+    state.split_view_active = true;
+    state.history.push(adapter::UiHistoryItem::Notice(
+        "/split: snapshot view opened (2 subagents max, /split off to close).".into(),
+    ));
+}
+
 /// 打开 plugin overlay:展示真实已装插件(PluginManager 读盘),
 /// enabled 标志来自 config `[plugins].enabled_plugins`(TUI 无热重载,
 /// 与运行时挂载状态一致)。
@@ -3352,6 +3380,27 @@ fn handle_key(
                 }
                 SlashOutcome::OpenTasks => {
                     open_tasks_overlay(state);
+                    return Ok(false);
+                }
+                SlashOutcome::ToggleSplit { on } => {
+                    // F49:并行分屏视图。**快照分屏**(按需刷新,非实时双流):
+                    // 每次开启都取当前 split_feeds 注册表重新快照。
+                    if on == Some(false) {
+                        if state.split_view_active {
+                            state.transcript = None;
+                            state.split_view_active = false;
+                            guard.leave_alt_screen()?;
+                            state.history.push(adapter::UiHistoryItem::Notice(
+                                "/split: split view closed.".into(),
+                            ));
+                        } else {
+                            state.history.push(adapter::UiHistoryItem::Notice(
+                                "/split: no split view open.".into(),
+                            ));
+                        }
+                        return Ok(false);
+                    }
+                    open_split_overlay(state);
                     return Ok(false);
                 }
                 SlashOutcome::ToggleVim { .. } => {
@@ -5521,6 +5570,7 @@ mod draw_tests {
             false,
             zhuye_protocol::PermissionMode::Auto,
             false,
+            false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
         assert!(s.contains("Context"), "context bar shown: {s}");
@@ -6482,5 +6532,97 @@ mod mouse_tests {
         let text = format_ide_snapshot(&state);
         assert!(text.contains("0 docs, 0 entries cached"), "{text}");
         assert!(text.contains("not supported"), "{text}");
+    }
+}
+
+#[cfg(test)]
+mod split_overlay_tests {
+    use super::*;
+
+    /// F49:open_split_overlay 用最近 2 个子代理的快照填充 transcript 槽,
+    /// 并标记 split_view_active;空注册表 → 诚实空态行,不伪造双栏。
+    #[test]
+    fn open_split_overlay_renders_snapshot_from_split_feeds() {
+        let mut state = UiState::default();
+        state
+            .split_feeds
+            .push_progress("c1", "explorer", "reading src/lib.rs");
+        state
+            .split_feeds
+            .push_progress("c1", "explorer", "found the bug");
+        state
+            .split_feeds
+            .push_progress("c2", "tester", "cargo test ✓");
+        state.split_feeds.apply_status(&[
+            adapter::SubagentView {
+                id: "c1".into(),
+                role: "explorer".into(),
+                running: true,
+                current_tool: Some("Read".into()),
+                iteration: 2,
+                total_tokens: 100,
+            },
+            adapter::SubagentView {
+                id: "c2".into(),
+                role: "tester".into(),
+                running: true,
+                current_tool: None,
+                iteration: 1,
+                total_tokens: 50,
+            },
+        ]);
+        open_split_overlay(&mut state);
+        assert!(state.split_view_active, "split flag set");
+        let pager = state.transcript.expect("transcript holds split snapshot");
+        let s: String = pager
+            .lines
+            .iter()
+            .flat_map(|l| l.spans.iter())
+            .map(|s| s.content.clone())
+            .collect();
+        assert!(s.contains("SNAPSHOT"), "诚实标注快照: {s}");
+        assert!(s.contains("[explorer]"), "左栏 role: {s}");
+        assert!(s.contains("[tester]"), "右栏 role: {s}");
+        assert!(s.contains("found the bug"), "左栏最近输出: {s}");
+        assert!(s.contains("cargo test ✓"), "右栏最近输出: {s}");
+    }
+
+    #[test]
+    fn open_split_overlay_without_subagents_shows_empty_state() {
+        let mut state = UiState::default();
+        open_split_overlay(&mut state);
+        assert!(state.split_view_active);
+        let pager = state.transcript.expect("split transcript opened");
+        let s: String = pager
+            .lines
+            .iter()
+            .flat_map(|l| l.spans.iter())
+            .map(|s| s.content.clone())
+            .collect();
+        assert!(
+            s.contains("no subagent activity"),
+            "空态说明(不伪造双栏): {s}"
+        );
+    }
+
+    /// 快照只取最近 2 个子代理(即使注册表里有 3 个)。
+    #[test]
+    fn open_split_overlay_takes_only_last_two_active_feeds() {
+        let mut state = UiState::default();
+        for (id, line) in [("c1", "one"), ("c2", "two"), ("c3", "three")] {
+            state
+                .split_feeds
+                .push_progress(id, format!("role-{id}").as_str(), line);
+        }
+        open_split_overlay(&mut state);
+        let pager = state.transcript.expect("split transcript opened");
+        let s: String = pager
+            .lines
+            .iter()
+            .flat_map(|l| l.spans.iter())
+            .map(|s| s.content.clone())
+            .collect();
+        assert!(s.contains("three"), "最新 feed 可见: {s}");
+        assert!(!s.contains("[role-c1]"), "只取最近 2 个: {s}");
     }
 }

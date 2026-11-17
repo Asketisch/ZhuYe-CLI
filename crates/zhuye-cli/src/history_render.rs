@@ -310,6 +310,10 @@ pub enum SlashOutcome {
     Copy { n: Option<usize> },
     /// v1.x `/raw [on|off]`：切换 raw scrollback 模式（本地状态）。
     ToggleRaw { on: Option<bool> },
+    /// F49 `/split [on|off]`：并行分屏视图 —— 最近 2 个活跃子代理的最近
+    /// 输出左右两栏渲染到 transcript pager。**快照分屏**（按需刷新,
+    /// 非实时双流）;`on == Some(false)` 关闭。
+    ToggleSplit { on: Option<bool> },
     /// v1.x `/think`：切换 thinking 块显示（本地状态）。
     ToggleThink,
     /// v1.x `/theme [name|cycle|picker]`：切换/选择主题。
@@ -438,6 +442,7 @@ pub fn is_legacy_passthrough_slash(name: &str) -> bool {
             | "effort"
             | "ref"
             | "rm-session"
+            | "split"
     )
 }
 
@@ -460,6 +465,10 @@ pub fn legacy_popup_commands() -> &'static [(&'static str, &'static str)] {
         ("tasks", "open the task list panel"),
         ("effort", "set reasoning effort (low/medium/high)"),
         ("exit-plan", "exit plan mode"),
+        (
+            "split",
+            "snapshot view of the last 2 active subagents, side by side (/split off to close)",
+        ),
     ]
 }
 
@@ -544,6 +553,24 @@ pub fn dispatch_slash(text: &str) -> SlashOutcome {
             }
         }
         "/status" => SlashOutcome::ShowStatus,
+        // F49 `/split [on|off]`:并行分屏视图(快照,最近 2 个活跃子代理)。
+        // 无参 → 开启;/split off → 关闭。
+        "/split" => {
+            let arg = trimmed
+                .split_whitespace()
+                .nth(1)
+                .unwrap_or("")
+                .to_ascii_lowercase();
+            match arg.as_str() {
+                "" | "on" => SlashOutcome::ToggleSplit { on: Some(true) },
+                "off" => SlashOutcome::ToggleSplit { on: Some(false) },
+                other => SlashOutcome::Handled {
+                    notice: Some(format!(
+                        "/split: unknown argument '{other}'. Usage: /split [on|off]"
+                    )),
+                },
+            }
+        }
 
         // ── v1.x Tier 4: 高价值 Op / 状态命令 ──────────────────────────
         // /effort <low|medium|high>
@@ -1014,6 +1041,46 @@ mod sanitize_tests {
             SlashOutcome::ToggleVim { .. } => {}
             other => panic!("/VIM 大小写不敏感, 实为 {other:?}"),
         }
+    }
+
+    /// F49:`/split` dispatch 矩阵(无参 = 开 / off = 关 / 未知参 = 用法提示)。
+    #[test]
+    fn dispatch_slash_split_produces_toggle_intent() {
+        match dispatch_slash("/split") {
+            SlashOutcome::ToggleSplit { on: Some(true) } => {}
+            other => panic!("/split 应产出 ToggleSplit{{on:Some(true)}}, 实为 {other:?}"),
+        }
+        match dispatch_slash("/split on") {
+            SlashOutcome::ToggleSplit { on: Some(true) } => {}
+            other => panic!("/split on 应产出开启意图, 实为 {other:?}"),
+        }
+        match dispatch_slash("/SPLIT OFF") {
+            SlashOutcome::ToggleSplit { on: Some(false) } => {}
+            other => panic!("/split 大小写不敏感, 实为 {other:?}"),
+        }
+        match dispatch_slash("/split off") {
+            SlashOutcome::ToggleSplit { on: Some(false) } => {}
+            other => panic!("/split off 应产出关闭意图, 实为 {other:?}"),
+        }
+        match dispatch_slash("/split bogus") {
+            SlashOutcome::Handled {
+                notice: Some(notice),
+            } => assert!(notice.contains("Usage"), "未知参给用法提示: {notice}"),
+            other => panic!("/split bogus 应为 Handled 用法提示, 实为 {other:?}"),
+        }
+    }
+
+    /// F49:`/split` 是旧式命令 —— composer 侧须放行(否则枚举校验拒绝,
+    /// 永远到不了 dispatch_slash)。
+    #[test]
+    fn split_is_registered_as_legacy_passthrough_and_popup_command() {
+        assert!(is_legacy_passthrough_slash("split"));
+        assert!(
+            legacy_popup_commands()
+                .iter()
+                .any(|(name, desc)| name == &"split" && desc.contains("subagents")),
+            "/split 应登记进命令弹窗供发现"
+        );
     }
 
     #[test]

@@ -57,15 +57,33 @@ pub(crate) fn new_patch_apply_failure(stderr: String) -> PlainHistoryCell {
 }
 
 pub(crate) fn new_view_image_tool_call(path: LegacyAppPathString, cwd: &Path) -> PlainHistoryCell {
+    new_view_image_tool_call_with_note(path, cwd, None)
+}
+
+/// F49:image_view 单元格(可选携带图形通道说明行)。
+///
+/// `note` 来自 [`crate::terminal::image_view_output`]:仅当终端被检测为
+/// kitty graphics 协议且文件是 PNG 时才有值(如
+/// `"kitty graphics: displayed inline (WxH px, N KB)"`)。其余协议
+/// (Sixel 编解码 TODO / None / screen-reader 会话)诚实降级为 None,
+/// 单元格维持原样 —— 只输出元数据行,绝不输出转义序列。
+pub(crate) fn new_view_image_tool_call_with_note(
+    path: LegacyAppPathString,
+    cwd: &Path,
+    note: Option<String>,
+) -> PlainHistoryCell {
     let display_path = path
         .to_inferred_path_uri()
         .map(|path| display_path_for(path.to_abs_path().as_path(), cwd))
         .unwrap_or_else(|| path.into_string());
 
-    let lines: Vec<Line<'static>> = vec![
+    let mut lines: Vec<Line<'static>> = vec![
         vec!["• ".dim(), "Viewed Image".bold()].into(),
         vec!["  └ ".dim(), display_path.dim()].into(),
     ];
+    if let Some(note) = note {
+        lines.push(vec!["  └ ".dim(), note.dim()].into());
+    }
 
     PlainHistoryCell { lines }
 }

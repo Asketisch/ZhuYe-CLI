@@ -29,12 +29,38 @@ fn fmt_tool_elapsed(elapsed_ms: u64) -> String {
 /// - 首行 `✓ name (Nms)` 绿色粗体 / `✗ name (Nms)` 红色(`error=true`)。
 /// - 输出截断到前 [`MAX_OUTPUT_LINES`] 行,超出加 `… (+N more lines)` dim。
 /// - 输出每行 `│   ` 暗灰前缀 + 白字;错误输出标红。
+/// - F49:screen-reader 会话自动折叠为单行摘要(读屏器逐行念多行输出
+///   是噪音),行为见 [`tool_call_cell_with`]。
 pub fn tool_call_cell(
     name: &str,
     output: &str,
     error: bool,
     elapsed_ms: u64,
     args: Option<&str>,
+) -> PlainHistoryCell {
+    tool_call_cell_with(
+        name,
+        output,
+        error,
+        elapsed_ms,
+        args,
+        crate::terminal::screen_reader_enabled(),
+    )
+}
+
+/// [`tool_call_cell`] 的可注入版本(供单测)。
+///
+/// `screen_reader=true` 时富输出折叠为**单行摘要**:只保留头部行
+/// (`✓/✗ name (Nms) · args`)+ 一行 dim 摘要「output: N lines (folded for
+/// screen reader)」,不再逐行展示 ANSI 着色的输出体。diff / 图片等富
+/// 渲染同理由此收口成摘要行。
+pub fn tool_call_cell_with(
+    name: &str,
+    output: &str,
+    error: bool,
+    elapsed_ms: u64,
+    args: Option<&str>,
+    screen_reader: bool,
 ) -> PlainHistoryCell {
     let glyph = if error { "✗" } else { "✓" };
     let head_color = if error { Color::Red } else { Color::Green };
@@ -60,6 +86,18 @@ pub fn tool_call_cell(
 
     let trimmed = output.trim();
     let mut lines = vec![header];
+    // F49:screen-reader 会话 —— 富输出(diff / 图片元数据 / 多行工具结果)
+    // 折叠为单行摘要,不逐行念。
+    if screen_reader {
+        if !trimmed.is_empty() {
+            let total = trimmed.lines().count();
+            lines.push(Line::from(Span::styled(
+                format!("│   output: {total} line(s) (folded for screen reader)"),
+                Style::default().fg(Color::DarkGray),
+            )));
+        }
+        return PlainHistoryCell::new(lines);
+    }
     if !trimmed.is_empty() {
         let all: Vec<&str> = trimmed.lines().collect();
         let total = all.len();
@@ -365,5 +403,58 @@ mod tests {
             .iter()
             .map(|s| s.content.clone().into_owned())
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod screen_reader_cells_tests {
+    use super::*;
+    use crate::tui_core::history_cell::HistoryCell;
+
+    fn plain(cell: &PlainHistoryCell) -> Vec<String> {
+        cell.display_lines(80)
+            .iter()
+            .map(|l| {
+                l.spans
+                    .iter()
+                    .map(|s| s.content.clone().into_owned())
+                    .collect()
+            })
+            .collect()
+    }
+
+    /// F49:screen-reader 开启时工具富输出折叠为单行摘要。
+    #[test]
+    fn screen_reader_folds_tool_output_to_single_summary_line() {
+        let output = "diff --git a/x.rs b/x.rs\n+++ b/x.rs\n@@ -1 +1 @@\n-a\n+b\nmore\nlines";
+        let cell = tool_call_cell_with("Edit", output, false, 120, Some("x.rs"), true);
+        let lines = plain(&cell);
+        assert_eq!(lines.len(), 2, "header + single summary: {lines:?}");
+        assert!(lines[0].contains("✓ Edit"), "header: {lines:?}");
+        assert!(lines[0].contains("x.rs"), "args kept: {lines:?}");
+        assert!(
+            lines[1].contains("output: 7 line(s) (folded for screen reader)"),
+            "summary line: {lines:?}"
+        );
+        // 富内容(行体 / diff 行)不再出现。
+        assert!(!lines[1].contains("diff --git"));
+        assert!(!lines[1].contains("+b"));
+    }
+
+    /// 空输出 → 只有头部行,不产生空摘要。
+    #[test]
+    fn screen_reader_empty_output_has_no_summary_line() {
+        let cell = tool_call_cell_with("Glob", "", false, 5, None, true);
+        assert_eq!(plain(&cell).len(), 1);
+    }
+
+    /// screen-reader 关闭 → 行为与原 tool_call_cell 一致(回归)。
+    #[test]
+    fn screen_reader_off_keeps_truncated_output() {
+        let output = "l1\nl2\nl3";
+        let folded = plain(&tool_call_cell_with("T", output, false, 1, None, true));
+        let normal = plain(&tool_call_cell_with("T", output, false, 1, None, false));
+        assert_eq!(normal.len(), 4, "header + 3 output lines: {normal:?}");
+        assert_eq!(folded.len(), 2, "header + summary: {folded:?}");
     }
 }

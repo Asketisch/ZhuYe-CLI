@@ -126,6 +126,16 @@ pub enum UiEventKind {
     SubagentStatusUpdate {
         children: Vec<SubagentView>,
     },
+    /// F49:子代理进度推送的**结构化**保留(`SubagentProgress` 原件投影)。
+    /// 此前被扁平化成 Notice 文本,child_id 丢失,`/split` 快照分屏无法
+    /// 按子代理聚合最近输出。apply_event 同时做两件事:① 写入
+    /// `state.split_feeds` 注册表(child_id 聚合);② 仍以既有
+    /// `[子代理 role] text` Notice 进对话流(主流程显示不变)。
+    SubagentProgress {
+        child_id: String,
+        role: String,
+        text: String,
+    },
     /// M4:v1.4 工具输出流式增量(单工具的进行中输出)。live 区渲染 tail,
     /// 完整输出仍由 ToolCompleted 落 scrollback,二者互补不重复。
     ToolOutputDelta {
@@ -670,6 +680,19 @@ pub fn apply_event(state: &mut UiState, event: UiEvent) -> Vec<Line<'static>> {
             // 不再向聊天记录推送 "Mode: X → Y" 通知，避免消息堆积。
         }
         UiEventKind::Notice(text) => state.history.push(UiHistoryItem::Notice(text)),
+        UiEventKind::SubagentProgress {
+            child_id,
+            role,
+            text,
+        } => {
+            // F49:① 按子代理聚合最近输出(/split 快照分屏数据源)。
+            state.split_feeds.push_progress(&child_id, &role, &text);
+            // ② 主流程显示保持不变:仍以 Notice 行进对话流(此前
+            // SubagentProgress 在 conversion 层直接扁平化为同款文本)。
+            state
+                .history
+                .push(UiHistoryItem::Notice(format!("[子代理 {role}] {text}")));
+        }
         UiEventKind::ApprovalNeeded { id, summary, kind } => {
             state.pending_approval = Some(PendingApproval { id, summary, kind });
         }
@@ -829,6 +852,9 @@ pub fn apply_event(state: &mut UiState, event: UiEvent) -> Vec<Line<'static>> {
         UiEventKind::SubagentStatusUpdate { children } => {
             // v1.4 查询通道:按 child_id upsert /tasks 的 agents 列表。
             // label 汇总 role / 在跑工具 / 迭代数 / token,终态标 Done。
+            // F49:同步 upsert /split 快照分屏的子代理注册表(QuerySubagents
+            // 应答投影 —— subagent_registry 快照的 CLI 消费处)。
+            state.split_feeds.apply_status(&children);
             for c in &children {
                 let status = if c.running {
                     crate::events::AgentStatus::Running
@@ -1791,5 +1817,96 @@ mod tests {
             !state.interrupt_requested,
             "回合收尾(TurnCompleted 兼收 TurnAborted)应复位中断标记"
         );
+    }
+}
+
+#[cfg(test)]
+mod split_feed_tests {
+    use super::*;
+
+    /// F49:SubagentProgress → 注册表按 child_id 聚合 + 主流程 Notice 不变。
+    #[test]
+    fn subagent_progress_feeds_split_registry_and_keeps_notice_flow() {
+        let mut state = UiState::default();
+        apply_event(
+            &mut state,
+            UiEvent {
+                kind: UiEventKind::SubagentProgress {
+                    child_id: "c1".into(),
+                    role: "explorer".into(),
+                    text: "reading src/lib.rs".into(),
+                },
+            },
+        );
+        apply_event(
+            &mut state,
+            UiEvent {
+                kind: UiEventKind::SubagentProgress {
+                    child_id: "c1".into(),
+                    role: "explorer".into(),
+                    text: "found the bug".into(),
+                },
+            },
+        );
+        apply_event(
+            &mut state,
+            UiEvent {
+                kind: UiEventKind::SubagentProgress {
+                    child_id: "c2".into(),
+                    role: "tester".into(),
+                    text: "cargo test …".into(),
+                },
+            },
+        );
+        // 注册表:两个 feed,c1 聚合两行。
+        assert_eq!(state.split_feeds.len(), 2);
+        let feeds = state.split_feeds.recent_active(8);
+        let c1 = feeds.iter().find(|f| f.id == "c1").unwrap();
+        assert_eq!(c1.lines, vec!["reading src/lib.rs", "found the bug"]);
+        assert_eq!(c1.role, "explorer");
+        // 主流程:每条进度仍以 [子代理 role] Notice 进对话流。
+        assert_eq!(state.history.len(), 3);
+        assert!(matches!(
+            &state.history[0],
+            UiHistoryItem::Notice(t) if t.contains("[子代理 explorer] reading src/lib.rs")
+        ));
+    }
+
+    /// F49:QuerySubagents 快照投影(SubagentStatusUpdate)upsert 注册表状态。
+    #[test]
+    fn subagent_status_upserts_split_registry_state() {
+        let mut state = UiState::default();
+        apply_event(
+            &mut state,
+            UiEvent {
+                kind: UiEventKind::SubagentProgress {
+                    child_id: "c1".into(),
+                    role: "explorer".into(),
+                    text: "old line".into(),
+                },
+            },
+        );
+        apply_event(
+            &mut state,
+            UiEvent {
+                kind: UiEventKind::SubagentStatusUpdate {
+                    children: vec![SubagentView {
+                        id: "c1".into(),
+                        role: "explorer".into(),
+                        running: true,
+                        current_tool: Some("Grep".into()),
+                        iteration: 4,
+                        total_tokens: 42,
+                    }],
+                },
+            },
+        );
+        let feeds = state.split_feeds.recent_active(1);
+        assert_eq!(feeds.len(), 1);
+        assert!(feeds[0].running);
+        assert_eq!(feeds[0].current_tool.as_deref(), Some("Grep"));
+        assert_eq!(feeds[0].iteration, 4);
+        // 输出缓冲不被状态快照清掉。
+        assert_eq!(feeds[0].lines, vec!["old line"]);
     }
 }

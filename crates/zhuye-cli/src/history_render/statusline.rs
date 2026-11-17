@@ -122,6 +122,9 @@ impl ContextUsage {
 /// - `approval_pending`:审批挂起时附 `[y/n]`。
 /// - `usage`:上下文用量(有数据时附 `Context █░░ 6%`)。
 /// - `permission_mode`:会话级权限模式(非 `Auto` 时附 `[plan]` / `[accept_edits]` …)。
+/// - `screen_reader`:F49 读屏模式 —— ① spinner 动画禁用,busy 时输出静态
+///   「运行中」文本(braille 字形对读屏器是噪音);③ 进度条块字形省略,
+///   改为纯文本百分比。
 pub fn render_identity_line(
     palette: &crate::theme::Palette,
     busy: bool,
@@ -134,6 +137,7 @@ pub fn render_identity_line(
     vim_enabled: bool,
     permission_mode: PermissionMode,
     plan_enter_pending: bool,
+    screen_reader: bool,
 ) -> Line<'static> {
     // 颜色走语义角色,不再硬编码 —— `/theme` 切换后这里实时生效。
     let dim = palette.dim();
@@ -141,10 +145,16 @@ pub fn render_identity_line(
     let mut spans: Vec<Span<'static>> = Vec::new();
 
     if busy {
-        spans.push(Span::styled(
-            format!("{} ", spinner_frame(tick)),
-            brand.add_modifier(Modifier::BOLD),
-        ));
+        // F49:screen-reader 模式下 spinner 动画禁用 —— 输出静态「运行中」
+        // 文本(不再随 tick 翻转 braille 字形)。
+        if screen_reader {
+            spans.push(Span::styled("运行中 ".to_string(), brand));
+        } else {
+            spans.push(Span::styled(
+                format!("{} ", spinner_frame(tick)),
+                brand.add_modifier(Modifier::BOLD),
+            ));
+        }
     }
     spans.push(Span::styled(model.to_string(), brand));
     // v1.x:实际命中的模型 spec(多 provider 路由 / 故障转移时可能不同于
@@ -167,8 +177,17 @@ pub fn render_identity_line(
         spans.push(Span::styled(cwd.to_string(), dim));
     }
 
-    // 上下文用量条(有数据才显示)。
-    if let Some(seg) = context_bar_span(palette, usage) {
+    // 上下文用量条(有数据才显示)。F49:screen-reader 模式下进度条块字形
+    // (█░)对读屏器是一串无意义符号 —— 改为纯文本百分比,动画/图形省略。
+    if screen_reader {
+        if let Some(pct) = usage.percent() {
+            spans.push(Span::styled(" · ", dim));
+            spans.push(Span::styled(
+                format!("Context {pct}%"),
+                palette.ok().add_modifier(Modifier::BOLD),
+            ));
+        }
+    } else if let Some(seg) = context_bar_span(palette, usage) {
         spans.push(Span::styled(" · ", dim));
         spans.push(seg);
     }
@@ -380,6 +399,7 @@ pub fn render_status_line(
         vim_enabled,
         PermissionMode::default(),
         false,
+        false,
     )
 }
 
@@ -397,6 +417,7 @@ fn identity_fg_colors(palette: &crate::theme::Palette) -> Vec<Option<ratatui::st
         /*vim_enabled*/ false,
         PermissionMode::Plan,
         /*plan_enter_pending*/ false,
+        /*screen_reader*/ false,
     );
     line.spans.iter().map(|s| s.style.fg).collect()
 }
@@ -459,6 +480,7 @@ mod tests {
             false,
             PermissionMode::Auto,
             false,
+            false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
         assert!(s.contains("reflect"), "model: {s}");
@@ -483,6 +505,7 @@ mod tests {
             false,
             PermissionMode::Auto,
             false,
+            false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
         assert!(s.contains("git:(main)"), "git branch: {s}");
@@ -501,6 +524,7 @@ mod tests {
             &ContextUsage::default(),
             false,
             PermissionMode::Auto,
+            false,
             false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
@@ -521,6 +545,7 @@ mod tests {
             false,
             PermissionMode::Auto,
             false,
+            false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
         assert!(s.contains("[y/n]"), "approval hint: {s}");
@@ -539,6 +564,7 @@ mod tests {
             &ContextUsage::default(),
             false,
             PermissionMode::Auto,
+            false,
             false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
@@ -565,6 +591,7 @@ mod tests {
             &usage,
             false,
             PermissionMode::Auto,
+            false,
             false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
@@ -593,6 +620,7 @@ mod tests {
             false,
             PermissionMode::Auto,
             false,
+            false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
         assert!(s.contains("openai/gpt-4o"), "hit model: {s}");
@@ -616,6 +644,7 @@ mod tests {
             &usage,
             false,
             PermissionMode::Auto,
+            false,
             false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
@@ -660,6 +689,7 @@ mod tests {
             false,
             PermissionMode::Plan,
             false,
+            false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
         assert!(s.contains("[plan]"), "Plan 模式应显示 [plan] 段: {s}");
@@ -678,6 +708,7 @@ mod tests {
             &ContextUsage::default(),
             false,
             PermissionMode::Auto,
+            false,
             false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
@@ -698,6 +729,7 @@ mod tests {
             &ContextUsage::default(),
             true,
             PermissionMode::Auto,
+            false,
             false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
@@ -723,6 +755,7 @@ mod tests {
             false,
             PermissionMode::Auto,
             false,
+            false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
         assert!(s.contains("Ctrl+C to quit"), "应有退出提示: {s}");
@@ -741,6 +774,7 @@ mod tests {
             &ContextUsage::default(),
             false,
             PermissionMode::Auto,
+            false,
             false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
@@ -860,5 +894,113 @@ mod tests {
         let line = render_metrics_line(&crate::theme::Palette::DARK, &history);
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
         assert!(s.contains("no tool calls yet"), "ignores non-tool: {s}");
+    }
+}
+
+#[cfg(test)]
+mod screen_reader_tests {
+    use super::*;
+
+    /// F49:screen-reader 开启时 spinner 动画禁用 —— busy 下输出静态
+    /// 「运行中」文本,不出现 braille 字形,也不随 tick 翻转。
+    #[test]
+    fn screen_reader_busy_shows_static_label_instead_of_spinner() {
+        let line = render_identity_line(
+            &crate::theme::Palette::DARK,
+            /*busy*/ true,
+            /*tick*/ 2,
+            "m",
+            "p",
+            None,
+            false,
+            &ContextUsage::default(),
+            false,
+            PermissionMode::Auto,
+            false,
+            /*screen_reader*/ true,
+        );
+        let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
+        assert!(s.contains("运行中"), "static busy label: {s}");
+        assert!(
+            !SPINNER_FRAMES.iter().any(|f| s.contains(f)),
+            "no braille glyphs: {s}"
+        );
+        // tick 变化不改变输出(静态文本,无动画帧)。
+        let again = render_identity_line(
+            &crate::theme::Palette::DARK,
+            true,
+            7,
+            "m",
+            "p",
+            None,
+            false,
+            &ContextUsage::default(),
+            false,
+            PermissionMode::Auto,
+            false,
+            true,
+        );
+        let s2: String = again.spans.iter().map(|s| s.content.clone()).collect();
+        assert_eq!(s, s2, "static label must not animate with tick");
+    }
+
+    /// F49:screen-reader 开启时上下文进度条块字形省略,改为纯文本百分比。
+    #[test]
+    fn screen_reader_context_bar_is_textual() {
+        let usage = ContextUsage {
+            window_size: Some(100_000),
+            last_input_tokens: Some(45_000),
+            last_cached_tokens: Some(0),
+            total_cost_usd: None,
+            ..ContextUsage::default()
+        };
+        let line = render_identity_line(
+            &crate::theme::Palette::DARK,
+            false,
+            0,
+            "m",
+            "p",
+            None,
+            false,
+            &usage,
+            false,
+            PermissionMode::Auto,
+            false,
+            true,
+        );
+        let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
+        assert!(s.contains("Context 45%"), "textual percent: {s}");
+        assert!(!s.contains('█'), "no bar glyphs: {s}");
+        assert!(!s.contains('░'), "no bar glyphs: {s}");
+    }
+
+    /// screen-reader 关闭时行为不变(回归):busy 显示 braille spinner,
+    /// 有数据时上下文条带块字形。
+    #[test]
+    fn screen_reader_off_keeps_spinner_and_bar() {
+        let usage = ContextUsage {
+            window_size: Some(100_000),
+            last_input_tokens: Some(45_000),
+            last_cached_tokens: Some(0),
+            total_cost_usd: None,
+            ..ContextUsage::default()
+        };
+        let line = render_identity_line(
+            &crate::theme::Palette::DARK,
+            true,
+            2,
+            "m",
+            "p",
+            None,
+            false,
+            &usage,
+            false,
+            PermissionMode::Auto,
+            false,
+            false,
+        );
+        let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
+        assert!(s.starts_with("⠹ "), "spinner: {s}");
+        assert!(s.contains('█') || s.contains('░'), "bar glyphs: {s}");
     }
 }

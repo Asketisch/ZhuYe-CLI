@@ -355,6 +355,13 @@ pub struct UiState {
     /// v1.x Plan mode:`PlanRequest` 到来时填入,打开进入 plan 模式的确认条。
     /// 用户 `1/3/Esc` 后回送 `Op::PlanApproval` 并清空。
     pub(crate) plan_enter_request: Option<PlanEnterRequestState>,
+    /// F49:`/split` 快照分屏 —— 子代理最近输出注册表(subagent_registry
+    /// 快照的 CLI 侧等价物)。`SubagentProgress` 推送与 `SubagentStatus`
+    /// (QuerySubagents 应答)投影在此按 child_id upsert。
+    pub(crate) split_feeds: crate::split_view::SplitFeedRegistry,
+    /// F49:`/split` 当前是否以快照占据 transcript overlay 槽。
+    /// 关闭(`/split off` / Esc)时据此清槽,不误伤 /help 等其他 transcript。
+    pub(crate) split_view_active: bool,
 }
 
 /// M4:正在运行的工具的输出流状态(v1.4 `ToolCallOutputDelta` 增量渲染)。
@@ -686,6 +693,8 @@ impl Default for UiState {
             needs_terminal_reflow: false,
             loop_state: None,
             plan_enter_request: None,
+            split_feeds: crate::split_view::SplitFeedRegistry::default(),
+            split_view_active: false,
         }
     }
 }

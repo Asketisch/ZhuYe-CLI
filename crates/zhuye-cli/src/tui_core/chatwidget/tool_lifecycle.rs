@@ -15,9 +15,19 @@ impl ChatWidget {
 
     pub(super) fn on_view_image_tool_call(&mut self, path: LegacyAppPathString) {
         self.flush_answer_stream_with_separator();
-        self.add_to_history(history_cell::new_view_image_tool_call(
+        // F49:kitty-graphics 输出通道 —— 协议检测结果门控:仅 Kitty 且文件是
+        // PNG 时内联输出 APC 帧(见 terminal::image_view_output);Sixel(编解码
+        // TODO)/ None / screen-reader 会话一律诚实降级,维持元数据行,不输出
+        // 任何转义序列。
+        let protocol = crate::terminal::detect_graphics_protocol();
+        let abs_path = path
+            .to_inferred_path_uri()
+            .map(|uri| uri.to_abs_path().as_path().to_path_buf());
+        let note = abs_path.and_then(|p| crate::terminal::image_view_output(protocol, &p));
+        self.add_to_history(history_cell::new_view_image_tool_call_with_note(
             path,
             self.config.cwd.as_path(),
+            note,
         ));
         self.request_redraw();
     }

@@ -155,8 +155,10 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
             outcome: cf.outcome,
             rounds: cf.rounds,
         },
-        // v1.4 子代理可观测(推送通道):父代理转发子代理中间进度,
-        // 以 Notice 行实时进对话流(每个子代理的分组视图留待后续迭代)。
+        // v1.4 子代理可观测(推送通道):父代理转发子代理中间进度。
+        // F49:保留结构化投影(child_id / role / text)供 `/split` 快照分屏
+        // 按子代理聚合最近输出;apply_event 仍以既有 `[子代理 role] text`
+        // Notice 进对话流,主流程显示不变(分组视图留待后续迭代)。
         // Message 直接展示文本;ToolBegin/End 的 text 已是工具名,
         // 补省略号/完成标记区分方向。
         SubagentProgress(sp) => {
@@ -169,7 +171,11 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
                     format!("{} ✓", sp.text)
                 }
             };
-            UiEventKind::Notice(format!("[子代理 {}] {}", sp.role, text))
+            UiEventKind::SubagentProgress {
+                child_id: sp.child_id,
+                role: sp.role,
+                text,
+            }
         }
         // v1.4 子代理可观测(查询通道):状态快照 → /tasks 面板 agents
         // 列表实时刷新(apply_event 按 child_id upsert)。映射为本地投影。

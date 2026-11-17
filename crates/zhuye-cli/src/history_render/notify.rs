@@ -49,8 +49,10 @@ impl NotifyTriggers {
                 self.error = Some(msg.clone());
             }
             // 工具调用 / 子代理活动说明这一回合干了实事,值得把人叫回来。
+            // F49:SubagentProgress 与 SubagentStatusUpdate 同属子代理活动。
             UiEventKind::ToolStarted { .. }
             | UiEventKind::ToolCompleted { .. }
+            | UiEventKind::SubagentProgress { .. }
             | UiEventKind::SubagentStatusUpdate { .. } => self.did_work = true,
             _ => {}
         }

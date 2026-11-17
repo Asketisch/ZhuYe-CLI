@@ -34,6 +34,7 @@ mod markdown;
 mod model_list;
 mod picker;
 mod routing_status;
+mod split_view;
 mod tasks_pager;
 mod terminal;
 mod terminal_probe;

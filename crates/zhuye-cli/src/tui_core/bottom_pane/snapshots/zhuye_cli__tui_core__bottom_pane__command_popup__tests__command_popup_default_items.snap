@@ -1,5 +1,6 @@
 ---
-source: crates/reflect-tui/src/tui_core/bottom_pane/command_popup.rs
+source: crates/zhuye-cli/src/tui_core/bottom_pane/command_popup.rs
+assertion_line: 496
 expression: commands
 ---
 /model - choose what model and reasoning effort to use
@@ -56,3 +57,4 @@ expression: commands
 /tasks - open the task list panel
 /effort - set reasoning effort (low/medium/high)
 /exit-plan - exit plan mode
+/split - snapshot view of the last 2 active subagents, side by side (/split off to close)
