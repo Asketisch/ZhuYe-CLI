@@ -112,7 +112,7 @@ ratatui-macros = "0.7"
 rmcp          = { workspace = true }
 diffy         = "0.4"
 shlex         = "1"
-strum         = { version = "0.26", features = ["derive"] }
+strum         = { version = "0.28", features = ["derive"] }
 strum_macros  = "0.26"
 webbrowser    = "1"
 pathdiff      = "0.2"
