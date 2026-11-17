@@ -72,7 +72,7 @@ TASKS: dict[str, dict] = {
     },
     "tui.platform.windows": {
         # T-E20:Windows ConPTY 专项,直接启动 Python 原生适配器。
-        "command": ["python", "tests/conpty.py"],
+        "command": ["python3", "tests/conpty.py"],
         "note": "T-E20:Windows ConPTY 启动 / 输入 / Ctrl+C 冒烟",
         "timeout_s": 1200,
         "os": ["windows"],
@@ -99,21 +99,21 @@ TASKS: dict[str, dict] = {
 
     # ---- 性能、长稳与发布(PLAN §3.4,T-Q01~T-Q08) ----
     "tui.performance": {
-        "command": ["python", "tests/performance.py"],
+        "command": ["python3", "tests/performance.py"],
         "note": "T-Q01~T-Q03:启动 / 长历史 / 输出洪峰性能基线",
         "timeout_s": 1800,
         "os": ["linux", "darwin"],
         "required_on": ["linux", "darwin"],
     },
     "tui.soak": {
-        "command": ["python", "tests/soak.py"],
+        "command": ["python3", "tests/soak.py"],
         "note": "T-Q04:持续 resize / redraw 的存活与 RSS 趋势",
         "timeout_s": 3600,
         "os": ["linux", "darwin"],
         "required_on": ["linux", "darwin"],
     },
     "tui.release": {
-        "command": ["python", "tests/release.py"],
+        "command": ["python3", "tests/release.py"],
         "note": "T-Q05~T-Q07:发布包结构 / 版本 / 本机执行与安装升级卸载冒烟",
         "uses_artifact": True,
         "timeout_s": 600,
