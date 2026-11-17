@@ -4,8 +4,9 @@
 本组把 `tui_pty.KEY_SEQS` 里定义了但无用例引用的按键逐一变成行为断言。
 
 锚点字面量来源(2026-10 实证,证据见 `tests/COVERAGE.md` §K 组):
-  - 权限模式 HUD 段 `[accept_edits]` / `[plan]`   statusline.rs identity 行
-    (实测循环为 Auto(无标记) → AcceptEdits → Plan → Auto,三态)
+  - 权限模式 HUD 段 `[prompt]` / `[plan]`   statusline.rs identity 行
+    (三段工作模式(核心 81776217 起):循环 Auto(默认,无标记)
+    → Prompt(Ask)→ Plan → Auto;accept_edits 等旧档已弃用、不进循环)
   - 复制通知 `⚠ Copied last reply (N chars) to clipboard.`
   - 编辑器通知 `⚠ External editor closed; content loaded into composer.`
   - 历史文件 `~/.zhuye/prompt_history.jsonl` 每行一个**裸 JSON 字符串**
@@ -42,16 +43,17 @@ def _seed_history(sandbox: Sandbox, entries: list[str]) -> Path:
 
 
 def test_shift_tab_cycles_permission_modes(tui) -> None:
-    """K1 Shift+Tab 循环权限模式:Auto(无标记)→ accept_edits → plan → Auto。
+    """K1 Shift+Tab 循环权限模式:Auto(无标记)→ prompt → plan → Auto。
 
-    keymap.rs 注释宣称五模式,实测 HUD 可见的循环是三态 —— 锁定真实行为。
+    核心 81776217 起对齐三段工作模式:轮换第一步改为 Ask(Prompt),
+    accept_edits 等旧档弃用、不进循环(protocol `next_in_ui_cycle`)。
     """
     with tui() as s:
         s.wait_boot(timeout=30)
         s.key("shift+tab")
         s._pump(settle=0.6, max_wait=1.2)
         line = _identity_line(s)
-        assert "[accept_edits]" in line, f"第 1 次应为 accept_edits:{line!r}"
+        assert "[prompt]" in line, f"第 1 次应为 prompt(Ask):{line!r}"
 
         s.key("shift+tab")
         s._pump(settle=0.6, max_wait=1.2)
@@ -61,8 +63,8 @@ def test_shift_tab_cycles_permission_modes(tui) -> None:
         s.key("shift+tab")
         s._pump(settle=0.6, max_wait=1.2)
         line = _identity_line(s)
-        assert "accept_edits" not in line and "[plan]" not in line, (
-            f"第 3 次应回到 Auto(无模式标记):{line!r}"
+        assert "[prompt]" not in line and "[plan]" not in line, (
+            f"第 3 次应回到 Auto(默认,无模式标记):{line!r}"
         )
         assert not s.has_panic()
 

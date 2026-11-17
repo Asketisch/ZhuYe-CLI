@@ -204,7 +204,7 @@
 
 | # | 用例 | 断言锚点 |
 |---|---|---|
-| K1 | Shift+Tab 循环权限模式 | identity 行 `[accept_edits]` → `[plan]` → 无标记(Auto),实测三态循环(见 §6 D11) |
+| K1 | Shift+Tab 循环权限模式 | identity 行 `[prompt]` → `[plan]` → 无标记(Auto),三段工作模式循环(核心 81776217 起,见 §6 D11) |
 | K2 | Ctrl+O 复制最后回复 | `⚠ Copied last reply (N chars) to clipboard.` |
 | K3 | Ctrl+G 外部编辑器往返 | `⚠ External editor closed; content loaded into composer.` + `▶ TEXT_FROM_EDITOR` 提交 |
 | K3b | 全屏模式 Ctrl+G 外部编辑器 | 编辑器前真正离开备用屏(`ESC[?1049l`),退出后重进(`ESC[?1049h`) |
@@ -355,7 +355,7 @@
 | 插件能力 | `bootstrap.rs:409-426` | `Plugin 'x' loaded (…)` 通知 + `/plugin` 面板 |
 | Telemetry | `bootstrap_wiring.rs:75-129` | `~/.zhuye/traces/` 产物 + `traces spans` |
 | 压缩 | `bootstrap.rs` + `reflect-compact` | `🗜 已压缩上下文:…` 通知 |
-| 权限模式 | `Op::CyclePermissionMode` | HUD `[plan]` / `[accept_edits]` 段 |
+| 权限模式 | `Op::CyclePermissionMode` | HUD `[prompt]` / `[plan]` 段 |
 | 工具参数流(`ToolCallArgsDelta`) | `tui/conversion.rs` + `adapter.rs` | 调用行参数摘要 `✓ glob (…) · *.rs` |
 | 会话恢复回放(任意日期 + 轮转副本 + 双 id) | `resume.rs::replay_all`(`reflect_rollout::reader::replay`) | 旧日期会话 `--resume` 历史回填 + 续写原文件(P8);按内部 session id 恢复(P9) |
 | 路由事件(failover / 冷却 / 跨模型降级) | `tui/conversion.rs` + `routing_status.rs` | `↻ 路由切换 · main: …` / `↘ 模型降级 · …` 通知行 |
@@ -430,7 +430,7 @@
 | D8 | **`Ctrl+Shift+D` 快捷键在真实终端不可达**:终端无法区分 Ctrl+D 与 Ctrl+Shift+D(同为字节 `0x04`),crossterm 把 `0x04` 解析成 `Char('d') + CONTROL`(**不带 SHIFT**),而 `keymap.rs` 的 `OpenDiff` 分支要求 `CONTROL|SHIFT` —— 该分支永远命中不了,实际落到 `Ctrl+D → Exit` | `crates/zhuye-cli/src/keymap.rs:88-94`(要求 SHIFT)vs `:60-65`(Ctrl+D 排除 SHIFT);实测见 `test_overlay.py::test_ctrl_shift_d_is_unreachable_from_a_terminal` | 未修(记录)。diff overlay 的实际入口只有 `/diff` |
 | D9 | ~~**坏 `config.toml` 静默回落**~~:`this is [ not valid toml {{{` 这类非法内容不产生任何用户可见告警,TUI 以默认配置照常启动 —— 用户改了配置却不生效时无从得知 | W9 实证(2026-10):进程存活、无 panic、raw 无 config 相关输出 | **已修**:bootstrap 启动前显式体检 config.toml,解析失败在终端打印 `⚠ 警告:<路径> 解析失败(...)`,仍回落默认配置不挡启动 |
 | D10 | **busy 窗口内的 composer 提交被吞且草稿保留**:回合进行中按 Enter,提交内容不上传也不清框;`/loop stop` 在迭代 busy 窗口内提交即失效,且残留草稿会污染后续输入(与 `/loop` 的自动提交叠加尤其明显) | W5 调试实证(2026-10):第 2 轮触发后立刻 stop 无效,拖到空闲窗口才生效;残留草稿使后续 stop 拼成非法命令 | 未修(记录) |
-| D11 | **Shift+Tab 权限模式循环与注释不符**:`keymap.rs:45-100` 注释宣称 Plan/Auto/Prompt/AcceptEdits/Bypass 五模式循环,实测 HUD 可见循环只有三态 Auto → AcceptEdits → Plan → Auto,Prompt / Bypass 到不了 | K1 实证(2026-10):连续 6 次 Shift+Tab 交替出现 `[accept_edits]`/`[plan]`/无标记 | 未修(记录) |
+| D11 | ~~**Shift+Tab 权限模式循环与注释不符**~~:`keymap.rs` 注释宣称五模式循环,旧实测 HUD 可见循环只有三态 Auto → AcceptEdits → Plan → Auto,Prompt / Bypass 到不了 | K1 实证(2026-10):连续 6 次 Shift+Tab 交替出现 `[accept_edits]`/`[plan]`/无标记 | **已对齐**:核心 81776217 起三段工作模式,轮换即 Auto → Prompt(Ask)→ Plan → Auto(`next_in_ui_cycle`),accept_edits/deny/bubble/bypass 弃用、不进循环;CLI 侧注释与 `/mode` 帮助同步(b905335),K1 锚点已更新 |
 | D12 | **整段输入(paste-burst)会丢字符**:一次 `write` 写入的连续按键被当作 bracketed paste 处理,部分字符被吞 —— 实测 `/demo:hello` → `/emo:hello`、`/plugin` → `/lugin`,表现为 slash 弹窗不弹、命令不被识别 | G 组实证(2026-10):`test_plugin.py` 的 G2/G3/G4 在整组跑时**间歇**失败(单跑恒过),屏上可见缺字;与 submodule 升级无关(升级前后各复现一次,基线代码同样复现) | 未修(记录)。测试侧规避:分两段写入 + `_pump` 让出(G2/G3/G4 已按此改);产品侧 paste-burst 的字符丢弃待定 |
 | D13 | **满载下 Ctrl+G 按键间歇丢失**:套件满载连续跑时 `ctrl+g`(0x07)偶发未被处理 —— 编辑器未拉起、无任何通知、composer 草稿原样保留;单跑稳定复现不了 | K3 / K3b 实证(2026-10-27,合并 submodule `e4560bc` 后):全套件跑复现 2 次(K3+K3b 同批)+ 单跑复现 1 次,随后单跑连 7 次全过;失败批次均在 7 分钟连续 pty 压测的高负载窗口。 ede1639 长驻阻塞读取任务事件循环下出现,基线(每轮 spawn poll 任务)同批次未复现 | 未修(记录)。疑与高负载下 fork 版 crossterm poll/read 或输入通道交接时序有关;复现率低,先挂观察 |
 | D15 | **checkpoint 前缀随 submodule 更名,旧 tag 失联**:`9332aa9` 把 checkpoint 实现收编进 `zhuye_git::checkpoint` 时前缀从 `reflect-checkpoint:` / `reflect-cp/` 改名为 `zhuye-checkpoint:` / `zhuye-cp/`;`/checkpoint` 列表按新前缀过滤,**develop 接线前**创建的历史 checkpoint 不再显示、也无法 rewind(提交仍在仓库里,手工 `git reset` 可达) | `zhuye-agent/crates/resources/zhuye-git/src/checkpoint.rs:27-31`;`git tag \| grep reflect-cp` 可列出失联旧 tag | 未修(记录)。更名是 submodule 的既定口径(烛夜更名),属一次性迁移代价 |
