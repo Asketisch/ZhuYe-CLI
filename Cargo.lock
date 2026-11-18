@@ -6788,6 +6788,7 @@ dependencies = [
  "pathdiff",
  "pollster",
  "pretty_assertions",
+ "proptest",
  "pulldown-cmark 0.10.3",
  "rand 0.8.7",
  "ratatui",

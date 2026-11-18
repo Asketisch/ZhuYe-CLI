@@ -68,6 +68,7 @@ make coverage-audit    # = 覆盖自审(有未覆盖命令即失败)
 | `functional/test_keys.py` | K 组:键盘交互(权限循环 / 历史召回 / 外部编辑器 / 复制 / 多行 / vim) |
 | `functional/test_render.py` | V 组:渲染与视觉(宽字符 / 折行 / markdown / 主题 / resize / 小窗) |
 | `functional/test_flow.py` | W 组:工作流与容错(审批 / AskUser / loop / 恢复边界 / 坏输入 / 信号) |
+| `functional/test_differential.py` | D 组:TUI 版本差分(rollout/副作用/屏幕标记/panic;真实差分需两个二进制,条件任务) |
 | `functional/test_coverage_audit.py` | 覆盖自审门禁(新增命令忘了加用例 → 失败) |
 | `rust/run.sh` | Rust 侧总入口 |
 | `rust/workspace_tests.sh` | `cargo test` + `clippy` + `fmt` + `doc` |

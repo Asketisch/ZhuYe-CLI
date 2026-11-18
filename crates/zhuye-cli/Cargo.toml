@@ -170,6 +170,8 @@ pretty_assertions = "1"
 # Upstream `test_backend.rs` (VT100Backend) drives VT100 emulation for snapshot
 # tests of `custom_terminal` / `insert_history`. Required by the vendored tests.
 vt100 = "0.15"
+# 属性测试(验证增强计划 P2):ANSI 解析 / 文本截断 / JSON 紧凑化的不变量。
+proptest = { workspace = true }
 
 # IDE 上下文命名管道客户端(ide_context/windows_pipe.rs)专用。
 # 特征面与该文件头部的 use 一一对应,新增 import 时同步补特征。

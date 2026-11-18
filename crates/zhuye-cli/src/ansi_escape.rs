@@ -371,4 +371,45 @@ mod tests {
         let line = ansi_escape_line("\x1b[31m\x1b[0m");
         assert!(line.spans.is_empty());
     }
+
+    // ── 属性测试(验证增强计划 P2):解析器鲁棒性与可见文本保持 ──
+
+    use proptest::prelude::*;
+
+    // 任意 Unicode 字符串(含 ESC / 控制字符 / 截断序列)解析不 panic。
+    proptest! {
+        #[test]
+        fn 任意输入解析不panic(input in prop::collection::vec(any::<char>(), 0..200)
+            .prop_map(|chars| chars.into_iter().collect::<String>()))
+        {
+            let _ = ansi_escape_line(&input);
+        }
+
+        // 结构化输入:终止完整的转义序列夹在纯文本块之间,
+        // 可见文本(span 拼接)必须等于纯文本块拼接 —— 剥离不吞正文。
+        #[test]
+        fn 可见文本保持(
+            chunks in prop::collection::vec(
+                prop::string::string_regex("[\\x20-\\x7e\\p{Han}]{0,16}").unwrap(),
+                1..8,
+            ),
+        )
+        {
+            // 固定的「终止完整」转义序列集:SGR / 非 SGR CSI / OSC(BEL 与 ST 结尾)/ 字符集选择。
+            const ESCAPES: [&str; 8] = [
+                "\x1b[31m", "\x1b[1;4m", "\x1b[0m", "\x1b[2K",
+                "\x1b]0;title\x07", "\x1b]8;;url\x1b\\", "\x1b(B", "\x1b7",
+            ];
+            let mut input = String::new();
+            let mut expected = String::new();
+            for (index, plain) in chunks.iter().enumerate() {
+                input.push_str(plain);
+                expected.push_str(plain);
+                input.push_str(ESCAPES[index % ESCAPES.len()]);
+            }
+            let line = ansi_escape_line(&input);
+            let visible: String = line.spans.iter().map(|s| s.content.clone()).collect();
+            prop_assert_eq!(visible, expected, "剥离吞掉了正文或泄漏了序列");
+        }
+    }
 }

@@ -237,3 +237,13 @@ jobs:
 
       - name: Run soak baseline
         run: python3 tests/soak.py
+
+      # TUI 版本差分(P2):同一提交的 release/debug 两个二进制对 3 个场景
+      # (对话轮次 / 工具副作用 / 会话恢复)做行为语义对比,零分歧预期 ——
+      # 验证差分链路本身在 CI 环境可跑且全绿(真双版本差分由发版流程跑)。
+      - name: Build debug binary (差分候选)
+        run: cargo build -p zhuye-cli
+      - name: Run TUI semantic differential
+        run: ZHUYE_DIFF=1 ZHUYE_DIFF_BASELINE="$PWD/target/release/zhuye-cli" \
+             ZHUYE_DIFF_CANDIDATE="$PWD/target/debug/zhuye-cli" \
+             python3 tests/runner.py run --task tui.contract.differential

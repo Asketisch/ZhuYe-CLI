@@ -581,3 +581,78 @@ mod tests {
         );
     }
 }
+
+// ── 属性测试(验证增强计划 P2):截断不变量与 JSON 语义保持 ──
+
+#[cfg(test)]
+mod property_tests {
+    use super::*;
+
+    use proptest::prelude::*;
+    use unicode_segmentation::UnicodeSegmentation;
+
+    /// 任意 JSON 值策略:标量(bool / 整数 / 任意字符串)× 有限深度嵌套。
+    /// 不含 f64(NaN / Inf 不是合法 JSON),字符串用任意 Unicode。
+    fn json_value_strategy() -> impl Strategy<Value = serde_json::Value> {
+        let leaf = prop::strategy::Union::new(vec![
+            any::<bool>().prop_map(serde_json::Value::Bool).boxed(),
+            any::<i64>().prop_map(serde_json::Value::from).boxed(),
+            any::<String>().prop_map(serde_json::Value::String).boxed(),
+        ]);
+        leaf.prop_recursive(3, 64, 8, |inner| {
+            prop::strategy::Union::new(vec![
+                prop::collection::vec(inner.clone(), 0..6)
+                    .prop_map(serde_json::Value::Array)
+                    .boxed(),
+                prop::collection::vec((any::<String>(), inner), 0..6)
+                    .prop_map(|pairs| serde_json::Value::Object(pairs.into_iter().collect()))
+                    .boxed(),
+            ])
+        })
+    }
+
+    proptest! {
+        // 截断后字素数不超过上限;未超限时原样返回(字素边界安全)。
+        #[test]
+        fn truncate_text_字素上限(
+            text in prop::collection::vec(any::<char>(), 0..120)
+                .prop_map(|chars| chars.into_iter().collect::<String>()),
+            n in 0usize..60,
+        )
+        {
+            let out = truncate_text(&text, n);
+            let out_count = out.graphemes(true).count();
+            let in_count = text.graphemes(true).count();
+            if in_count <= n {
+                prop_assert_eq!(out, text, "未超限必须原样返回");
+            } else {
+                prop_assert!(out_count <= n, "截断后 {out_count} 个字素 > 上限 {n}");
+            }
+        }
+
+        // 幂等:截断两次与截断一次结果一致(再次截断不再变化)。
+        #[test]
+        fn truncate_text_幂等(
+            text in prop::collection::vec(any::<char>(), 0..120)
+                .prop_map(|chars| chars.into_iter().collect::<String>()),
+            n in 0usize..60,
+        )
+        {
+            let once = truncate_text(&text, n);
+            let twice = truncate_text(&once, n);
+            prop_assert_eq!(once, twice);
+        }
+
+        // JSON 语义保持:紧凑化只是重排空白,再解析必须得到相同的值。
+        #[test]
+        fn format_json_compact_语义保持(value in json_value_strategy())
+        {
+            let raw = serde_json::to_string(&value).unwrap();
+            let compact = format_json_compact(&raw)
+                .unwrap_or_else(|| panic!("合法 JSON 紧凑化失败:{raw}"));
+            let reparsed: serde_json::Value = serde_json::from_str(&compact)
+                .unwrap_or_else(|e| panic!("紧凑化结果不可解析:{compact}: {e}"));
+            prop_assert_eq!(reparsed, value, "紧凑化丢失或改变了 JSON 语义");
+        }
+    }
+}

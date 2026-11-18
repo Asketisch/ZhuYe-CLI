@@ -240,8 +240,11 @@ def run_task(task_id: str, args: argparse.Namespace) -> TaskResult:
         return TaskResult(task_id, "pending",
                           task.get("note", "任务已登记,尚无实现映射(未覆盖)"))
     if coverage == "conditional" and not task.get("enabled", False):
-        return TaskResult(task_id, "skip",
-                          f"条件能力未启用:{task.get('note', '')}")
+        # 显式启用钩子:与核心仓 agent.contract.differential 同一环境变量口径。
+        if not (task_id == "tui.contract.differential"
+                and os.environ.get("ZHUYE_DIFF") == "1"):
+            return TaskResult(task_id, "skip",
+                              f"条件能力未启用:{task.get('note', '')}")
 
     ok, reason = _platform_supported(task)
     if not ok:

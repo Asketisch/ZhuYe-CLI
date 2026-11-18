@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "description": "diff 触发的可靠性规则表(ZhuYe-CLI)。规则只追加定向检查,不替代 pr/main/nightly/release 完整选集;变更本表需单独说明并人工审查。",
+  "rules": [
+    {
+      "id": "REL-CLI-001",
+      "trigger_paths": ["crates/zhuye-cli/src/history_render/**", "crates/zhuye-cli/src/tui/**"],
+      "task_ids": ["tui.e2e.terminal", "tui.coverage.audit"],
+      "reason": "slash 双分发通道与按键路由变更必须过 PTY 行为面与覆盖自审门禁",
+      "source": "CLI AGENTS.md 关键约束 8",
+      "owner": "cli",
+      "status": "active"
+    },
+    {
+      "id": "REL-CLI-002",
+      "trigger_paths": ["crates/zhuye-cli/src/tui_core/text_formatting.rs", "crates/zhuye-cli/src/ansi_escape.rs", "crates/zhuye-cli/src/history_render/cells.rs"],
+      "task_ids": ["tui.static"],
+      "reason": "CJK/ANSI/截断纯逻辑变更:proptest 属性测试随 cargo test 执行(tui.static)",
+      "source": "工作区验证增强计划 P2",
+      "owner": "cli",
+      "status": "active"
+    },
+    {
+      "id": "REL-CLI-003",
+      "trigger_paths": ["crates/zhuye-cli/src/cli/session.rs", "crates/zhuye-cli/src/cli/traces.rs", "crates/zhuye-cli/src/bootstrap.rs"],
+      "task_ids": ["tui.e2e.terminal", "tui.contract.differential"],
+      "reason": "会话持久化/恢复路径变更影响跨版本兼容(INC-004 同源)",
+      "source": "INC-004",
+      "owner": "cli",
+      "status": "active"
+    },
+    {
+      "id": "REL-CLI-004",
+      "trigger_paths": ["zhuye-agent"],
+      "task_ids": ["tui.e2e.terminal", "tui.contract.differential"],
+      "reason": "submodule 指针变更:全量 PTY 行为面 + 双版本差分",
+      "source": "工作区验证增强计划 P2",
+      "owner": "cli",
+      "status": "active"
+    },
+    {
+      "id": "REL-CLI-005",
+      "trigger_paths": ["tests/functional/test_differential.py", "tests/verification/**"],
+      "task_ids": ["tui.e2e.terminal"],
+      "reason": "差分比较器/场景变更时,纯自测与行为面必须全绿(P2)",
+      "source": "工作区验证增强计划 P2",
+      "owner": "cli",
+      "status": "active"
+    }
+  ]
+}

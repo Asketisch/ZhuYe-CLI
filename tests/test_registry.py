@@ -96,6 +96,14 @@ TASKS: dict[str, dict] = {
         "note": "slash 命令覆盖自审(--strict)",
         "timeout_s": 1800,
     },
+    "tui.contract.differential": {
+        # TUI 版本差分:需要显式 baseline/candidate 二进制的条件任务(夜间观察)
+        "coverage": "conditional",
+        "command": ["tests/functional/run_differential.sh"],
+        "timeout_s": 3600,
+        "os": ["linux", "darwin"],
+        "note": "TUI 版本差分(rollout/副作用/屏幕标记/panic);需 ZHUYE_DIFF=1 与两个二进制路径",
+    },
 
     # ---- 性能、长稳与发布(PLAN §3.4,T-Q01~T-Q08) ----
     "tui.performance": {
@@ -142,8 +150,9 @@ SUITES: dict[str, list[str]] = {
         "tui.unit.input", "tui.unit.state", "tui.component.render",
         "tui.platform", "tui.platform.windows", "tui.security",
     ],
-    # 夜间:终端组合、洪峰、生命周期、长稳
-    "nightly": ["tui.fault", "tui.performance", "tui.soak", "tui.live"],
+    # 夜间:终端组合、洪峰、生命周期、长稳、TUI 版本差分
+    "nightly": ["tui.fault", "tui.performance", "tui.soak", "tui.live",
+                "tui.contract.differential"],
     # 发布候选:最终二进制与安装(未建立渠道前为 pending,报告暴露缺口)
     "release": ["tui.static", "tui.e2e.terminal", "tui.release"],
 }

@@ -21,6 +21,7 @@
 | **覆盖自审层** | `tests/tools/coverage_audit.py` | 「声明了什么」× 「测了什么」的**机械差集** | ❌ | 4 条门禁 |
 | CLI 参数面 | `tests/rust/cli_core.sh`、`cli_modules.sh` | 17 个子命令的**参数矩阵**与输出契约(bash,含退出码) | ❌ | 101 断言 |
 | CLI 语义面 | `tests/functional/test_cli.py` | CLI 输出的**语义**(列结构、预览条数、统计口径) | ❌ | 10 条 |
+| **TUI 版本差分层** | `tests/functional/test_differential.py` | baseline/candidate 两个真二进制在同一 mock 场景下的**行为语义对比**(rollout / 副作用 / 屏幕标记 / panic);纯比较器自测始终运行,真实差分需 ZHUYE_DIFF=1 | ❌ | 自测 6 条 + 差分场景 3 条 |
 | Rust 单测 | `crates/zhuye-cli/src/**` | 内部单元与集成(既有基线);`9332aa9` 接线后 git 三件套本地单测随实现移入 submodule(由 `zhuye-git` 自带测试承接),新增 side-channel 转换 ×3 + CommandRunner 桥接 ×2 | — | 1450 条(lib,不含 vendored) |
 | live 端到端 | `tests/live/` | 真实 LLM + 真实工具(需 API key) | — | 手动跑 |
 
@@ -51,6 +52,8 @@
 | 渲染与视觉(宽字符 / 折行 / markdown / 主题 / resize / 小窗) | V1–V9 | — | — |
 | 工作流与容错(审批 / AskUser / loop / 恢复边界 / 坏输入 / 信号 / 热重载 / 子代理 / 控制序列注入) | W1–W15 | — | — |
 | 真实 HTTP 链路(Anthropic/OpenAI SSE / 跨天恢复 / busy 窗口 Esc·Ctrl+C 中断 / 凭据 failover / 跨 provider 降级 / 动态免费模型发现) | H1–H7 | — | — |
+| TUI 版本差分(rollout / 副作用 / 屏幕标记 / panic;3 场景 × 双二进制) | D 组(`test_differential.py`,需 ZHUYE_DIFF=1) | — | — |
+| ANSI 解析 / 文本截断 / JSON 紧凑化不变量(任意输入不 panic、可见文本保持、字素上限、幂等、JSON 语义保持) | —(Rust 属性测试:`ansi_escape::tests` + `text_formatting::property_tests`,proptest) | — | — |
 | Rust 编译面 | — | workspace_tests(cargo test/clippy/fmt/doc) | — |
 
 ---
