@@ -169,7 +169,7 @@ REFLECT_LIVE_MODEL_COUNT=2 PRACTICE_OUT=report.md ./tests/run_all.sh live-practi
 | **dsh 有地区门** | 部分模型返回 `REGION_BLOCKED: This model is not available in your country` | 该模型跳过;换模型 |
 | **地区门 403** | 免费车道按出口 IP 判地区 | 换出口后重跑 |
 | **模型集合随时变** | 上游随时下架某个 id | 清单每次实时拉取;`[routing].fallbacks` 跨模型降级兜底 |
-| **慢首字 / 思考静默** | 实测首字 >30s、思考阶段可静默 60~70s | `timeout_secs = 300`(reqwest 的 timeout 是**总**时长) |
+| **慢首字 / 思考静默** | 实测首字 >30s、思考阶段可静默 60~70s | v1.10 起超时是「建连 + 读空闲」双层(默认 300s):长流不会被总时长腰斩;仅无字节静默超 300s 才需调大 `timeout_secs` |
 | **部分模型不支持 tools** | provider 直接 400 | 能力探测识别并跳过 |
 | **prompt 可能被上游记录** | Kilo 模型卡明示 | **只用合成数据**,不要喂真实仓库内容 / 凭据 |
 | **部分 provider 对 tool_results 更严** | 实测 Cohere 系模型报 `invalid request: all elements in tool_results must have the 'outputs' property specified`(400) | 工具回合偶发失败;不影响「工具被调用 / 结果上屏」的断言 |

@@ -53,6 +53,11 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
         TurnComplete(_) => UiEventKind::TurnCompleted,
         TurnAborted(_) => UiEventKind::TurnCompleted,
         AgentMessageDelta(d) => UiEventKind::AgentDelta(d.delta),
+        // v1.10:模型调用失败将自动重试 —— 丢弃本轮流式半成品并提示。
+        AgentMessageReset(r) => UiEventKind::AgentReset {
+            reason_code: r.reason_code,
+            retry_in_ms: r.retry_in_ms,
+        },
         AgentMessage(msg) => UiEventKind::AgentMessage(msg.text),
         ThinkingDelta(td) => UiEventKind::Thinking(td.delta),
         ToolCallBegin(tb) => UiEventKind::ToolStarted {

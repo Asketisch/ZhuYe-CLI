@@ -136,6 +136,13 @@ pub enum UiEventKind {
         role: String,
         text: String,
     },
+    /// v1.10:本 turn 流式输出被重置(模型调用失败将自动重试)。TUI 丢弃
+    /// 尚未落 scrollback 的半成品(live / stream / thinking 缓冲),并提示
+    /// 正在重试;已 drain 进滚屏的行无法撤回,由 Notice 说明作废。
+    AgentReset {
+        reason_code: String,
+        retry_in_ms: u64,
+    },
     /// M4:v1.4 工具输出流式增量(单工具的进行中输出)。live 区渲染 tail,
     /// 完整输出仍由 ToolCompleted 落 scrollback,二者互补不重复。
     ToolOutputDelta {
@@ -431,6 +438,19 @@ pub fn apply_event(state: &mut UiState, event: UiEvent) -> Vec<Line<'static>> {
             state.pending_approval = None;
             state.pending_question = None;
             state.pending_ask_user = None;
+        }
+        UiEventKind::AgentReset {
+            reason_code,
+            retry_in_ms,
+        } => {
+            // v1.10:模型调用失败将自动重试 —— 丢弃尚未落 scrollback 的
+            // 半成品(live 文本 / 流式控制器 / 思考缓冲),避免重试输出与
+            // 旧输出拼接。已 drain 进滚屏的行无法撤回,用 Notice 说明作废。
+            state.clear_stream();
+            extra.push(Line::from(Span::styled(
+                format!("⚠ 流式输出中断({reason_code}),{retry_in_ms}ms 后自动重试…"),
+                Style::default().fg(Color::Yellow),
+            )));
         }
         UiEventKind::AgentDelta(delta) => {
             // ── reasoning → agent 正文边界：先 flush 累积的思考成一条消息，
@@ -1909,4 +1929,44 @@ mod split_feed_tests {
         // 输出缓冲不被状态快照清掉。
         assert_eq!(feeds[0].lines, vec!["old line"]);
     }
+}
+
+/// v1.10:模型流式调用失败将自动重试 —— `AgentReset` 必须丢弃未落屏的
+/// 半成品(live / 思考缓冲),并提示用户正在重试(否则重试输出会与
+/// 半截文本拼接)。
+#[test]
+fn agent_reset_discards_pending_stream_and_notifies() {
+    let ev = |kind: UiEventKind| UiEvent { kind };
+    let mut state = UiState::default();
+    apply_event(
+        &mut state,
+        ev(UiEventKind::TurnStarted {
+            turn_id: zhuye_protocol::TurnId::default(),
+        }),
+    );
+    apply_event(&mut state, ev(UiEventKind::AgentDelta("半截回答".into())));
+    apply_event(&mut state, ev(UiEventKind::Thinking("思考中".into())));
+    assert!(!state.live.is_empty());
+
+    let lines = apply_event(
+        &mut state,
+        ev(UiEventKind::AgentReset {
+            reason_code: "SSE_PARSE_ERROR".into(),
+            retry_in_ms: 500,
+        }),
+    );
+
+    assert!(state.live.is_empty(), "live 半成品必须清空");
+    assert!(state.live_thinking.is_empty(), "thinking 缓冲必须清空");
+    assert!(state.stream.is_none(), "流式控制器必须释放");
+    let text: String = lines
+        .iter()
+        .flat_map(|l| l.spans.iter())
+        .map(|s| s.content.as_ref().to_string())
+        .collect();
+    assert!(
+        text.contains("SSE_PARSE_ERROR"),
+        "提示行应包含错误码:{text}"
+    );
+    assert!(text.contains("重试"), "提示行应说明正在重试:{text}");
 }
