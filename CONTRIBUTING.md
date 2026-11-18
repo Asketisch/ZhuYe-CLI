@@ -58,7 +58,7 @@ python3 tests/tools/coverage_audit.py --strict   # 覆盖自审
 - **分层**：本 crate 只负责表现层 —— 事件循环、布局、渲染、协议事件适配
   （`tui/conversion.rs` 是协议事件 → UI 事件的唯一转换边界）。引擎能力
   通过子模块库 crate 调用，不在 TUI 里重新实现引擎逻辑。
-- **接线对齐**：bootstrap 的能力装配以 `reflect-exec/src/bootstrap.rs`
+- **接线对齐**：bootstrap 的能力装配以 `zhuye-exec/src/bootstrap.rs`
   （headless）为参照物；给 TUI 加引擎能力时先看那边怎么接。
 - **注释**：解释「为什么」，不复述「是什么」。本项目注释密度偏高是有意
   为之（记录踩坑与设计取舍），但只写有信息量的。
@@ -85,11 +85,11 @@ git add zhuye-agent && git commit            # 指针与代码适配一起提交
 要点：
 
 - **指针变更必须与代码适配一起提交** —— 只改指针不改代码会留下编译不过的仓库。
-- 升级后逐条核对新增 / 变更的公开 API：本仓库的直接依赖是 `reflect-core`、
-  `reflect-protocol`、`reflect-rollout`、`reflect-telemetry`、`reflect-config`、
-  `reflect-compact` 等，这些 crate 的 API 变更需要在本仓库有对应消费点。
+- 升级后逐条核对新增 / 变更的公开 API：本仓库的直接依赖是 `zhuye-core`、
+  `zhuye-protocol`、`zhuye-rollout`、`zhuye-telemetry`、`zhuye-config`、
+  `zhuye-compact` 等，这些 crate 的 API 变更需要在本仓库有对应消费点。
 - **消费点优先走共享 API**：submodule 提供的读取 / 聚合能力（如
-  `reflect_rollout::session_stats`），不要在本仓库复刻一份聚合逻辑，
+  `zhuye_rollout::session_stats`），不要在本仓库复刻一份聚合逻辑，
   否则两边会漂移。
 - 本仓库的 `AGENTS.md` 记录本项目的架构与约束,submodule 侧的说明见
   `zhuye-agent/AGENTS.md`。

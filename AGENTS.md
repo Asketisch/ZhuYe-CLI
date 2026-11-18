@@ -13,6 +13,39 @@ ZhuYe-CLI — ZhuYe 的终端交互式客户端(ratatui + crossterm),面向终�
 - Rust stable,edition 2024,MSRV 1.85(`rust-toolchain.toml` 锁定)
 - 用户数据目录:`~/.zhuye/`(config.toml / sessions/ / traces/);Plan 草稿写 `<workspace>/.zhuye/plan/`
 
+## AGENTS.md 体系导航
+
+本仓库的目录级契约按「渐进式披露」分层:根篇(本篇)恒在上下文只做导航与全局约定,
+具体目录的本地契约在就近的分层篇里,改哪个目录先读哪篇。**修改任何目录前,
+先读该目录(或其所在 crate 篇)的 AGENTS.md。**
+
+| 想了解什么 | 读哪个 AGENTS.md |
+|---|---|
+| slash 命令双通道(legacy 白名单与结局;枚举面在 tui_core、分发在 tui、门禁在 tests,见下方各行) | [src/history_render/](crates/zhuye-cli/src/history_render/AGENTS.md) |
+| 事件循环 / 按键路由 / UiState / 协议投影 | [src/tui/](crates/zhuye-cli/src/tui/AGENTS.md) |
+| 呈现原语(vendored 上游 / 换行 / composer / 快照) | [src/tui_core/](crates/zhuye-cli/src/tui_core/AGENTS.md) |
+| headless 子命令(session / traces / clap 路由) | [src/cli/](crates/zhuye-cli/src/cli/AGENTS.md) |
+| 构建面 / 依赖 / feature / bootstrap / 桩层 / picker | [crates/zhuye-cli/](crates/zhuye-cli/AGENTS.md) |
+| 测试分层 / 组字母 / coverage-audit / CI 门禁 | [tests/](tests/AGENTS.md) |
+| 构建 / 发版 / 安装脚本 | [scripts/](scripts/AGENTS.md) |
+| 核心引擎(submodule,只读消费) | [zhuye-agent/AGENTS.md](zhuye-agent/AGENTS.md)(外链,展开见下方「submodule 侧索引」) |
+| 贡献流程 / submodule 升级 | [CONTRIBUTING.md](CONTRIBUTING.md)(外链) |
+| 第三方来源与许可证 | [NOTICE](NOTICE)(外链) |
+
+**submodule 侧索引(只读)**:`zhuye-agent/` 内已落地同构的分层 AGENTS.md 体系
+(6 层篇 + 8 crate 篇 + 3 顶层目录篇)。本仓库只读消费、**勿在其内修改**;
+升级 submodule 指针时,按此表定位受影响的引擎契约篇再核对消费点:
+
+| 想了解什么(引擎侧) | 读 `zhuye-agent/` 内哪篇 |
+|---|---|
+| 协议契约:Op / EventMsg / Item / Submission | [crates/protocol/](zhuye-agent/crates/protocol/AGENTS.md) · [zhuye-protocol/](zhuye-agent/crates/protocol/zhuye-protocol/AGENTS.md) |
+| 能力原语:模型 / 工具 / hook | [crates/abilities/](zhuye-agent/crates/abilities/AGENTS.md) · [zhuye-llm/](zhuye-agent/crates/abilities/zhuye-llm/AGENTS.md) · [zhuye-tools/](zhuye-agent/crates/abilities/zhuye-tools/AGENTS.md) · [zhuye-hooks/](zhuye-agent/crates/abilities/zhuye-hooks/AGENTS.md) |
+| 资源层:配置 / 权限 / 插件 / 持久化 | [crates/resources/](zhuye-agent/crates/resources/AGENTS.md) · [zhuye-plugin/](zhuye-agent/crates/resources/zhuye-plugin/AGENTS.md) |
+| 多 agent 编排:子代理 / 讨论 / 任务 | [crates/orchestration/](zhuye-agent/crates/orchestration/AGENTS.md) |
+| 外部集成:MCP / LSP / git | [crates/integrations/](zhuye-agent/crates/integrations/AGENTS.md) |
+| 运行时与入口:AgentThread / StateGraph / headless / 引擎 CLI | [crates/runtime/](zhuye-agent/crates/runtime/AGENTS.md) · [zhuye-core/](zhuye-agent/crates/runtime/zhuye-core/AGENTS.md) · [zhuye-exec/](zhuye-agent/crates/runtime/zhuye-exec/AGENTS.md) · [zhuye-cli/](zhuye-agent/crates/runtime/zhuye-cli/AGENTS.md) |
+| 引擎侧脚本 / 双 SDK / 测试分层 | [scripts/](zhuye-agent/scripts/AGENTS.md) · [sdks/](zhuye-agent/sdks/AGENTS.md) · [tests/](zhuye-agent/tests/AGENTS.md) |
+
 ## ⚠️ 代码规范:注释必须为中文
 
 **本仓库所有代码注释必须使用中文**,包括:
@@ -148,8 +181,25 @@ zhuye-task/subagent、zhuye-protocol。
 4. **覆盖矩阵同步** —— `tests/COVERAGE.md` 随改动更新:
    新增能力补「能力 × 覆盖层」表的一行;移除能力移到「未覆盖项」并写明原因;
    发现的缺陷记入「已知缺陷」。
-5. **验证** —— 按下方「验证矩阵」跑对应命令,全绿再提交。
-6. **注释与提交信息** —— 注释一律中文;commit 用 `type(scope): 描述`
+5. **AGENTS.md 分层索引同步** —— 修改或新增代码时,对应目录的 AGENTS.md
+   (模块篇、crate 篇、根导航表)必须同步更新;契约 / 同步点 / 禁止事项
+   变化即改对应篇,导航目标增删即改根表。按下表定位:
+
+   | 代码改动 | 同步更新 |
+   |---|---|
+   | 新增 / 移除 src 模块目录 | 新建 / 删除该篇 + crate 篇速览表 + 根导航表 |
+   | slash 命令(枚举 / 白名单 / 分发结局) | `src/tui_core/` + `src/tui/` + `src/history_render/` + `tests/`(S 组) |
+   | 事件循环 / 按键 / UiState / 协议投影 | `src/tui/` |
+   | 呈现原语 / 换行 / 快照 / vendored 边界 | `src/tui_core/` |
+   | headless 子命令 / 参数面 | `src/cli/` |
+   | 依赖 / feature / bootstrap 装配 / 桩层 / picker | `crates/zhuye-cli/` |
+   | 测试分层 / 组结构 / 覆盖矩阵 / 套件入口 | `tests/` |
+   | 脚本新增 / 移除 / 行为变更 | `scripts/` 速览表 |
+   | 升级 submodule 指针 / 引擎契约变化 | 按上方「submodule 侧索引」读对应篇核对消费点;本仓库适配面变化则同步 `crates/zhuye-cli/` 篇 |
+
+   拿不准改哪篇时,至少更新 crate 篇与根导航表,确保索引不失真。
+6. **验证** —— 按下方「验证矩阵」跑对应命令,全绿再提交。
+7. **注释与提交信息** —— 注释一律中文;commit 用 `type(scope): 描述`
    conventional 风格(参考 git log)。
 
 ## 验证矩阵(按改动范围选跑)

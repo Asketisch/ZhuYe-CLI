@@ -108,7 +108,7 @@ zhuye-cli session fork <id> --branch my-branch
 # fork 后打印 child id,提示:
 #   Resume with: zhuye-cli --resume <child_id> "..."
 
-# 给会话设置人可读名(写到 ~/.reflect/sessions/_names/<id>.name)
+# 给会话设置人可读名(写到 ~/.zhuye/sessions/_names/<id>.name)
 zhuye-cli session rename <id> "my session name"
 
 # 导出为 markdown(无 --out 打印 stdout)
@@ -128,7 +128,7 @@ zhuye-cli traces ls -n 20
 zhuye-cli traces show <id-or-prefix>
 ```
 
-数据来自 `~/.reflect/traces/model-io-sess_<session_id>.jsonl`(由 reflect-telemetry 写入)。
+数据来自 `~/.zhuye/traces/model-io-sess_<session_id>.jsonl`(由 zhuye-telemetry 写入)。
 
 ## 构建、测试与发布
 

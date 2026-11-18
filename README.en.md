@@ -105,7 +105,7 @@ zhuye-cli session fork <id> --branch my-branch
 # After forking the child id is printed and the hint:
 #   Resume with: zhuye-cli --resume <child_id> "..."
 
-# Set a human-readable name (written to ~/.reflect/sessions/_names/<id>.name)
+# Set a human-readable name (written to ~/.zhuye/sessions/_names/<id>.name)
 zhuye-cli session rename <id> "my session name"
 
 # Export to Markdown (prints to stdout without --out)
@@ -125,7 +125,7 @@ zhuye-cli traces ls -n 20
 zhuye-cli traces show <id-or-prefix>
 ```
 
-Data comes from `~/.reflect/traces/model-io-sess_<session_id>.jsonl` (written by reflect-telemetry).
+Data comes from `~/.zhuye/traces/model-io-sess_<session_id>.jsonl` (written by zhuye-telemetry).
 
 ## Build, Test, and Release
 
