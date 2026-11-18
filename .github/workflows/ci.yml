@@ -246,6 +246,9 @@ jobs:
         run: cargo build -p zhuye-cli
       - name: Run TUI semantic differential
         run: |
+          # nightly-quality 的依赖安装步骤只装 pyte(performance/soak 所需),
+          # 差分走 pytest 收集 —— 这里补装 pytest。
+          python3 -m pip install --quiet pytest
           ZHUYE_DIFF=1 \
           ZHUYE_DIFF_BASELINE="$PWD/target/release/zhuye-cli" \
           ZHUYE_DIFF_CANDIDATE="$PWD/target/debug/zhuye-cli" \
