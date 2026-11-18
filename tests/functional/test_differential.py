@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -251,7 +252,75 @@ def test_真实差分(scenario: dict) -> None:
         if not path.is_file():
             pytest.fail(f"{label} 二进制不存在:{path}(条件任务显式启用时必须可用)")
     out_dir = Path(os.environ.get("ZHUYE_DIFF_OUTPUT", str(DEFAULT_OUTPUT)))
-    base_proj = run_scenario(scenario, baseline, out_dir)
-    cand_proj = run_scenario(scenario, candidate, out_dir)
+    base_proj = run_scenario(scenario, baseline, out_dir / "baseline")
+    cand_proj = run_scenario(scenario, candidate, out_dir / "candidate")
     divergences = compare_projections(base_proj, cand_proj)
     assert not divergences, f"差分场景 {scenario['id']} 发现分歧:\n" + "\n".join(divergences)
+
+
+def test_跨版本恢复() -> None:
+    """发布版创建会话后,候选版恢复并续写同一份历史。"""
+    binaries = _diff_binaries()
+    if binaries is None:
+        pytest.skip("未提供 ZHUYE_DIFF_BASELINE / ZHUYE_DIFF_CANDIDATE")
+    baseline, candidate = (path.resolve() for path in binaries)
+    for label, path in (("baseline", baseline), ("candidate", candidate)):
+        assert path.is_file(), f"{label} 二进制不存在:{path}"
+
+    prior = "升级前独有中文消息甲"
+    initial_reply = "升级前独有中文回复乙"
+    followup = "升级后独有中文消息丙"
+    followup_reply = "升级后独有中文回复丁"
+    output = Path(os.environ.get("ZHUYE_DIFF_OUTPUT", str(DEFAULT_OUTPUT))) / "upgrade_resume"
+    output.mkdir(parents=True, exist_ok=True)
+    identities = {
+        label: {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+        for label, path in (("baseline", baseline), ("candidate", candidate))
+    }
+    (output / "binaries.json").write_text(
+        json.dumps(identities, ensure_ascii=False, indent=2), encoding="utf-8")
+    sandbox = Sandbox.create(prefix="zhuye-cli-upgrade-")
+    try:
+        script = write_mock_script(sandbox.home.parent / "before.jsonl", [text_reply(initial_reply)])
+        with TuiSession(sandbox, env=sandbox.mock_env(script), binary=baseline) as first:
+            first.wait_boot(timeout=40)
+            first.type_text(prior)
+            first.key("enter")
+            first.wait_text(initial_reply, timeout=40)
+            before = first.wait_idle(timeout=40)
+            (output / "baseline-screen.txt").write_text(before, encoding="utf-8")
+            first.quit(timeout=10)
+
+        files = sandbox.session_files()
+        assert len(files) == 1, f"发布版应创建一份会话文件:{files}"
+        original = files[0]
+        session_id = original.stem
+        before_rollout = original.read_text(encoding="utf-8")
+        assert prior in before_rollout and initial_reply in before_rollout
+        (output / "baseline-rollout.jsonl").write_text(before_rollout, encoding="utf-8")
+
+        script = write_mock_script(sandbox.home.parent / "after.jsonl", [text_reply(followup_reply)])
+        with TuiSession(sandbox, args=["--resume", session_id],
+                        env=sandbox.mock_env(script), binary=candidate) as resumed:
+            resumed.wait_boot(timeout=40)
+            resumed.wait_text("已恢复历史会话", timeout=40)
+            screen = resumed.wait_text(prior, timeout=40)
+            (output / "candidate-resumed-screen.txt").write_text(screen, encoding="utf-8")
+            assert screen.count(prior) == 1, f"旧消息应恰好显示一次:{screen}"
+            assert screen.count(initial_reply) == 1, f"旧回复应恰好显示一次:{screen}"
+            resumed.type_text(followup)
+            resumed.key("enter")
+            resumed.wait_text(followup_reply, timeout=40)
+            screen = resumed.wait_idle(timeout=40)
+            (output / "candidate-followup-screen.txt").write_text(screen, encoding="utf-8")
+            resumed.quit(timeout=10)
+
+        matches = [path for path in sandbox.session_files() if path.stem == session_id]
+        assert matches == [original], f"会话应续写原文件且只有一份:{matches}"
+        after_rollout = original.read_text(encoding="utf-8")
+        (output / "candidate-rollout.jsonl").write_text(after_rollout, encoding="utf-8")
+        assert after_rollout.startswith(before_rollout), "恢复后应追加到原 JSONL"
+        assert followup in after_rollout and followup_reply in after_rollout
+        assert after_rollout.count(prior) == 1 and after_rollout.count(followup) == 1
+    finally:
+        sandbox.cleanup()

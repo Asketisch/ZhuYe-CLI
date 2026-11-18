@@ -230,7 +230,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install test dependencies
-        run: python -m pip install --upgrade pip pyte
+        run: python -m pip install --upgrade pip pyte pytest
 
       - name: Run performance baseline
         run: python3 tests/performance.py
@@ -238,18 +238,48 @@ jobs:
       - name: Run soak baseline
         run: python3 tests/soak.py
 
-      # TUI 版本差分(P2):同一提交的 release/debug 两个二进制对 3 个场景
-      # (对话轮次 / 工具副作用 / 会话恢复)做行为语义对比,零分歧预期 ——
-      # 验证差分链路本身在 CI 环境可跑且全绿(真双版本差分由发版流程跑)。
-      # 注意:run 必须用块标量(|),plain scalar 会把反斜杠续行折叠成空格。
+      # 同一提交的构建对照用于验证差分链路。
       - name: Build debug binary (差分候选)
         run: cargo build -p zhuye-cli
       - name: Run TUI semantic differential
+        env:
+          ZHUYE_DIFF: '1'
+          ZHUYE_DIFF_BASELINE: ${{ github.workspace }}/target/release/zhuye-cli
+          ZHUYE_DIFF_CANDIDATE: ${{ github.workspace }}/target/debug/zhuye-cli
+        run: python3 tests/runner.py run --task tui.contract.differential
+
+      - name: Download latest published binary
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # nightly-quality 的依赖安装步骤只装 pyte(performance/soak 所需),
-          # 差分走 pytest 收集 —— 这里补装 pytest。
-          python3 -m pip install --quiet pytest
-          ZHUYE_DIFF=1 \
-          ZHUYE_DIFF_BASELINE="$PWD/target/release/zhuye-cli" \
-          ZHUYE_DIFF_CANDIDATE="$PWD/target/debug/zhuye-cli" \
-          python3 tests/runner.py run --task tui.contract.differential
+          set -euo pipefail
+          case "$(uname -s)-$(uname -m)" in
+            Linux-x86_64) triple=x86_64-unknown-linux-gnu ;;
+            Darwin-arm64) triple=arm64-apple-darwin ;;
+            Darwin-x86_64) triple=x86_64-apple-darwin ;;
+            *) echo "不支持的平台" >&2; exit 1 ;;
+          esac
+          mkdir -p target/published
+          gh release download --pattern "*-${triple}.tar.gz" --dir target/published
+          tar -xzf target/published/*.tar.gz -C target/published
+          binary=$(find target/published -type f -name zhuye-cli -print -quit)
+          test -n "$binary"
+          cp "$binary" target/published-baseline
+          chmod +x target/published-baseline
+
+      - name: Verify published session upgrade
+        env:
+          ZHUYE_DIFF_BASELINE: ${{ github.workspace }}/target/published-baseline
+          ZHUYE_DIFF_CANDIDATE: ${{ github.workspace }}/target/debug/zhuye-cli
+        run: |
+          mkdir -p target/verification-tui
+          python3 -m pytest tests/functional/test_differential.py -k 跨版本恢复 -v --tb=short --junitxml=target/verification-tui/upgrade.xml
+          python3 tests/functional/assert_differential_report.py target/verification-tui/upgrade.xml test_跨版本恢复
+
+      - name: Upload differential evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tui-differential-${{ matrix.os }}
+          path: target/verification-tui/
+          if-no-files-found: warn

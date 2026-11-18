@@ -9,4 +9,10 @@ export ZHUYE_DIFF_BASELINE ZHUYE_DIFF_CANDIDATE
 : "${ZHUYE_DIFF_OUTPUT:=$ROOT/target/verification-tui}"
 export ZHUYE_DIFF_OUTPUT
 # 复用能力覆盖层夹具(pyte 驱动真实 PTY),只跑真实差分用例。
-exec python3 -m pytest "$ROOT/tests/functional/test_differential.py" -k 真实差分 -q --tb=short
+mkdir -p "$ZHUYE_DIFF_OUTPUT"
+python3 -m pytest "$ROOT/tests/functional/test_differential.py" -k 真实差分 -v --tb=short \
+    --junitxml="$ZHUYE_DIFF_OUTPUT/differential.xml"
+python3 "$ROOT/tests/functional/assert_differential_report.py" \
+    "$ZHUYE_DIFF_OUTPUT/differential.xml" \
+    'test_真实差分[turn_basic]' 'test_真实差分[tool_write_side_effect]' \
+    'test_真实差分[resume_history]'
