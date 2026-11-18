@@ -5,7 +5,37 @@
 
 ## [Unreleased]
 
-(无)
+### submodule 接线:三段工作模式 + 独立审批策略
+
+`zhuye-agent` 指针升级到 `12398067`(ZhuYe develop):
+
+- **三段工作模式**:`/permissions` 与 Shift+Tab 轮换改为
+  默认(auto,自动批准文件编辑)→ Ask(prompt,每工具询问)→
+  Plan(只读规划)→ 默认;accept_edits / bubble / bypass / deny
+  旧档弃用(`/mode <name>` 直达仍兼容)。
+- **独立审批策略**:回合级 `approval_policy` 与工作模式分离 ——
+  跟随模式(auto,默认)/ 请求批准 / 帮我批准 / 完全访问四档。
+- **安全修复**:Ask 与 Deny 模式压过只读 bash 自动放行
+  (此前 `printf` 类纯读命令在询问/禁止模式下静默执行)。
+- M5a SQLite 条目版本库 + FTS5 中文检索;F24 Windows Job Object
+  沙箱;Windows 侧编译债清零(可见性 / 导入 / lint)。
+
+### TUI 功能
+
+- F01 注入防护接线:`/status` 安全段 + guard_stats 事件。
+- F49:鼠标支持(默认关)、`/personality`、`/ide` 接通,
+  kitty 键盘协议检测,`/split` 分屏快照(最近 2 个子代理)。
+
+### 依赖升级
+
+libc 0.2.191、dirs 7.0.0、strum 0.28.0、two-face 0.5.2+bat-0.26.1。
+
+### 工具与测试
+
+- `scripts/create_tag.sh` 一站式发版脚本(bump / CHANGELOG 转正 /
+  tag / 推送一体)。
+- `/split` 进 slash 矩阵覆盖;registry 裸 `python` 改 `python3`;
+  Windows 侧 `cargo test` 编译债清零后纳入下游 CI 覆盖。
 
 ## [0.1.1] — 2026-11-15
 
