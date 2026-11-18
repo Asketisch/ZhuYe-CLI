@@ -305,6 +305,8 @@ pub struct UiState {
     pub checkpoint_rewind_sha: Option<String>,
     /// v1.x Tier 5: fork/rewind select overlay — 从历史 user prompt 选择。
     pub fork_rewind: Option<crate::picker::fork_rewind::ForkRewindState>,
+    /// 提示词选择器的当前行和可选方案。
+    pub prompt_picker: Option<(usize, Vec<String>)>,
     /// v1.x Tier 5: `/copy` overlay — 列出 agent 回复，选中后复制到剪贴板。
     pub copy_history: Option<crate::picker::copy_history::CopyHistoryState>,
     /// v1.x Tier 5: `/skills hub` overlay — 技能列表。
@@ -682,6 +684,7 @@ impl Default for UiState {
             checkpoint_overlay: None,
             checkpoint_rewind_sha: None,
             fork_rewind: None,
+            prompt_picker: None,
             copy_history: None,
             skills_hub: None,
             clipboard_lease: None,

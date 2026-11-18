@@ -367,16 +367,30 @@ pub enum SlashOutcome {
 /// `reload`/`rescan` 全量重扫，其他词作为层名透传（预留聚焦切换）。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PromptSlashAction {
+    Picker,
     List,
-    Switch { layer: Option<String> },
+    Switch {
+        layer: Option<String>,
+    },
+    Select {
+        selection: Option<zhuye_protocol::PromptSelection>,
+    },
+    SaveDefault {
+        selection: zhuye_protocol::PromptSelection,
+    },
 }
 
 impl PromptSlashAction {
     /// 映射到协议 `PromptAction`（构造 `Op::PromptCommand` 时消费）。
     pub fn into_protocol(self) -> zhuye_protocol::PromptAction {
         match self {
+            Self::Picker => zhuye_protocol::PromptAction::List,
             Self::List => zhuye_protocol::PromptAction::List,
             Self::Switch { layer } => zhuye_protocol::PromptAction::Switch { layer },
+            Self::Select { selection } => zhuye_protocol::PromptAction::Select { selection },
+            Self::SaveDefault { selection } => {
+                zhuye_protocol::PromptAction::SaveDefault { selection }
+            }
         }
     }
 }
@@ -865,12 +879,37 @@ pub fn dispatch_slash(text: &str) -> SlashOutcome {
         // /prompt [list|reload|<layer>] — 提示词层管理（v1.6.1，引擎内置
         // 命令，不开 turn）。解析语义与 headless 的 expand_prompt_slash 一致。
         "/prompt" => {
-            let arg = trimmed.split_whitespace().nth(1).unwrap_or("list");
+            let mut args = trimmed.split_whitespace().skip(1);
+            let arg = args.next().unwrap_or("");
             // 关键字(list/reload/rescan)大小写不敏感;层名透传保留原样
             // (层名是文件名,大小写敏感)。
             let action = match arg.to_ascii_lowercase().as_str() {
+                "" => PromptSlashAction::Picker,
                 "list" => PromptSlashAction::List,
                 "reload" | "rescan" => PromptSlashAction::Switch { layer: None },
+                "default" => PromptSlashAction::Select {
+                    selection: Some(zhuye_protocol::PromptSelection::Default),
+                },
+                "auto" => PromptSlashAction::Select {
+                    selection: Some(zhuye_protocol::PromptSelection::Auto),
+                },
+                "follow" => PromptSlashAction::Select { selection: None },
+                "use" => PromptSlashAction::Select {
+                    selection: Some(zhuye_protocol::PromptSelection::Manual {
+                        profile: args.next().unwrap_or_default().into(),
+                    }),
+                },
+                "save" => {
+                    let value = args.next().unwrap_or_default();
+                    let selection = match value {
+                        "default" => zhuye_protocol::PromptSelection::Default,
+                        "auto" => zhuye_protocol::PromptSelection::Auto,
+                        profile => zhuye_protocol::PromptSelection::Manual {
+                            profile: profile.into(),
+                        },
+                    };
+                    PromptSlashAction::SaveDefault { selection }
+                }
                 _ => PromptSlashAction::Switch {
                     layer: Some(arg.to_string()),
                 },
@@ -1121,14 +1160,31 @@ mod sanitize_tests {
     fn dispatch_slash_prompt_actions_parse() {
         // v1.6:与 headless expand_prompt_slash 同语义 —— 空参/list 查询,
         // reload/rescan 全量重扫,其他词透传为层名。
-        for input in ["/prompt", "/prompt list"] {
-            match dispatch_slash(input) {
-                SlashOutcome::Prompt {
-                    action: PromptSlashAction::List,
-                } => {}
-                other => panic!("{input} 应产出 Prompt::List, 实为 {other:?}"),
+        assert!(matches!(
+            dispatch_slash("/prompt"),
+            SlashOutcome::Prompt {
+                action: PromptSlashAction::Picker
             }
-        }
+        ));
+        assert!(matches!(
+            dispatch_slash("/prompt list"),
+            SlashOutcome::Prompt {
+                action: PromptSlashAction::List
+            }
+        ));
+        assert!(matches!(
+            dispatch_slash("/prompt auto"),
+            SlashOutcome::Prompt {
+                action: PromptSlashAction::Select {
+                    selection: Some(zhuye_protocol::PromptSelection::Auto)
+                }
+            }
+        ));
+        assert!(
+            matches!(dispatch_slash("/prompt use claude"), SlashOutcome::Prompt {
+            action: PromptSlashAction::Select { selection: Some(zhuye_protocol::PromptSelection::Manual { profile }) }
+        } if profile == "claude")
+        );
         for input in ["/prompt reload", "/prompt rescan"] {
             match dispatch_slash(input) {
                 SlashOutcome::Prompt {

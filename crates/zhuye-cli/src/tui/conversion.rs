@@ -323,17 +323,23 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
         // active_layers 只记录用户目录层的命中(内嵌层不记录),空 = 全部
         // 走内嵌默认。作为 Notice 进对话流(选择 overlay 留待后续迭代)。
         PromptList(pl) => UiEventKind::Notice(format!(
-            "📋 提示词层 · 模型 {} · 生效: {} · 可用: {}",
+            "📋 提示词 · 模型 {} · 选择 {:?} · 方案 {} · 生效层: {} · 可用: {} {}",
             pl.current_spec,
+            pl.selection,
+            pl.profile,
             format_prompt_layers(&pl.active_layers),
             pl.available.join(", "),
+            pl.fallback_reason.unwrap_or_default(),
         )),
         // v1.6.1 `/prompt reload` 的应答:提示词库已重扫,下一 turn 即用
         // 新文案。action 为触发词(`reload`,预留聚焦切换的层名)。
         PromptSwitched(ps) => UiEventKind::Notice(format!(
-            "🔄 提示词已重扫({})· 生效层: {}",
+            "🔄 提示词({}) · 选择 {:?} · 方案 {} · 生效层: {} {}",
             ps.action,
+            ps.selection,
+            ps.profile,
             format_prompt_layers(&ps.active_layers),
+            ps.fallback_reason.unwrap_or_default(),
         )),
         // v1.x `Op::RescanExtensions` 的应答:skills 目录已重扫,回报
         // 重扫后的条目总数;commands 运行时重扫协议侧尚未接线(恒 false)。
@@ -562,6 +568,9 @@ mod tests {
                 available: vec!["default".into(), "claude".into()],
                 current_spec: "anthropic/claude-sonnet-5-5".into(),
                 active_layers: vec!["claude".into()],
+                selection: zhuye_protocol::PromptSelection::Default,
+                profile: "default".into(),
+                fallback_reason: None,
             }),
         );
         let out = convert_event(ev).expect("应转换为 UiEvent");
@@ -582,6 +591,9 @@ mod tests {
                 available: vec!["default".into()],
                 current_spec: "openai/gpt-5.6".into(),
                 active_layers: vec![],
+                selection: zhuye_protocol::PromptSelection::Default,
+                profile: "default".into(),
+                fallback_reason: None,
             }),
         );
         let out = convert_event(ev).unwrap();
@@ -601,6 +613,9 @@ mod tests {
                 zhuye_protocol::PromptSwitchedEvent {
                     action: "reload".into(),
                     active_layers: vec!["claude".into()],
+                    selection: zhuye_protocol::PromptSelection::Default,
+                    profile: "default".into(),
+                    fallback_reason: None,
                 },
             ),
         );

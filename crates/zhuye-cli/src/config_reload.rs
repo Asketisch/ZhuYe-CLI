@@ -31,6 +31,7 @@ pub fn diff_sections(old: &ReflectConfig, new: &ReflectConfig) -> Vec<String> {
         };
     }
     cmp_section!(active, "active");
+    cmp_section!(prompts, "prompts");
     cmp_section!(anthropic, "anthropic");
     cmp_section!(openai, "openai");
     cmp_section!(ollama, "ollama");
@@ -106,6 +107,9 @@ fn handle_reload(
         .apply_to_registry(registry)
         .map_err(|e| format!("apply_to_registry failed: {e}"))?;
     let sections_changed = diff_sections(old_cfg, new_cfg);
+    if old_cfg.prompts != new_cfg.prompts {
+        *agent_cfg.prompt_default.write() = new_cfg.prompts.clone();
+    }
     // model spec 变了 → 同步给运行中的 agent(下一轮生效)。
     if let Some(spec) = new_cfg.resolved_model_spec()
         && old_cfg.resolved_model_spec().as_deref() != Some(spec.as_str())

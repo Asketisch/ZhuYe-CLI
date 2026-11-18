@@ -273,8 +273,9 @@ pub(crate) fn build_m4(
     // workspace 在后(workspace 同名层优先),另兼容旧版 `~/.zhuye/prompts.md`
     // 降级为 default 层。进程级全局句柄,pre_loop 每轮 resolve。
     let ws_prompts = workspace.join(".zhuye").join("prompts");
-    let home_prompts = home_path.join(".zhuye").join("prompts");
-    let legacy_prompts_md = home_path.join(".zhuye").join("prompts.md");
+    let data_dir = zhuye_config::data_dir().unwrap_or_else(|| home_path.join(".zhuye"));
+    let home_prompts = data_dir.join("prompts");
+    let legacy_prompts_md = data_dir.join("prompts.md");
     let legacy = std::fs::read_to_string(&legacy_prompts_md).ok();
     if legacy.is_some() {
         tracing::warn!(

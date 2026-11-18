@@ -6882,6 +6882,7 @@ name = "zhuye-config"
 version = "0.1.2"
 dependencies = [
  "dirs 5.0.1",
+ "fs2",
  "notify",
  "opentelemetry",
  "opentelemetry-otlp",
@@ -6894,6 +6895,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "toml",
+ "toml_edit 0.22.27",
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
@@ -6925,6 +6927,7 @@ dependencies = [
  "uuid",
  "zhuye-agent-def",
  "zhuye-compact",
+ "zhuye-config",
  "zhuye-fs",
  "zhuye-goal",
  "zhuye-hooks",

@@ -764,6 +764,46 @@ fn handle_event(
 
     match event {
         Event::Key(key) => {
+            if let Some((selected, profiles)) = state.prompt_picker.as_mut() {
+                if key.kind == crossterm::event::KeyEventKind::Release {
+                    return Ok(false);
+                }
+                match key.code {
+                    KeyCode::Esc | KeyCode::Char('q') => state.prompt_picker = None,
+                    KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        state.prompt_picker = None;
+                    }
+                    KeyCode::Up | KeyCode::Char('k') => *selected = selected.saturating_sub(1),
+                    KeyCode::Down | KeyCode::Char('j') => {
+                        *selected = (*selected + 1).min(profiles.len() + 2)
+                    }
+                    KeyCode::Enter | KeyCode::Char('s') => {
+                        let selection = match *selected {
+                            0 => Some(zhuye_protocol::PromptSelection::Default),
+                            1 => Some(zhuye_protocol::PromptSelection::Auto),
+                            2 => None,
+                            index => profiles.get(index - 3).map(|profile| {
+                                zhuye_protocol::PromptSelection::Manual {
+                                    profile: profile.clone(),
+                                }
+                            }),
+                        };
+                        let action = if key.code == KeyCode::Char('s') {
+                            selection.map(|selection| zhuye_protocol::PromptAction::SaveDefault {
+                                selection,
+                            })
+                        } else {
+                            Some(zhuye_protocol::PromptAction::Select { selection })
+                        };
+                        if let Some(action) = action {
+                            submit_prompt_action(thread, action);
+                        }
+                        state.prompt_picker = None;
+                    }
+                    _ => {}
+                }
+                return Ok(false);
+            }
             // v1.x:Tab 在输入为空时也循环 permission mode(等价 Shift+Tab)。
             // 裸 Tab 不在 `resolve_global_key`(避免抢占 composer 的补全/缩进),
             // 这里在 fallthrough 前单独判定。
@@ -1911,6 +1951,7 @@ fn dispatch_slash_command(
             // /permissions — 循环切换权限模式(三段:默认 Auto → Ask Prompt → Plan → Auto)。
             emit_op(thread, event_tx, zhuye_protocol::Op::CyclePermissionMode);
         }
+        SlashCommand::Prompt => open_prompt_picker(state, thread),
         _ => {
             // 兜底：明确告知「未实现」，不再用「try typing it directly」误导
             // （直接输入与本路径同源，提示重试无意义）。用 command() 显示命令名，
@@ -2094,20 +2135,11 @@ fn dispatch_slash_command_with_args(
             }
         }
         SlashCommand::Prompt => {
-            // v1.6:弹窗路径无参 → 默认 List(带参解析在
-            // history_render::dispatch_slash 的 /prompt 臂)。应答事件经
-            // 会话泵回流为 Notice,per-submission handle 立即 drop
-            // (与 SlashOutcome::Prompt 处理臂同款,防 Notice 重复)。
-            let thread = Arc::clone(thread);
-            tokio::spawn(async move {
-                let sub = Submission::with_id(
-                    uuid::Uuid::new_v4().to_string(),
-                    zhuye_protocol::Op::PromptCommand {
-                        action: zhuye_protocol::PromptAction::List,
-                    },
-                );
-                drop(thread.submit(sub).await);
-            });
+            if let SlashOutcome::Prompt { action } =
+                history_render::dispatch_slash(&format!("/prompt {args}"))
+            {
+                submit_prompt_action(thread, action.into_protocol());
+            }
         }
         _ => {
             // 兜底（带参版）：明确告知未实现，用 command() 显示命令名。
@@ -2121,6 +2153,37 @@ fn dispatch_slash_command_with_args(
 
 /// 打开 diff 全屏 overlay:扫 history 收集所有 ToolCall 的 unified_diff,
 /// 经 Reflect `create_diff_summary`(语法高亮 + +/- 着色)渲染成行,喂给 pager。
+fn submit_prompt_action(thread: &Arc<AgentThread>, action: zhuye_protocol::PromptAction) {
+    let thread = Arc::clone(thread);
+    tokio::spawn(async move {
+        let sub = Submission::with_id(
+            uuid::Uuid::new_v4().to_string(),
+            zhuye_protocol::Op::PromptCommand { action },
+        );
+        drop(thread.submit(sub).await);
+    });
+}
+
+fn open_prompt_picker(state: &mut UiState, thread: &Arc<AgentThread>) {
+    let profiles = thread
+        .config()
+        .prompt_library
+        .read()
+        .available_layers()
+        .into_iter()
+        .filter(|name| name != "default")
+        .collect::<Vec<_>>();
+    let selected = match thread.config().current_prompt_selection() {
+        zhuye_protocol::PromptSelection::Default => 0,
+        zhuye_protocol::PromptSelection::Auto => 1,
+        zhuye_protocol::PromptSelection::Manual { profile } => profiles
+            .iter()
+            .position(|name| name == &profile)
+            .map_or(0, |index| index + 3),
+    };
+    state.prompt_picker = Some((selected, profiles));
+}
+
 fn open_diff_overlay(state: &mut UiState) {
     // 钳到至少 8 列:diff 渲染自身还要减去边框/缩进,裸 width 在 resize 到
     // 极窄分屏时会让下游 `wrap_cols - 4` 下溢 panic。
@@ -3561,6 +3624,10 @@ fn handle_key(
                     return Ok(false);
                 }
                 SlashOutcome::Prompt { action } => {
+                    if matches!(action, history_render::PromptSlashAction::Picker) {
+                        open_prompt_picker(state, thread);
+                        return Ok(false);
+                    }
                     // v1.6.1:/prompt → Op::PromptCommand(submission_loop 单点
                     // 处理,不开 turn)。应答事件 PromptList/PromptSwitched 由
                     // 引擎经 per-submission 通道 + 会话扇出双路发送,而 TUI 的
@@ -4389,6 +4456,29 @@ fn draw(
 /// 与面积相关(base 上居中),draw 与 draw_fullscreen 共用,避免两份 picker
 /// 渲染逻辑重复。
 fn render_centered_overlays(frame: &mut Frame<'_>, state: &mut UiState, area: Rect) {
+    if let Some((selected, profiles)) = &state.prompt_picker {
+        use ratatui::widgets::{Block, Borders, Clear};
+        let popup = centered_rect(60, 70, area);
+        let visible = usize::from(popup.height.saturating_sub(2));
+        let first = (selected + 1).saturating_sub(visible);
+        let labels = ["ZhuYe 默认", "智能选择", "跟随共享默认"]
+            .into_iter()
+            .chain(profiles.iter().map(String::as_str));
+        let lines: Vec<Line<'_>> = labels
+            .enumerate()
+            .skip(first)
+            .take(visible)
+            .map(|(index, label)| {
+                let marker = if index == *selected { "› " } else { "  " };
+                Line::from(format!("{marker}{label}"))
+            })
+            .collect();
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title(" 提示词 · ↑/↓ 选择 · Enter 应用 · s 保存默认 · Esc 关闭 ");
+        frame.render_widget_ref(Clear, popup);
+        frame.render_widget_ref(Paragraph::new(lines).block(block), popup);
+    }
     // v1.x Plan mode:plan_enter_request(进入 plan 模式前的权限请求)保留居中弹窗。
     // plan_approval 已改为内联提示条,不再使用模态弹窗。
     if let Some(ref req) = state.plan_enter_request {

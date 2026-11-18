@@ -161,7 +161,9 @@ impl SlashCommand {
             SlashCommand::Mcp => "list configured MCP tools; use /mcp verbose for details",
             SlashCommand::Lsp => "show language-server diagnostics status",
             SlashCommand::Todo => "show the agent's current todo checklist",
-            SlashCommand::Prompt => "manage prompt layers: /prompt list · /prompt reload",
+            SlashCommand::Prompt => {
+                "choose prompts: /prompt · /prompt use <profile> · /prompt reload"
+            }
             SlashCommand::Apps => "manage apps",
             SlashCommand::Plugins => "browse plugins",
             SlashCommand::Logout => "log out of Reflect",

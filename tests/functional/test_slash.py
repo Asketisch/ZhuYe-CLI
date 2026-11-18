@@ -109,7 +109,7 @@ MATRIX: list[tuple[str, str, str, str]] = [
     ("statusline", "", "placeholder", "尚未接入分发"),
     ("theme", "", "placeholder", "尚未接入分发"),
     ("pets", "", "placeholder", "尚未接入分发"),
-    ("prompt", "", "placeholder", "尚未接入分发"),
+    ("prompt", "", "panel", "ZhuYe 默认"),
     ("logout", "", "placeholder", "尚未接入分发"),
     ("feedback", "", "placeholder", "尚未接入分发"),
     ("ps", "", "placeholder", "尚未接入分发"),
@@ -201,6 +201,21 @@ def test_unknown_command_is_silently_rejected(tui) -> None:
         assert "Unrecognized" not in txt, (
             f"当前实现丢弃了 Unrecognized 提示(已知行为 D-S1),不应出现在屏幕上:\n{txt[-400:]}"
         )
+
+
+def test_prompt_picker_can_select_and_save_default(tui) -> None:
+    """选择器支持键盘切换智能模式并将选择保存到共享配置。"""
+    with tui() as session:
+        session.wait_boot(timeout=30)
+        _submit(session, "prompt", "")
+        session.wait_text("ZhuYe 默认", timeout=20)
+        session.key("down")
+        session.key("enter")
+        session.wait_text("方案 default", timeout=20)
+        _submit(session, "prompt", "")
+        session.wait_text("› 智能选择", timeout=20)
+        session.type_text("s")
+        session.wait_text("save_default", timeout=20)
 
 
 def test_command_popup_lists_commands(tui) -> None:

@@ -396,7 +396,7 @@
 - **行首空格不阻止已知命令被解析**:`validate_submission` 的
   `input_starts_with_space` 只影响「未知命令」的拦截;legacy 通道的
   `dispatch_slash` 入口做了 `trim()`,所以 `" /clear"` 仍会弹二次确认。
-- **`/prompt` 子命令**(`list` / `reload` / `rescan`)在当前构建未接线。
+- **`/prompt`** 打开提示词选择器，支持键盘选择、保存默认及 `list` / `reload` / `default` / `auto` / `use` 命令。
 - **`--resume` 只认完整 UUID**:3 字符或 8 字符前缀都报 `invalid thread id
   … invalid length`;前缀解析只在 headless `session show` 里有(W7 锁定)。
   → **已修**:TUI 侧 `--resume` 支持唯一前缀(≥4 位,语义与 `session show`
