@@ -13,6 +13,10 @@
 #   随之无人维护(unmaintained 警告而非漏洞)。使用方是引擎侧
 #   zhuye-agent-def / zhuye-core 等,迁移需引擎更换 YAML 实现,外层无版本
 #   可升;引擎迁移后移除此豁免。
+# - RUSTSEC-2026-0543:chrono 0.4.45(最新版)被标记 unmaintained(警告而非
+#   漏洞)。经 rmcp 3.10 / schemars / zhuye-telemetry 等十余条路径传递,
+#   本仓库无从升级;迁移需 rmcp 上游弃用 chrono 且引擎整体更换时间库,
+#   迁移后移除此豁免。
 
 [advisories]
 ignore = [
@@ -22,4 +26,5 @@ ignore = [
     "RUSTSEC-2026-0253",
     "RUSTSEC-2026-0002",
     "RUSTSEC-2024-0449",
+    "RUSTSEC-2026-0543",
 ]
