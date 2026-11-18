@@ -216,9 +216,11 @@ zhuye-task/subagent、zhuye-protocol。
   PR 描述同样使用中文(参考 git log)。第三方/许可证声明保留原文;
   **用户可见文案(UI 文本、错误提示、日志)不在此限制内**,按现有代码风格。
 - **用户可见文档中英双语**:README / docs/ / SECURITY / CONTRIBUTING /
-  CODE_OF_CONDUCT 为分文件成对(`x.md` + `x.en.md`,顶部语言切换条互指);
-  改了中文版须同步更新对应 `.en.md` —— 英文版不在 CI 门禁,但必须一起维护,
-  不允许长期漂移(与 submodule 侧治理规则一致)。
+  CODE_OF_CONDUCT 为分文件成对(`x.md` + `x.en.md`,顶部语言切换条互指;
+  切换条位于 `<p align="center">` HTML 块内,链接须用 HTML `<a href>`、
+  强调须用 `<b>` —— HTML 块内的 markdown 语法(`[text](url)` / `**bold**`)
+  GitHub 不解析、会原样显示);改了中文版须同步更新对应 `.en.md` ——
+  英文版不在 CI 门禁,但必须一起维护,不允许长期漂移(与 submodule 侧治理规则一致)。
 - AGENTS.md 体系与 tests 内部文档保持纯中文,不做双语。
 
 ## Submodule 维护

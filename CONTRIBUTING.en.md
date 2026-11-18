@@ -1,6 +1,6 @@
 # Contributing Guide
 
-<p align="center">  [中文](CONTRIBUTING.md) · **English**  </p>
+<p align="center">  <a href="CONTRIBUTING.md">中文</a> · <b>English</b>  </p>
 
 Thanks for your interest in ZhuYe-CLI! This repository contains **only the
 TUI presentation layer** (`crates/zhuye-cli`); the core engine is reused from

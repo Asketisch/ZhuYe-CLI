@@ -1,6 +1,6 @@
 # Development Guide
 
-<p align="center">  [中文](development.md) · **English**  </p>
+<p align="center">  <a href="development.md">中文</a> · <b>English</b>  </p>
 
 > Builds, test layering, and the verification workflow. The full
 > contribution rules (commit conventions, submodule workflow, PR

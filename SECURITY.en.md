@@ -1,6 +1,6 @@
 # Security Policy
 
-<p align="center">  [中文](SECURITY.md) · **English**  </p>
+<p align="center">  <a href="SECURITY.md">中文</a> · <b>English</b>  </p>
 
 > Vulnerability reporting and handling process for ZhuYe-CLI, plus
 > security-relevant design notes for auditors. The sandbox / permissions /

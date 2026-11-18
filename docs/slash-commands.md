@@ -1,6 +1,6 @@
 # Slash 命令与按键参考
 
-<p align="center">  <b>中文</b> · [English](slash-commands.en.md)  </p>
+<p align="center">  <b>中文</b> · <a href="slash-commands.en.md">English</a>  </p>
 
 > TUI 内全部 slash 命令的运行时结局参考,以及常用按键。结局口径与
 > `tests/functional/test_slash.py` 的 `MATRIX` 一致 —— 该矩阵是单一事实源,

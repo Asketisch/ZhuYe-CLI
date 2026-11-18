@@ -1,6 +1,6 @@
 # 贡献指南
 
-<p align="center">  <b>中文</b> · [English](CONTRIBUTING.en.md)  </p>
+<p align="center">  <b>中文</b> · <a href="CONTRIBUTING.en.md">English</a>  </p>
 
 感谢关注 ZhuYe-CLI！本仓库只包含 **TUI 表现层**（`crates/zhuye-cli`）；
 核心引擎由 [Reflect-Agent](https://github.com/Asketisch/Reflect-Agent) 通过

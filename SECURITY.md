@@ -1,6 +1,6 @@
 # 安全策略
 
-<p align="center">  <b>中文</b> · [English](SECURITY.en.md)  </p>
+<p align="center">  <b>中文</b> · <a href="SECURITY.en.md">English</a>  </p>
 
 > ZhuYe-CLI 的安全漏洞报告与处理流程,以及供审计参考的安全设计要点。
 > 沙箱 / 权限 / 脱敏等机制由核心引擎(submodule)提供,本文只描述本仓库

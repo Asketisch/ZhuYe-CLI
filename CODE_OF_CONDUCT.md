@@ -1,6 +1,6 @@
 # 贡献者公约行为准则
 
-<p align="center">  <b>中文</b> · [English](CODE_OF_CONDUCT.en.md)  </p>
+<p align="center">  <b>中文</b> · <a href="CODE_OF_CONDUCT.en.md">English</a>  </p>
 
 ## 我们的承诺
 

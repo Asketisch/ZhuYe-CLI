@@ -1,6 +1,6 @@
 # 开发指南
 
-<p align="center">  <b>中文</b> · [English](development.en.md)  </p>
+<p align="center">  <b>中文</b> · <a href="development.en.md">English</a>  </p>
 
 > 构建、测试分层与验证流程。贡献前的完整规范(提交约定、submodule 工作流、
 > PR 要求)见 [CONTRIBUTING.md](../CONTRIBUTING.md);架构背景见

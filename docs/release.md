@@ -1,6 +1,6 @@
 # 发版流程
 
-<p align="center">  <b>中文</b> · [English](release.en.md)  </p>
+<p align="center">  <b>中文</b> · <a href="release.en.md">English</a>  </p>
 
 > 从发版前审查到 tag、打包、安装的完整链路。开发与测试环境见
 > [development.md](development.md);变更记录约定见下文第 2 节。

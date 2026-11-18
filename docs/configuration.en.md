@@ -1,6 +1,6 @@
 # Configuration Reference
 
-<p align="center">  [中文](configuration.md) · **English**  </p>
+<p align="center">  <a href="configuration.md">中文</a> · <b>English</b>  </p>
 
 > The TUI's CLI flags, data directory, environment variables, and the
 > commonly used config.toml sections. The complete field-level definition of

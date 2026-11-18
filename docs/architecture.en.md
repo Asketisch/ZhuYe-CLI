@@ -1,6 +1,6 @@
 # Architecture Reference
 
-<p align="center">  [中文](architecture.md) · **English**  </p>
+<p align="center">  <a href="architecture.md">中文</a> · <b>English</b>  </p>
 
 > The architecture reference for ZhuYe-CLI: repository positioning and the
 > engine relationship, presentation-layer module layout, the event loop and

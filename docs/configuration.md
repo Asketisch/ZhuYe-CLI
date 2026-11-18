@@ -1,6 +1,6 @@
 # 配置参考
 
-<p align="center">  <b>中文</b> · [English](configuration.en.md)  </p>
+<p align="center">  <b>中文</b> · <a href="configuration.en.md">English</a>  </p>
 
 > TUI 的启动参数、数据目录、环境变量与 config.toml 常用节。config.toml 的
 > 完整字段定义由核心引擎提供,见 submodule 的

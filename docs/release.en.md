@@ -1,6 +1,6 @@
 # Release Process
 
-<p align="center">  [中文](release.md) · **English**  </p>
+<p align="center">  <a href="release.md">中文</a> · <b>English</b>  </p>
 
 > The full pipeline from pre-release review through tagging, packaging, and
 > installation. For the development and test environment see

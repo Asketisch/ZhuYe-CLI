@@ -1,6 +1,6 @@
 # 架构详解
 
-<p align="center">  <b>中文</b> · [English](architecture.en.md)  </p>
+<p align="center">  <b>中文</b> · <a href="architecture.en.md">English</a>  </p>
 
 > ZhuYe-CLI 的架构参考:仓库定位与引擎关系、表现层模块分层、事件循环与
 > UiState 状态机、协议投影边界,以及跨 workspace 的依赖约束。README 讲用法,

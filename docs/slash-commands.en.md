@@ -1,6 +1,6 @@
 # Slash Commands and Key Bindings Reference
 
-<p align="center">  [中文](slash-commands.md) · **English**  </p>
+<p align="center">  <a href="slash-commands.md">中文</a> · <b>English</b>  </p>
 
 > The runtime-outcome reference for every slash command inside the TUI, plus
 > common key bindings. The outcome categories mirror the `MATRIX` in
