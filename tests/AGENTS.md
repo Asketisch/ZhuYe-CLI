@@ -1,6 +1,6 @@
 # AGENTS.md — tests/(测试分层与覆盖门禁)
 
-> 何时读我:新增 / 修改任何测试、动 `COVERAGE.md` 结构、被 `make coverage-audit`
+> **何时读我**:新增 / 修改任何测试、动 `COVERAGE.md` 结构、被 `make coverage-audit`
 > 卡住,或想确认「这个改动该补什么测试」之前,先读本篇。
 
 ## 目录职责

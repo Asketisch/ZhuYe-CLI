@@ -1,6 +1,6 @@
 # AGENTS.md — tui_core/(自包含呈现原语)
 
-> 何时读我:改任何呈现原语 —— 换行 / composer / 终端后端 / 历史单元 / markdown
+> **何时读我**:改任何呈现原语 —— 换行 / composer / 终端后端 / 历史单元 / markdown
 > 渲染 / 快照,或触碰 vendored 上游移植代码 —— 之前,先读本篇。
 
 ## 模块概述

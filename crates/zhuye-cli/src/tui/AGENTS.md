@@ -1,6 +1,6 @@
 # AGENTS.md — tui/(事件循环与枚举通道)
 
-> 何时读我:改事件循环、按键路由、UiState 状态机、协议事件投影或 slash 枚举通道
+> **何时读我**:改事件循环、按键路由、UiState 状态机、协议事件投影或 slash 枚举通道
 > 分发前,先读本篇。本篇契约域 = `tui/` + src 根的 `events.rs` / `adapter.rs` /
 > `terminal.rs`(后三者与事件循环内聚,故归本篇;目录位置在 src 根)。
 

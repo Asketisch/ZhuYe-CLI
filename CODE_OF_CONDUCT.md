@@ -1,5 +1,7 @@
 # 贡献者公约行为准则
 
+<p align="center">  <b>中文</b> · [English](CODE_OF_CONDUCT.en.md)  </p>
+
 ## 我们的承诺
 
 为营造开放、友好的环境，我们作为贡献者和维护者承诺：无论年龄、体型、
@@ -44,6 +46,8 @@
 维护者有权利和责任删除与本行为准则不符的评论、提交、代码、wiki 编辑、
 issue 和其他贡献，或暂时/永久封禁任何有不当、威胁、冒犯或有害行为的
 贡献者。
+
+## 出处
 
 本公约改编自 [Contributor Covenant][homepage] 2.1 版，
 见 https://www.contributor-covenant.org/version/2/1/code_of_conduct.html。

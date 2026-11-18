@@ -1,6 +1,6 @@
 # AGENTS.md — zhuye-cli crate
 
-> 何时读我:改本 crate 的构建面(Cargo / feature / patch)、src 根文件群(bootstrap /
+> **何时读我**:改本 crate 的构建面(Cargo / feature / patch)、src 根文件群(bootstrap /
 > terminal / viewport 等)、桩层或 `picker/`,或新增 / 移除 src 模块目录前,先读本篇。
 
 ## 模块概述

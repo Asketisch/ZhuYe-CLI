@@ -1,11 +1,13 @@
+<p align="center">
+  <b>中文</b> · [English](README.en.md)
+</p>
+
 # ZhuYe-CLI
 
 [![CI](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml/badge.svg)](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.85%20%7C%20edition%202024-orange.svg)](rust-toolchain.toml)
-[![English](https://img.shields.io/badge/README-English-blue.svg)](README.en.md)
 
-> 📖 **English version**: [README.en.md](README.en.md) — translated README for international readers.
 > 注意:本仓库所有代码注释、commit message、PR 描述仍**强制使用中文**(详见 [CONTRIBUTING.md](CONTRIBUTING.md))。
 
 ZhuYe 的终端交互式客户端,面向终端 AI Agent 工作流,基于 [ratatui](https://github.com/ratatui-org/ratatui)。
@@ -162,11 +164,18 @@ git commit -m "chore: bump zhuye-agent submodule"
 
 本地联调核心改动:在 Reflect-Agent 仓库改代码 → `git push` → 本仓库 `git submodule update --remote`。完整流程(含分支切换、指针记录)见 [CONTRIBUTING.md](CONTRIBUTING.md) 的「submodule 工作流」小节。
 
-## 相关文档
+## 文档
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) — 贡献指南(中文注释规范、submodule 工作流、PR 要求)
-- [AGENTS.md](AGENTS.md) — AI 助手项目说明(强制中文注释规范 + 测试脚本强制要求的原文)
-- [CHANGELOG.md](CHANGELOG.md) — 变更日志
+| 文档 | 内容 |
+|------|------|
+| [docs/architecture.md](docs/architecture.md) | 架构详解:表现层分层、事件循环与 UiState、协议投影、submodule 引擎关系 |
+| [docs/slash-commands.md](docs/slash-commands.md) | slash 命令全量参考(含运行时结局)与 TUI 常用按键 |
+| [docs/configuration.md](docs/configuration.md) | 配置参考:`~/.zhuye/` 数据目录、config.toml、启动参数、环境变量 |
+| [docs/development.md](docs/development.md) | 开发指南:构建、测试分层、验证矩阵 |
+| [docs/release.md](docs/release.md) | 发版流程:发版前审查、CHANGELOG 约定、打包与安装 |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南(中文注释规范、submodule 工作流、PR 要求) |
+| [AGENTS.md](AGENTS.md) | AI 助手项目说明(强制中文注释规范 + 测试脚本强制要求的原文) |
+| [CHANGELOG.md](CHANGELOG.md) | 变更日志 |
 
 ## 社区与安全
 

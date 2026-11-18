@@ -1,9 +1,12 @@
+<p align="center">
+  [中文](README.md) · **English**
+</p>
+
 # ZhuYe-CLI
 
 [![CI](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml/badge.svg)](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.85%20%7C%20edition%202024-orange.svg)](rust-toolchain.toml)
-[![中文](https://img.shields.io/badge/README-中文-red.svg)](README.md)
 
 An interactive terminal client for ZhuYe (烛夜), designed for terminal-based AI agent workflows, built on [ratatui](https://github.com/ratatui-org/ratatui).
 
@@ -161,9 +164,16 @@ For local joint development on the core: make changes in the Reflect-Agent repo 
 
 ## Documentation
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) — Contributing guide (Chinese-comment policy, submodule workflow, PR requirements)
-- [AGENTS.md](AGENTS.md) — AI assistant project notes (source of the Chinese-comment policy and the mandatory test-script rule)
-- [CHANGELOG.md](CHANGELOG.md) — Changelog
+| Document | Contents |
+|------|------|
+| [docs/architecture.en.md](docs/architecture.en.md) | Architecture reference: presentation-layer modules, event loop and UiState, protocol projection, submodule engine relationship |
+| [docs/slash-commands.en.md](docs/slash-commands.en.md) | Full slash-command reference (with runtime outcomes) and common TUI key bindings |
+| [docs/configuration.en.md](docs/configuration.en.md) | Configuration reference: `~/.zhuye/` data directory, config.toml, CLI flags, environment variables |
+| [docs/development.en.md](docs/development.en.md) | Development guide: builds, test layering, verification matrix |
+| [docs/release.en.md](docs/release.en.md) | Release process: pre-release review, CHANGELOG conventions, packaging and installation |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contributing guide (Chinese-comment policy, submodule workflow, PR requirements) |
+| [AGENTS.md](AGENTS.md) | AI assistant project notes (source of the Chinese-comment policy and the mandatory test-script rule) |
+| [CHANGELOG.md](CHANGELOG.md) | Changelog |
 
 ## Community & Security
 

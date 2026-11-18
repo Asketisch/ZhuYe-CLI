@@ -1,5 +1,7 @@
 # 贡献指南
 
+<p align="center">  <b>中文</b> · [English](CONTRIBUTING.en.md)  </p>
+
 感谢关注 ZhuYe-CLI！本仓库只包含 **TUI 表现层**（`crates/zhuye-cli`）；
 核心引擎由 [Reflect-Agent](https://github.com/Asketisch/Reflect-Agent) 通过
 git submodule 复用。请先读 [README](README.md) 的架构说明。
@@ -68,6 +70,11 @@ python3 tests/tools/coverage_audit.py --strict   # 覆盖自审
   行为不一致 —— 改命令时两条都要看，并把运行时结局登记进
   `tests/functional/test_slash.py` 的 `MATRIX` 与
   [tests/COVERAGE.md](tests/COVERAGE.md) §S 组。
+- **文档双语**：用户可见文档（README / docs/ / SECURITY /
+  CODE_OF_CONDUCT / 本文件）为中英分文件成对（`x.md` + `x.en.md`，顶部
+  语言切换条互指）；改了中文版须**同步更新对应 `.en.md`** —— 英文版不在
+  CI 门禁范围，但必须一起维护，不允许长期漂移。AGENTS.md 体系与 tests
+  内部文档保持纯中文，不做双语。
 
 ## Submodule 工作流
 

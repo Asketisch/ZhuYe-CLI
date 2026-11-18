@@ -16,8 +16,8 @@ ZhuYe-CLI — ZhuYe 的终端交互式客户端(ratatui + crossterm),面向终�
 ## AGENTS.md 体系导航
 
 本仓库的目录级契约按「渐进式披露」分层:根篇(本篇)恒在上下文只做导航与全局约定,
-具体目录的本地契约在就近的分层篇里,改哪个目录先读哪篇。**修改任何目录前,
-先读该目录(或其所在 crate 篇)的 AGENTS.md。**
+具体目录的本地契约在就近的分层篇里,用户向系统说明在 `docs/`(中英双语)。
+**修改任何目录前,先读该目录(或其所在 crate 篇)的 AGENTS.md。**
 
 | 想了解什么 | 读哪个 AGENTS.md |
 |---|---|
@@ -28,6 +28,7 @@ ZhuYe-CLI — ZhuYe 的终端交互式客户端(ratatui + crossterm),面向终�
 | 构建面 / 依赖 / feature / bootstrap / 桩层 / picker | [crates/zhuye-cli/](crates/zhuye-cli/AGENTS.md) |
 | 测试分层 / 组字母 / coverage-audit / CI 门禁 | [tests/](tests/AGENTS.md) |
 | 构建 / 发版 / 安装脚本 | [scripts/](scripts/AGENTS.md) |
+| 架构与系统说明(用户向,中英双语) | [docs/architecture.md](docs/architecture.md) · [README 文档表](README.md)(外链) |
 | 核心引擎(submodule,只读消费) | [zhuye-agent/AGENTS.md](zhuye-agent/AGENTS.md)(外链,展开见下方「submodule 侧索引」) |
 | 贡献流程 / submodule 升级 | [CONTRIBUTING.md](CONTRIBUTING.md)(外链) |
 | 第三方来源与许可证 | [NOTICE](NOTICE)(外链) |
@@ -45,17 +46,6 @@ ZhuYe-CLI — ZhuYe 的终端交互式客户端(ratatui + crossterm),面向终�
 | 外部集成:MCP / LSP / git | [crates/integrations/](zhuye-agent/crates/integrations/AGENTS.md) |
 | 运行时与入口:AgentThread / StateGraph / headless / 引擎 CLI | [crates/runtime/](zhuye-agent/crates/runtime/AGENTS.md) · [zhuye-core/](zhuye-agent/crates/runtime/zhuye-core/AGENTS.md) · [zhuye-exec/](zhuye-agent/crates/runtime/zhuye-exec/AGENTS.md) · [zhuye-cli/](zhuye-agent/crates/runtime/zhuye-cli/AGENTS.md) |
 | 引擎侧脚本 / 双 SDK / 测试分层 | [scripts/](zhuye-agent/scripts/AGENTS.md) · [sdks/](zhuye-agent/sdks/AGENTS.md) · [tests/](zhuye-agent/tests/AGENTS.md) |
-
-## ⚠️ 代码规范:注释必须为中文
-
-**本仓库所有代码注释必须使用中文**,包括:
-
-- 行注释(`//`)与块注释(`/* */`)
-- 文档注释(`///`、`//!`)——crate 模块文档、结构体/函数/字段文档
-- 提交信息与 PR 描述同样使用中文(参考 git log)
-
-新增或修改代码时一律遵守。第三方/许可证声明保留原文。
-**用户可见文案(UI 文本、错误提示、日志)不在此限制内**,按现有代码风格。
 
 ## 常用命令
 
@@ -195,6 +185,7 @@ zhuye-task/subagent、zhuye-protocol。
    | 依赖 / feature / bootstrap 装配 / 桩层 / picker | `crates/zhuye-cli/` |
    | 测试分层 / 组结构 / 覆盖矩阵 / 套件入口 | `tests/` |
    | 脚本新增 / 移除 / 行为变更 | `scripts/` 速览表 |
+   | 用户可见文档(README / docs/ / SECURITY 等中文版) | 同步更新对应 `.en.md`(不在 CI 门禁,必须同步) |
    | 升级 submodule 指针 / 引擎契约变化 | 按上方「submodule 侧索引」读对应篇核对消费点;本仓库适配面变化则同步 `crates/zhuye-cli/` 篇 |
 
    拿不准改哪篇时,至少更新 crate 篇与根导航表,确保索引不失真。
@@ -217,6 +208,18 @@ zhuye-task/subagent、zhuye-protocol。
 > 全程离线:`ZHUYE_MODEL=mock/mock-1` + 隔离 HOME(mktemp),
 > 不污染真实 `~/.zhuye`;缺 pytest / pyte 时能力覆盖层判基础设施错误。
 > 首次运行需 `pip install pytest pyte`(Node 不需要)。
+
+## 约定
+
+- **强制:注释一律使用中文** —— 包括行注释(`//`)与块注释(`/* */`)、
+  文档注释(`///`、`//!`,crate 模块文档、结构体/函数/字段文档),提交信息与
+  PR 描述同样使用中文(参考 git log)。第三方/许可证声明保留原文;
+  **用户可见文案(UI 文本、错误提示、日志)不在此限制内**,按现有代码风格。
+- **用户可见文档中英双语**:README / docs/ / SECURITY / CONTRIBUTING /
+  CODE_OF_CONDUCT 为分文件成对(`x.md` + `x.en.md`,顶部语言切换条互指);
+  改了中文版须同步更新对应 `.en.md` —— 英文版不在 CI 门禁,但必须一起维护,
+  不允许长期漂移(与 submodule 侧治理规则一致)。
+- AGENTS.md 体系与 tests 内部文档保持纯中文,不做双语。
 
 ## Submodule 维护
 

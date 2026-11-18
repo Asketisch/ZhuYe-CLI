@@ -1,6 +1,6 @@
 # AGENTS.md — history_render(历史行渲染与 legacy 通道)
 
-> 何时读我:改 slash **legacy 通道**(白名单 / `dispatch_slash`)、statusline、
+> **何时读我**:改 slash **legacy 通道**(白名单 / `dispatch_slash`)、statusline、
 > 历史行渲染(cells / marker / notify)之前,先读本篇。本篇契约域 =
 > `history_render.rs`(src 根文件)+ `history_render/` 目录的**双形态模块**。
 

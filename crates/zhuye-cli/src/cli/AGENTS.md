@@ -1,6 +1,6 @@
 # AGENTS.md — cli/(headless 子命令)
 
-> 何时读我:改 headless 子命令(session / traces / discussion / security /
+> **何时读我**:改 headless 子命令(session / traces / discussion / security /
 > workspace)或 `src/bin/main.rs` 的 clap 路由之前,先读本篇。
 
 ## 模块概述
