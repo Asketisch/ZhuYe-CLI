@@ -227,14 +227,17 @@ def test_loop_fires_repeatedly_and_stops(tui, mock_script) -> None:
             s.key("enter")
             deadline = time.monotonic() + 8
             while time.monotonic() < deadline:
-                if "/loop: stopped" in s.raw_output():
+                # 停止提示走归一化屏幕断言:raw 流里多词文案会被流式渲染的
+                # 词间重绘打断(见上方 LOOPFIRE 注释),高负载 runner 上
+                # "was: ..." 段会匹配失败 —— pyte 重建的逻辑屏幕不受影响。
+                if "/loop: stopped" in s.normalized():
                     stopped = True
                     break
                 s._pump(settle=0.4, max_wait=0.8)
             if stopped:
                 break
         assert stopped, f"/loop stop 重试 4 次仍未生效:\n{s.raw_output()[-600:]}"
-        assert "was: /status every 3s" in s.raw_output(), "停止提示应带原配置"
+        assert "was: /status every 3s" in s.normalized(), "停止提示应带原配置"
         assert not s.has_panic()
 
 

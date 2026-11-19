@@ -40,7 +40,7 @@ expression: commands
 /mcp - list configured MCP tools; use /mcp verbose for details
 /lsp - show language-server diagnostics status
 /todo - show the agent's current todo checklist
-/prompt - manage prompt layers: /prompt list · /prompt reload
+/prompt - choose prompts: /prompt · /prompt use <profile> · /prompt reload
 /logout - log out of Reflect
 /exit - exit Reflect
 /feedback - send logs to maintainers
