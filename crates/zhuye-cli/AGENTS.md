@@ -41,10 +41,20 @@ src/ 约 489 个 `.rs`、18 万行,其中 `tui_core/` 约占 82% —— 真正�
    cli 篇)。新增入口时按此选 runtime,不要把 TUI 路径改成多线程。
 6. **`unsafe` 边界**:`bootstrap.rs:110-119` 的 `set_var` 仅限 bootstrap 单线程期
    (SAFETY 论证在注释内),不得在多线程期复制该写法;其余 unsafe 集中在 tui_core(见该篇)。
-7. **PlanWrite 三件套**(`bootstrap.rs:167-174`):`PlanWriteTool` 必须与
-   Enter/ExitPlanMode 一起注册(ALWAYS_ON_TOOLS 含 PlanWrite,缺注册即 "tool not found");
-   TUI 装配对齐 headless `zhuye-exec/src/bootstrap.rs` 参照物(`bootstrap_wiring.rs` 头注释)。
-8. **导出 / 落盘统一走 `zhuye_fs::write_atomic`**,不要手写 temp+rename。
+7. **PlanWrite 三件套**:EnterPlanMode / ExitPlanMode / PlanWrite 必须一起注册
+   (ALWAYS_ON_TOOLS 含 PlanWrite,缺注册即 "tool not found")。上游 8da90e5 起
+   TUI 内置工具注册走单一事实源 `zhuye_tools::register_builtin_tools_with_gates`
+   (exec / lib facade 共用),三件套在其中保证 —— **勿在本仓 bootstrap 手工
+   内联追加工具注册**,新增装配需求对齐 headless `zhuye-exec/src/headless.rs`
+   参照物(`bootstrap_wiring.rs` 头注释)。
+8. **门控型 bundled 插件装配**(上游 8da90e5 基建):门控判定单一事实源是
+   `zhuye_plugin::bundled_plugin_enabled`(默认表 `BUNDLED_PLUGIN_DEFAULTS`);
+   bootstrap.rs 三处接线 —— 工具注册经 `bundled_tool_gates`(web-search /
+   notebook 默认开,`[plugins].disabled_plugins` 显式禁用 = 不进注册表)、
+   verify-hooks 插件启用 = `enable_hook_names` 注入 `verification` / `test_runner`
+   (build_engine 前)、bootstrap_lsp 的 `lsp_plugin_disabled` 参数
+   (`plugins.is_disabled("lsp")`,config 激活语义不变)。改插件装配时三处同步。
+9. **导出 / 落盘统一走 `zhuye_fs::write_atomic`**,不要手写 temp+rename。
 
 ## 桩层
 

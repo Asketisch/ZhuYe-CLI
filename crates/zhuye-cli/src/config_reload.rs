@@ -32,9 +32,11 @@ pub fn diff_sections(old: &ReflectConfig, new: &ReflectConfig) -> Vec<String> {
     }
     cmp_section!(active, "active");
     cmp_section!(prompts, "prompts");
-    cmp_section!(anthropic, "anthropic");
-    cmp_section!(openai, "openai");
-    cmp_section!(ollama, "ollama");
+    // 模型组(`[[model_group]]`)是 v2 唯一的模型接入单元 —— 组增删改
+    // (端点 / 凭据 / 默认 model)统一报 "model_group",与引擎 exec 的
+    // diff_sections 同名对齐(上游 8da90e5 起)。registry 侧经
+    // `apply_to_registry` 已生效,此处只补段名报告。
+    cmp_section!(model_group, "model_group");
     cmp_section!(compact, "compact");
     cmp_section!(token_budget, "token_budget");
     cmp_section!(sandbox, "sandbox");
@@ -43,7 +45,7 @@ pub fn diff_sections(old: &ReflectConfig, new: &ReflectConfig) -> Vec<String> {
     cmp_section!(lsp_servers, "lsp_servers");
     cmp_section!(plugins, "plugins");
     cmp_section!(routing, "routing");
-    cmp_section!(subagent_providers, "subagent_providers");
+    cmp_section!(subagent_models, "subagent_models");
     cmp_section!(coordinator, "coordinator");
     cmp_section!(sanitize, "sanitize");
     cmp_section!(model, "model");
@@ -55,6 +57,17 @@ pub fn diff_sections(old: &ReflectConfig, new: &ReflectConfig) -> Vec<String> {
     cmp_section!(notifications, "notifications");
     cmp_section!(web_search, "web_search");
     cmp_section!(permissions, "permissions");
+    // v2 新增段:TUI 补全版比引擎 exec 的名单更全(exec 只报常用段),
+    // 这里保持「能 diff 的段都报」口径,Notice 不漏变更。
+    cmp_section!(ask_user_question, "ask_user_question");
+    cmp_section!(prompt_guard, "prompt_guard");
+    cmp_section!(subagents, "subagents");
+    cmp_section!(postgres_session, "postgres_session");
+    cmp_section!(sse_redis, "sse_redis");
+    cmp_section!(bridge, "bridge");
+    cmp_section!(voice, "voice");
+    cmp_section!(dap, "dap");
+    cmp_section!(acp, "acp");
     out
 }
 
@@ -135,15 +148,13 @@ mod tests {
 
     fn cfg_with_model(model: &str) -> ReflectConfig {
         ReflectConfig {
-            active: zhuye_config::ActiveSection {
-                provider: Some("openai".into()),
-                ..Default::default()
-            },
-            openai: Some(zhuye_config::OpenAISection {
+            model_group: vec![zhuye_config::ModelGroupSection {
+                id: "openai".into(),
+                endpoint: "openai".into(),
                 api_key: Some("k".into()),
                 model: Some(model.into()),
                 ..Default::default()
-            }),
+            }],
             ..Default::default()
         }
     }
@@ -160,9 +171,10 @@ mod tests {
         let a = cfg_with_model("gpt-4o");
         let b = cfg_with_model("gpt-4o-mini");
         let d = diff_sections(&a, &b);
-        // model 挂在 provider 段(`[<provider>].model`),`[active]` 段只有
-        // provider / credential / max_iterations —— provider 没变则 active 不变。
-        assert!(d.iter().any(|s| s == "openai"), "{d:?}");
+        // v2:model 挂在模型组(`[[model_group]]` 条目的 `model` 字段),
+        // `[active]` 只剩 group / credential / max_iterations 等 —— 组没变
+        // 则 active 不变。
+        assert!(d.iter().any(|s| s == "model_group"), "{d:?}");
         assert!(!d.iter().any(|s| s == "active"), "{d:?}");
     }
 
@@ -182,5 +194,31 @@ mod tests {
         b.model_discovery = Some(zhuye_config::ModelDiscoverySection::default());
         let d = diff_sections(&a, &b);
         assert!(d.iter().any(|s| s == "model_discovery"), "{d:?}");
+    }
+
+    #[test]
+    fn model_group_change_is_reported() {
+        // `[[model_group]]` 段增删改都要进热重载 Notice 的变更段列表。
+        let a = ReflectConfig::default();
+        let mut b = ReflectConfig::default();
+        b.model_group = vec![zhuye_config::ModelGroupSection {
+            id: "bigmodel".into(),
+            endpoint: "openai".into(),
+            api_key: Some("k".into()),
+            ..Default::default()
+        }];
+        let d = diff_sections(&a, &b);
+        assert!(d.iter().any(|s| s == "model_group"), "{d:?}");
+    }
+
+    #[test]
+    fn subagent_models_change_is_reported() {
+        // v2 段名 `[subagent_models]`(v1 旧名 `[subagent_providers]` 由
+        // 引擎 load 迁移接管)—— 段变更要进 Notice 列表。
+        let a = ReflectConfig::default();
+        let mut b = ReflectConfig::default();
+        b.subagent_models = Some(zhuye_config::schema::SubagentModelsSection::default());
+        let d = diff_sections(&a, &b);
+        assert!(d.iter().any(|s| s == "subagent_models"), "{d:?}");
     }
 }

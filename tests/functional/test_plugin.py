@@ -1,14 +1,19 @@
-"""G 组 —— 插件面:启动通知、slash 命令注入、`/plugin` overlay。
+"""G 组 —— 插件面:启动通知、slash 命令注入、`/plugin` overlay、门控插件。
 
-插件能力由 submodule 的 `reflect-plugin` 提供,本仓 TUI 侧只消费三处:
+插件能力由 submodule 的 `reflect-plugin` 提供,本仓 TUI 侧只消费四处:
 1. **启动通知**:bootstrap 挂载成功后 `PluginLoaded` 事件经 lifecycle 通道
    进通知流(scrollback 出现 `Plugin 'demo@inline' loaded …`);
 2. **slash 命令注入**:插件命令快照注入 composer,输入 `/demo` 弹窗列出
    `demo:hello`;提交 `/demo:hello` 不被「未知命令」校验拦截;
-3. **`/plugin` overlay**:展示真实已装插件(id / version / enabled 标志)。
+3. **`/plugin` overlay**:展示真实已装插件(id / version / enabled 标志);
+4. **门控型 bundled 插件**(上游 8da90e5 基建,装配接线在 bootstrap.rs):
+   web-search / notebook 默认开,`[plugins].disabled_plugins` 显式禁用 =
+   工具不进注册表(区别于 `[active].disallowed_tools` 的可见性过滤)。
+   判定单一事实源是引擎 `zhuye_plugin::bundled_plugin_enabled`。
 
 **前置**:submodule 构建出的 `reflect` CLI(用于安装示例插件)。
 缺失则整组 SKIP(不算失败)—— 插件 e2e 是增强项,不阻塞基础回归。
+门控用例(G5/G6)只依赖本仓二进制 + mock provider,不依赖示例插件。
 
 离线(`ZHUYE_MODEL=mock/mock-1`,零网络)。
 """
@@ -174,3 +179,72 @@ def test_plugin_overlay_lists_installed_plugin(plugin_home, sandbox) -> None:
             time.sleep(0.4)
         for token in ("Installed Plugins", "demo@inline", "v0.1.0", "enabled"):
             assert token in txt, f"overlay 应含 {token}:\n{txt[-800:]}"
+
+
+# ── 门控型 bundled 插件(上游 8da90e5 基建;装配接线在本仓 bootstrap.rs)──
+# 观察面:mock 回合里让模型调 `tool_search` / 直调工具,断言屏幕可见的
+# 工具输出文案(tool_search 命中行格式 `{name} [builtin]: {desc}`;未注册
+# 直调的引擎报错为 `tool not found: {name}`)。全程零网络。
+
+
+def _write_sandbox_config(sandbox, body: str) -> None:
+    """覆写沙箱 HOME 的 config.toml(保持「文件存在」前提,见 Sandbox.create)。"""
+    (sandbox.home / ".zhuye" / "config.toml").write_text(body, encoding="utf-8")
+
+
+def test_gated_plugin_default_on_registers_web_search(tui, mock_script) -> None:
+    """G5 门控默认态零变化:空 `[plugins]` 下 web_search 照常注册(金测试)。
+
+    model 调 `tool_search` 查 "web_search",命中输出行 `web_search [builtin]: …`
+    即注册面存在 —— 「默认开 + 升级零影响」的对外可见口径。
+    """
+    from tui_pty import text_reply, tool_call
+
+    script = mock_script(
+        [
+            tool_call("tool_search", {"query": "web_search"}),
+            text_reply("查询完成"),
+        ]
+    )
+    with tui(script=script) as s:
+        s.wait_boot(timeout=30)
+        s.type_text("search your tools")
+        s.key("enter")
+        txt = s.wait_text("✓ tool_search", timeout=30)
+        assert "web_search [builtin]" in txt, (
+            f"tool_search 应命中 web_search [builtin]:\n{txt[-600:]}"
+        )
+
+
+def test_gated_plugin_disabled_unregisters_web_search(tui, mock_script, sandbox) -> None:
+    """G6 `[plugins].disabled_plugins = ["web-search"]` = 注册门控(非可见性过滤)。
+
+    同一 tool_search 查询不再命中(`No tools matched`);直调 web_search 报
+    `tool not found`(未注册错误,区别于「已注册但缺 key」的执行错误)。
+    插件级粒度:notebook 等其余门控项不受影响。
+    """
+    from tui_pty import text_reply, tool_call
+
+    _write_sandbox_config(
+        sandbox,
+        '# 测试配置:显式禁用 web-search 门控插件。\n'
+        '[plugins]\n'
+        'disabled_plugins = ["web-search"]\n',
+    )
+    script = mock_script(
+        [
+            tool_call("tool_search", {"query": "web_search"}),
+            tool_call("web_search", {"query": "rust async"}),
+            text_reply("查询完成"),
+        ]
+    )
+    with tui(script=script) as s:
+        s.wait_boot(timeout=30)
+        s.type_text("search your tools")
+        s.key("enter")
+        txt = s.wait_text("✓ tool_search", timeout=30)
+        assert "No tools matched" in txt, f"禁用后 tool_search 不应命中:\n{txt[-600:]}"
+        assert "web_search [builtin]" not in txt, f"禁用后不应再命中 web_search:\n{txt[-600:]}"
+        # 直调被禁用的工具 → 未注册错误(tool not found),而非执行错误。
+        txt2 = s.wait_text("✗ web_search", timeout=30)
+        assert "tool not found" in txt2, f"禁用后直调应报未注册错误:\n{txt2[-600:]}"

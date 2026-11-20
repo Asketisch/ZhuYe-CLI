@@ -35,9 +35,11 @@ cd Reflect-TUI  # 仓库目录名以实际 clone 为准
 make build
 
 # 3. Configure an LLM provider (pick one)
-#    Option A: environment variable
+#    Option A: environment variable (env fallback for groups id = "anthropic" / "openai")
 export ANTHROPIC_API_KEY=sk-ant-...
-#    Option B: ~/.zhuye/config.toml — [active] / [anthropic] / [openai]
+#    Option B: declare [[model_group]] in ~/.zhuye/config.toml (the v2 single
+#    access unit; legacy [anthropic]/[openai] sections migrate on load —
+#    see docs/configuration.en.md)
 
 # 4. Run
 make run

@@ -357,13 +357,17 @@ def test_malformed_config_warns_and_falls_back_to_defaults(tui, sandbox) -> None
 
 
 def test_invalid_model_env_fails_fast(tui) -> None:
-    """W10 `ZHUYE_MODEL=nonexistent/x`:给出可行动的错误并退出。"""
+    """W10 `ZHUYE_MODEL=nonexistent/x`:给出可行动的错误并退出。
+
+    v2(上游 8da90e5)起模型组是唯一接入单元 —— 未知前缀既不是已声明组 id,
+    也无凭据组兜底时,启动报错改用「模型组」语汇。
+    """
     with tui(env={"ZHUYE_MODEL": "nonexistent/x"}) as s:
         rc = _wait_exit(s, timeout=25)
-        assert rc is not None, "未知 provider 应快速退出而不是挂死"
-        assert rc != 0, "未知 provider 应非 0 退出"
+        assert rc is not None, "未知模型组应快速退出而不是挂死"
+        assert rc != 0, "未知模型组应非 0 退出"
         raw = s.raw_output()
-        assert "provider" in raw.lower(), f"错误应提到 provider:\n{raw[-400:]}"
+        assert "模型组" in raw, f"错误应提到模型组:\n{raw[-400:]}"
 
 
 def test_sigterm_terminates_cleanly(tui, sandbox, mock_script) -> None:

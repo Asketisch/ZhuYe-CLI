@@ -111,7 +111,9 @@ zhuye-task/subagent、zhuye-protocol。
 6. vendored 上游测试 fixtures 由 feature `tui-upstream-tests` gate,默认关闭
    (`cargo test -p zhuye-cli --features tui-upstream-tests` 才跑)。
 7. Plan mode 写盘:PlanWrite 工具把 plan markdown 写到 `<workspace>/.zhuye/plan/<name>.md`,
-   ExitPlanMode 读取;`PlanWriteTool` 必须与 Enter/ExitPlanMode 一起注册(见 `bootstrap.rs`)。
+   ExitPlanMode 读取;`PlanWriteTool` 必须与 Enter/ExitPlanMode 一起注册 —— 上游 8da90e5 起
+   由单一事实源 `zhuye_tools::register_builtin_tools_with_gates` 保证,本仓 `bootstrap.rs`
+   勿手工内联追加工具注册(见 `crates/zhuye-cli/AGENTS.md` 约束 7/8)。
 8. **slash 命令有两条分发通道**,行为不一致,改命令时两条都要看:
    - `history_render::dispatch_slash`(legacy 通道)—— 命令名命中
      `is_legacy_passthrough_slash` 白名单时走这条;

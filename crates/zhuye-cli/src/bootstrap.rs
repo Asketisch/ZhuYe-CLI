@@ -17,7 +17,7 @@ use zhuye_core::{AgentConfig, AgentThread};
 use zhuye_hooks::builtins::{PlanModeGate, build_read_before_edit};
 use zhuye_llm::ModelRegistry;
 use zhuye_permissions::{FilePermissionStore, StorePermissionResolver};
-use zhuye_tools::{ToolRegistry, builtins};
+use zhuye_tools::ToolRegistry;
 
 /// bootstrap 交给 TUI 主循环的运行时句柄:主循环需要的、但不属于
 /// `AgentThread` 公开面的装配产物。
@@ -121,10 +121,12 @@ async fn bootstrap_and_run(args: TuiArgs) -> Result<()> {
     zhuye_cfg
         .apply_to_registry(&registry)
         .map_err(|e| anyhow::anyhow!("provider 构造失败: {e}"))?;
-    let provider = zhuye_cfg.active_provider().ok_or_else(|| {
+    // v2(上游 8da90e5):`active_provider()` 改名 `active_group()` ——
+    // 模型组是唯一接入单元,返回值 = 活跃组 id(registry 池名)。
+    let provider = zhuye_cfg.active_group().ok_or_else(|| {
         anyhow::anyhow!(
-            "未配置任何 provider:请在 ~/.zhuye/config.toml 设置 [active]/[anthropic]/[openai],\
-             或设置 OPENAI_API_KEY / ANTHROPIC_API_KEY 环境变量"
+            "未配置任何可用模型组:请在 ~/.zhuye/config.toml 声明 [[model_group]],\
+             或设置 OPENAI_API_KEY / ANTHROPIC_API_KEY 环境变量(组 openai / anthropic 有 env 兜底)"
         )
     })?;
     // v1.3 model 解析诚实化:不再回落内置默认,缺配置时如实报错。
@@ -139,44 +141,53 @@ async fn bootstrap_and_run(args: TuiArgs) -> Result<()> {
         .map_err(|e| anyhow::anyhow!("model 解析失败: {e}"))?
         .ok_or_else(|| {
             anyhow::anyhow!(
-                "provider `{provider}` 未配置 model:请在 ~/.zhuye/config.toml \
-                 设置 [active].model 或 [{provider}].model,或设置 ZHUYE_MODEL 环境变量"
+                "模型组 `{provider}` 未配置 model:请在 [[model_group]] 条目上 \
+                 设置 model 字段,或设置 ZHUYE_MODEL 环境变量"
             )
         })?;
 
     // 1.5 `[sanitize]` 脱敏器 + `[hooks]` hook engine(含 builtin + 插件
     // hook),AgentThread 构造时注入 —— 此前 TUI 传 None,两段配置是死信。
     let sanitizer = build_sanitizer(zhuye_cfg.sanitize.as_ref());
-    let hook_engine: Arc<zhuye_hooks::HookEngine> = Arc::new(
-        zhuye_hooks::config::HooksConfig::from_reflect_section(&zhuye_cfg.hooks).build_engine(),
-    );
+    // 门控型 bundled 插件(上游 8da90e5 基建)的启用 / 禁用列表:enabled
+    // 与下方 `bootstrap_plugins` 挂载列表同源(TUI 无 --plugin 显式覆盖
+    // 参数,直接用 config `[plugins].enabled_plugins`);disabled 取
+    // `[plugins].disabled_plugins`。显式禁用 > 显式启用 > 默认开关表。
+    let plugin_enabled_ids = zhuye_cfg.plugins.enabled_plugins.clone();
+    let plugin_disabled_ids = zhuye_cfg.plugins.disabled_plugins.clone();
+    let mut hooks_cfg = zhuye_hooks::config::HooksConfig::from_reflect_section(&zhuye_cfg.hooks);
+    // verify-hooks 门控插件(默认关,双路径):插件启用 = 显式启用
+    // verification / test_runner 两个内置 hook(与 exec 同口径,在
+    // build_engine 之前注入;TUI 无 serve 的 explicit-only 收紧步骤)。
+    if zhuye_plugin::bundled_plugin_enabled(
+        "verify-hooks",
+        &plugin_enabled_ids,
+        &plugin_disabled_ids,
+    ) {
+        hooks_cfg.enable_hook_names(&["verification", "test_runner"]);
+    }
+    let hook_engine: Arc<zhuye_hooks::HookEngine> = Arc::new(hooks_cfg.build_engine());
 
-    // 2. 注册内置工具的 Tool registry（与 zhuye-exec 同集合）。
+    // 2. 注册内置工具的 Tool registry(与 zhuye-exec 同集合)。
+    // 上游 8da90e5 起改走单一事实源 `register_builtin_tools_with_gates`
+    // (exec / lib facade 共用,勿在此内联追加):门控项 web_search /
+    // notebook_edit 按 bundled 插件启用状态决定注册与否 —— 显式禁用 =
+    // 不进注册表(区别于 `[active].disallowed_tools` 的可见性过滤),
+    // 默认全开时空配置行为不变;AskUserQuestion 上限改从
+    // `[ask_user_question]` 段注入(此前 TUI 走 protocol 默认)。
     let tools = Arc::new(ToolRegistry::default());
-    tools.register(Arc::new(builtins::EchoTool));
-    tools.register(Arc::new(builtins::BashTool::default()));
-    tools.register(Arc::new(builtins::ReadTool));
-    tools.register(Arc::new(builtins::WriteTool));
-    tools.register(Arc::new(builtins::EditTool));
-    tools.register(Arc::new(builtins::DeleteTool));
-    tools.register(Arc::new(builtins::GrepTool));
-    tools.register(Arc::new(builtins::GlobTool));
-    tools.register(Arc::new(zhuye_ast::AstTool::new()));
-    tools.register(Arc::new(builtins::WebFetchTool::new()));
-    tools.register(Arc::new(builtins::WebSearchTool::new()));
-    tools.register(Arc::new(builtins::EnterPlanModeTool));
-    tools.register(Arc::new(builtins::ExitPlanModeTool));
-    // v1.x Plan mode 写盘工具 —— Plan 阶段把 plan markdown 落到
-    // `<workspace>/.zhuye/plan/<name>.md`,供 ExitPlanMode 读取。
-    // required_permission = Auto,Plan mode 下免审批直写。必须与
-    // EnterPlanMode / ExitPlanMode 一起注册,否则 LLM 看到 schema
-    // (因 ALWAYS_ON_TOOLS 含 PlanWrite)却找不到实现 → "tool not found"。
-    tools.register(Arc::new(builtins::PlanWriteTool));
-    // v1.x:AskUserQuestionTool 现需 max_questions 字段(此前死信,现从
-    // config 注入)。TUI 走 Default(protocol 默认上限),与 CLI 默认一致。
-    tools.register(Arc::new(builtins::AskUserQuestionTool::default()));
-    tools.register(Arc::new(builtins::AskUserTool));
-    tools.register(Arc::new(builtins::ImageViewTool));
+    let gates = zhuye_plugin::bundled_tool_gates(&plugin_enabled_ids, &plugin_disabled_ids);
+    let ask_uq_max = zhuye_cfg
+        .ask_user_question
+        .as_ref()
+        .and_then(|s| s.resolved())
+        .map(|r| r.max_questions as u32);
+    zhuye_tools::register_builtin_tools_with_gates(
+        &tools,
+        ask_uq_max,
+        Arc::new(zhuye_ast::AstTool::new()),
+        gates,
+    );
 
     // 3. Task / team 存储。
     let task_store: Arc<dyn zhuye_task::TaskStore> = if args.ephemeral_tasks {
@@ -431,7 +442,16 @@ async fn bootstrap_and_run(args: TuiArgs) -> Result<()> {
     let mcp_manager = bootstrap_mcp(&zhuye_cfg, lifecycle_tx.clone(), tools.clone()).await;
     // v1.x:保留 LSP 连接管理器 —— `/lsp` 用它读诊断注册表(此前被丢弃,
     // publishDiagnostics 缓存的数据永远拿不到)。
-    let lsp_manager = bootstrap_lsp(&zhuye_cfg, lifecycle_tx.clone(), tools.clone()).await;
+    let lsp_manager = bootstrap_lsp(
+        &zhuye_cfg,
+        lifecycle_tx.clone(),
+        tools.clone(),
+        // lsp 门控插件粗粒度开关(上游 8da90e5,与 exec 同口径):显式禁用
+        // 即整体关闭(工具不注册、server 不启动);`[lsp_servers]` config
+        // 激活语义不变,插件启用无独立效果。
+        zhuye_cfg.plugins.is_disabled("lsp"),
+    )
+    .await;
 
     // MCP 资源 / Prompts 读取工具(与 exec 对齐;MCP 未启用时挂空
     // manager,工具自身对空列表返回友好结果)。v1.6 补 Prompts 原语。

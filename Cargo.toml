@@ -53,7 +53,9 @@ zhuye-compact    = { path = "zhuye-agent/crates/abilities/zhuye-compact" }
 zhuye-recovery   = { path = "zhuye-agent/crates/abilities/zhuye-recovery" }
 zhuye-notes      = { path = "zhuye-agent/crates/abilities/zhuye-notes" }
 zhuye-sanitize   = { path = "zhuye-agent/crates/abilities/zhuye-sanitize" }
-zhuye-kms        = { path = "zhuye-agent/crates/abilities/zhuye-kms" }
+# zhuye-kms 上游 8da90e5 起由 abilities 归位 integrations(plugins/kms 的能力本体),
+# 镜像路径同步跟随(见 CONTRIBUTING.md「submodule 工作流」)。
+zhuye-kms        = { path = "zhuye-agent/crates/integrations/zhuye-kms" }
 
 # resources 层
 # v0.1.8-develop:zhuye-fs / zhuye-git 为 submodule 新增 crate,
@@ -120,6 +122,11 @@ rmcp               = { version = "=3.10.0", features = [
 ] }
 lsp-types         = { version = "=0.97", default-features = false }
 globset           = "0.4"
+# v1.x skills.sh 市场安装:GitHub tarball 流式解包(tar+gzip,防 zip-slip)。
+# 仅 zhuye-skills 以 `workspace = true` 继承 —— 跨 workspace 解析落到本根
+# 清单,必须在此镜像声明(见 AGENTS.md 关键约束 1)。
+tar         = "0.4"
+flate2      = "1"
 url               = "2"
 schemars = "0.8"
 uuid     = { version = "1", features = ["v4", "v7", "serde"] }

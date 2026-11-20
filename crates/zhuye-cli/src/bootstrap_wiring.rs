@@ -130,9 +130,14 @@ pub(crate) fn build_telemetry_sink(
     Some(sink)
 }
 
-/// 遍历 config 所有 provider 的 credentials,收集声明了 `quota` 的条目,
-/// 注册到 `QuotaTracker`。任一 provider 有 quota 声明 → `Some(tracker)`;
-/// 全无 → `None`(向后兼容)。
+/// 遍历 config 所有模型组(`[[model_group]]`,v2 唯一的模型接入单元;
+/// 上游 8da90e5 起内置三段移除,旧配置经 load 迁移就地转成等价模型组)的
+/// credentials,收集声明了 `quota` 的条目,注册到 `QuotaTracker`。
+/// 任一组有 quota 声明 → `Some(tracker)`;全无 → `None`(向后兼容)。
+///
+/// 模型组只注册**显式枚举**的 `credentials`:引擎 builder 从组级 `api_key`
+/// wrap 出的 default 凭据 `quota` 恒 `None`(见 `build_group_pool`),
+/// 组级字段无需处理。provider 名取组 id,与 `apply_to_registry` 的池名一致。
 pub(crate) fn build_quota_tracker(
     cfg: &zhuye_config::ReflectConfig,
 ) -> Option<zhuye_llm::SharedQuotaTracker> {
@@ -165,54 +170,63 @@ pub(crate) fn build_quota_tracker(
         }
     }
 
-    let mut register_provider = |provider: &str, creds: &[zhuye_config::CredentialConfig]| {
-        for c in creds {
-            if let Some(q) = &c.quota {
-                let rt_source = q.check_via.as_ref().map(|s| match s {
-                    QuotaSource::Kimi => zhuye_llm::QuotaSource::Kimi,
-                    QuotaSource::Zhipu => zhuye_llm::QuotaSource::Zhipu,
-                    QuotaSource::Minimax => zhuye_llm::QuotaSource::Minimax,
-                    QuotaSource::Zenmux => zhuye_llm::QuotaSource::Zenmux,
-                    QuotaSource::Volcengine => zhuye_llm::QuotaSource::Volcengine,
-                    QuotaSource::AnthropicUsage => zhuye_llm::QuotaSource::AnthropicUsage,
-                    QuotaSource::OpenAIUsage => zhuye_llm::QuotaSource::OpenAIUsage,
-                });
-                let rt = zhuye_llm::QuotaConfig {
-                    window_secs: q.window_secs,
-                    max_tokens: q.max_tokens,
-                    check_via: rt_source,
-                };
-                tracker.register(provider, &c.label, rt);
-                let base_url = c
-                    .base_url
-                    .clone()
-                    .unwrap_or_else(|| format!("https://{provider}"));
-                tracker.register_credential(provider, &c.label, &base_url, &c.api_key);
-                if let Some(src) = &q.check_via {
-                    if let Some(p) = make_provider(src) {
-                        tracker.register_provider(provider, &c.label, p);
+    // `base_url_fallback`:凭据自身未写 base_url 时的回退值(模型组为
+    // 组级 base_url,再退到占位域名)。
+    let mut register_provider =
+        |provider: &str, creds: &[zhuye_config::CredentialConfig], base_url_fallback: String| {
+            for c in creds {
+                if let Some(q) = &c.quota {
+                    let rt_source = q.check_via.as_ref().map(|s| match s {
+                        QuotaSource::Kimi => zhuye_llm::QuotaSource::Kimi,
+                        QuotaSource::Zhipu => zhuye_llm::QuotaSource::Zhipu,
+                        QuotaSource::Minimax => zhuye_llm::QuotaSource::Minimax,
+                        QuotaSource::Zenmux => zhuye_llm::QuotaSource::Zenmux,
+                        QuotaSource::Volcengine => zhuye_llm::QuotaSource::Volcengine,
+                        QuotaSource::AnthropicUsage => zhuye_llm::QuotaSource::AnthropicUsage,
+                        QuotaSource::OpenAIUsage => zhuye_llm::QuotaSource::OpenAIUsage,
+                    });
+                    let rt = zhuye_llm::QuotaConfig {
+                        window_secs: q.window_secs,
+                        max_tokens: q.max_tokens,
+                        check_via: rt_source,
+                    };
+                    tracker.register(provider, &c.label, rt);
+                    let base_url = c
+                        .base_url
+                        .clone()
+                        .unwrap_or_else(|| base_url_fallback.clone());
+                    tracker.register_credential(provider, &c.label, &base_url, &c.api_key);
+                    if let Some(src) = &q.check_via {
+                        if let Some(p) = make_provider(src) {
+                            tracker.register_provider(provider, &c.label, p);
+                        }
                     }
+                    tracing::info!(
+                        provider,
+                        label = %c.label,
+                        window_secs = q.window_secs,
+                        max_tokens = q.max_tokens,
+                        has_api = q.check_via.is_some(),
+                        "registered token plan quota for credential"
+                    );
+                    any = true;
                 }
-                tracing::info!(
-                    provider,
-                    label = %c.label,
-                    window_secs = q.window_secs,
-                    max_tokens = q.max_tokens,
-                    has_api = q.check_via.is_some(),
-                    "registered token plan quota for credential"
-                );
-                any = true;
             }
+        };
+    // 模型组(`[[model_group]]`):provider 名 = 组 id(池名即组 id,
+    // 与热重载 / failover 归因维度一致)。非法 id 静默跳过 —— builder 在
+    // `apply_to_registry` 期已 warn,此处不重复报。
+    for group in &cfg.model_group {
+        let id = group.id.trim();
+        if !zhuye_config::ModelGroupSection::is_valid_id(id) {
+            continue;
         }
-    };
-    if let Some(s) = &cfg.anthropic {
-        register_provider("anthropic", &s.credentials);
-    }
-    if let Some(s) = &cfg.openai {
-        register_provider("openai", &s.credentials);
-    }
-    if let Some(s) = &cfg.ollama {
-        register_provider("ollama", &s.credentials);
+        let fallback = group
+            .base_url
+            .clone()
+            .filter(|b| !b.trim().is_empty())
+            .unwrap_or_else(|| format!("https://{id}"));
+        register_provider(id, &group.credentials, fallback);
     }
     if any { Some(tracker) } else { None }
 }
@@ -452,7 +466,8 @@ pub(crate) fn build_m5(
     tools: &Arc<ToolRegistry>,
 ) -> Arc<SubAgentFactory> {
     let _ = (workspace, agent_name);
-    // v1.x 功能 1:`[subagent_providers]` 独立 child registry(独立
+    // v1.x 功能 1:`[subagent_models]`(v2 段名,旧名 `[subagent_providers]`
+    // 由引擎 load 迁移接管)独立 child registry(独立
     // base_url + api_key + model);`None` = 父子共享。
     let child_registry: Option<SharedModelRegistry> = initial_cfg.to_child_registry().map(Arc::new);
     let factory = Arc::new(SubAgentFactory::new(
@@ -644,11 +659,21 @@ fn transport_mirror_from_runtime(t: zhuye_mcp::McpTransport) -> zhuye_protocol::
 
 /// 启动 `[lsp_servers]` 配置的 LSP server 集合并注册单例 `lsp` 工具
 /// (与 exec 的 `bootstrap_lsp` 同逻辑)。单 server 失败仅 warn。
+///
+/// `lsp_plugin_disabled`(上游 8da90e5):lsp 门控插件的粗粒度开关 ——
+/// `[plugins].disabled_plugins` 含 "lsp" 时即使有配置也整体关闭(lsp 工具
+/// 不注册、server 不启动);激活仍始终需要 `[lsp_servers]` 定义,config
+/// 激活语义不变,插件启用无独立效果。
 pub(crate) async fn bootstrap_lsp(
     initial_cfg: &zhuye_config::ReflectConfig,
     event_tx: tokio::sync::mpsc::Sender<Event>,
     tools: Arc<ToolRegistry>,
+    lsp_plugin_disabled: bool,
 ) -> Option<Arc<LspConnectionManager>> {
+    if lsp_plugin_disabled {
+        tracing::info!("lsp plugin explicitly disabled; skipping LSP bootstrap");
+        return None;
+    }
     let configs = match initial_cfg.lsp_server_configs() {
         Ok(c) if c.is_empty() => return None,
         Ok(c) => c,
@@ -869,5 +894,80 @@ mod tests {
             pii: None,
         };
         let _ = build_sanitizer(Some(&section));
+    }
+
+    /// 构造一条声明了 quota 的凭据(模型组 quota 测试共用)。
+    fn quota_cred(label: &str) -> zhuye_config::CredentialConfig {
+        zhuye_config::CredentialConfig {
+            label: label.to_string(),
+            api_key: "k".to_string(),
+            base_url: None,
+            model: None,
+            weight: 1,
+            cooldown_override_secs: None,
+            quota: Some(zhuye_config::QuotaConfig {
+                window_secs: 3600,
+                max_tokens: 1000,
+                check_via: None,
+            }),
+        }
+    }
+
+    #[test]
+    fn build_quota_tracker_registers_group_credential_quota() {
+        // `[[model_group]]` 显式枚举、声明 quota 的凭据,
+        // 应以组 id 为 provider 名注册进 tracker。
+        let cfg = zhuye_config::ReflectConfig {
+            model_group: vec![zhuye_config::ModelGroupSection {
+                id: "bigmodel".into(),
+                endpoint: "openai".into(),
+                credentials: vec![quota_cred("plan-a")],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        let tracker = build_quota_tracker(&cfg).expect("组内显式凭据声明 quota 应产生 tracker");
+        assert!(tracker.is_tracked("bigmodel", "plan-a"));
+    }
+
+    #[test]
+    fn build_quota_tracker_ignores_group_level_api_key() {
+        // 组只有组级 api_key(未显式列 credentials)时,builder wrap 出的
+        // default 凭据 quota 恒 None,不该产生 tracker。
+        let cfg = zhuye_config::ReflectConfig {
+            model_group: vec![zhuye_config::ModelGroupSection {
+                id: "bigmodel".into(),
+                endpoint: "openai".into(),
+                api_key: Some("k".into()),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        assert!(build_quota_tracker(&cfg).is_none());
+    }
+
+    #[test]
+    fn build_quota_tracker_skips_invalid_group_id() {
+        // 非法组 id(含 '/')跳过,且不影响其余合法组的注册。
+        let cfg = zhuye_config::ReflectConfig {
+            model_group: vec![
+                zhuye_config::ModelGroupSection {
+                    id: "bad/id".into(),
+                    endpoint: "openai".into(),
+                    credentials: vec![quota_cred("x")],
+                    ..Default::default()
+                },
+                zhuye_config::ModelGroupSection {
+                    id: "good".into(),
+                    endpoint: "openai".into(),
+                    credentials: vec![quota_cred("plan-a")],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        };
+        let tracker = build_quota_tracker(&cfg).expect("合法组仍应产生 tracker");
+        assert!(!tracker.is_tracked("bad/id", "x"));
+        assert!(tracker.is_tracked("good", "plan-a"));
     }
 }

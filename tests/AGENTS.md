@@ -34,7 +34,7 @@ live 端到端四类。分层判据与用例规模的正式说明见 [tests/READ
 | K | `test_keys.py` | 键盘交互(权限循环 / 历史召回 / vim) |
 | V | `test_render.py` | 渲染与视觉(宽字符 / 折行 / markdown / resize) |
 | W | `test_flow.py` | 审批 / AskUser / loop / 恢复边界 / 信号 |
-| G | `test_plugin.py` | 插件面(slash 注入 / plugin overlay) |
+| G | `test_plugin.py` | 插件面(slash 注入 / plugin overlay / 门控插件 disabled_plugins) |
 | H | `test_http_mock.py` | 真实 HTTP 链路(进程内 mock Anthropic SSE) |
 | U | `test_pty_helpers.py` | 测试设施自检 |
 | D | `test_differential.py` | TUI 版本差分(需 `ZHUYE_DIFF_BASELINE/CANDIDATE`,经 `run_differential.sh` 显式启用) |
