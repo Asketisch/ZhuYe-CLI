@@ -143,13 +143,15 @@ chrono = { version = "0.4", features = ["serde"] }
 parking_lot = "0.12"
 filetime    = "0.2"
 sha2     = "0.10"
-wasmtime     = { version = "=36.0.20", default-features = false, features = [
+# 36.0.22:RUSTSEC-2026-0569/0566/0571/0587(wasmtime Caller panic /
+# wasi 内存增长 / http h2 堆用量 / Windows 沙箱逃逸)的修复版本。
+wasmtime     = { version = "=36.0.22", default-features = false, features = [
     "async",
     "cranelift",
     "component-model",
     "runtime",
 ] }
-wasmtime-wasi = { version = "=36.0.20", default-features = false }
+wasmtime-wasi = { version = "=36.0.22", default-features = false }
 proptest = "1"
 opentelemetry         = "0.27"
 opentelemetry_sdk     = { version = "0.27", features = ["rt-tokio"] }
