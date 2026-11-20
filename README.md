@@ -37,9 +37,10 @@ cd ZhuYe-CLI
 make build
 
 # 3. 配置 LLM provider(二选一)
-#    方式一:环境变量
+#    方式一:环境变量(组 id 为 anthropic / openai 时 env 兜底)
 export ANTHROPIC_API_KEY=sk-ant-...
-#    方式二:~/.zhuye/config.toml 设置 [active]/[anthropic]/[openai]
+#    方式二:~/.zhuye/config.toml 声明 [[model_group]](v2 唯一接入单元,
+#    旧格式 [anthropic]/[openai] 读入时自动迁移;详见 docs/configuration.md)
 
 # 4. 运行
 make run

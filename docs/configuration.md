@@ -53,7 +53,7 @@ README 的「CLI 子命令」一节。
 
 | 变量 | 作用 |
 |------|------|
-| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | provider 凭据,起步二选一 |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | 同名模型组(`id = "openai"` / `"anthropic"`)的 env 兜底凭据,起步二选一(v2 起固定接入段移除,其余组不读 env) |
 | `ZHUYE_MODEL` | 覆盖模型规格;`=mock/mock-1` 为内置 mock provider,离线零网络 |
 | `ZHUYE_HOME` | 数据目录,默认 `~/.zhuye` |
 | `ZHUYE_CLI_FULLSCREEN` | `=1` 时启用全屏备用屏模式(等价 `--fullscreen`) |
@@ -62,12 +62,21 @@ README 的「CLI 子命令」一节。
 
 ## 4. config.toml 常用节
 
+v2(上游 8da90e5)起配置面是**模型组唯一**:`[[model_group]]` 是唯一的模型
+接入单元,v1 的固定段(`[anthropic]` / `[openai]` / `[ollama]`)不再出现在
+写回格式里 —— 旧配置读入后由引擎自动迁移成等价模型组,无需手动改。
+
 ```toml
 [active]
-provider = "openai"
+group = "openai"                    # 活跃模型组 id(缺省按解析顺序兜底:
+                                    # env ZHUYE_PROVIDER → ZHUYE_MODEL mock 特判
+                                    # → [active].group → ZHUYE_MODEL 前缀 →
+                                    # 首个有凭据的组)
 # bundled_skills = true            # 显式开启内置 skill 包(默认关闭)
 
-[openai]                            # [anthropic] 同构
+[[model_group]]                     # 组 id = 模型 spec 前缀(<id>/<model>)
+id = "openai"                       # 必填、唯一、不含 '/';组 id = registry 池名
+endpoint = "openai"                 # 线格式:openai | anthropic | ollama
 api_key = ""                        # 免 key 端点可以留空
 base_url = "https://api.kilo.ai/api/gateway"
 model = "free"                      # "free" 运行时从清单解析出真实模型
@@ -93,9 +102,11 @@ max_attempts = 10                   # 单次模型调用总尝试上限(含自�
 | `[notifications.tui]` | 终端通知开关与通道 |
 | `[telemetry]` | `redact` / `max_bytes` / `record_tool_schemas` 等 |
 | `[model_discovery]` | `model = "free"` 的运行时解析规则 |
+| `[plugins]` | `enabled_plugins` / `disabled_plugins` —— 门控型 bundled 插件开关(web-search / notebook 默认开,显式禁用 = 工具不进注册表) |
+| `[subagent_models]` | 子代理专用模型端点(v1 段名 `[subagent_providers]`,旧名读入时自动迁移) |
 
 ## 5. 深入阅读
 
-- [zhuye-agent/docs/configuration.md](../zhuye-agent/docs/configuration.md) —— config.toml 完整字段定义(外链,submodule)
+- [zhuye-agent/docs/configuration.md](../zhuye-agent/docs/configuration.md) —— config.toml 完整字段定义(外链,submodule;含 v1 → v2 迁移表)
 - [slash-commands.md](slash-commands.md) —— `/model`、`/permissions` 等运行时调整入口
 - [SECURITY.md](../SECURITY.md) —— 权限链、沙箱与脱敏的安全视角

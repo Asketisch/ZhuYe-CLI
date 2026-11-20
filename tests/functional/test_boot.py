@@ -112,10 +112,11 @@ def test_resize_rerenders_without_panic(tui) -> None:
 
 
 def test_missing_provider_exits_with_error(sandbox: Sandbox) -> None:
-    """B10 未配置 provider 且无 ZHUYE_MODEL 时,报清晰错误并退出(非 0)。"""
+    """B10 未配置任何模型组(v2 唯一接入单元,旧称 provider)且无
+    ZHUYE_MODEL 时,报清晰错误并退出(非 0)。"""
     from tui_pty import TuiSession
 
-    # 显式清掉 provider 变量:boot 需要 provider,缺配置应快速失败而不是挂死。
+    # 显式清掉 provider 变量:boot 需要可用模型组,缺配置应快速失败而不是挂死。
     # 剔除语义(值 None)—— 合并语义下 pop 删不掉 runner 注入的底座键,
     # 见 `Sandbox.env` 注释。
     env: dict[str, str | None] = {
@@ -130,10 +131,13 @@ def test_missing_provider_exits_with_error(sandbox: Sandbox) -> None:
         while time.monotonic() < deadline and s.returncode() is None:
             time.sleep(0.2)
         rc = s.returncode()
-        assert rc is not None, "无 provider 时应快速退出而不是挂死"
-        assert rc != 0, f"无 provider 应以非 0 退出,实际 {rc}"
+        assert rc is not None, "无模型组时应快速退出而不是挂死"
+        assert rc != 0, f"无模型组应以非 0 退出,实际 {rc}"
         raw = s.raw_output()
-        assert "provider" in raw.lower(), f"错误信息应提到 provider:\n{raw[-600:]}"
+        # v2(上游 8da90e5)起模型组是唯一接入单元,报错文案改用「模型组」
+        # 语汇(不再提 provider 段)。
+        assert "模型组" in raw, f"错误信息应提到模型组:\n{raw[-600:]}"
+        assert "model_group" in raw, f"错误信息应指出 [[model_group]] 段:\n{raw[-600:]}"
 
 
 def test_fullscreen_enters_alt_screen(tui) -> None:

@@ -2543,9 +2543,10 @@ fn personality_layer_name(name: &str) -> String {
     format!("personality-{normalized}")
 }
 
-/// M3:`/model` 输入 → 完整 `provider/model` spec 并经 registry 校验。
-/// 输入含 `/` 视为完整 spec;否则按 active provider 拼接。校验失败 → None
-/// (保持当前模型)。
+/// M3:`/model` 输入 → 完整 `<组id>/model` spec 并经 registry 校验。
+/// 输入含 `/` 视为完整 spec;否则按活跃模型组 id 拼接(v2 起组 id 即
+/// spec 前缀,上游 8da90e5 将 `active_provider()` 改名 `active_group()`)。
+/// 校验失败 → None(保持当前模型)。
 fn resolve_model_switch(
     registry: &zhuye_llm::ModelRegistry,
     cfg: &zhuye_config::ReflectConfig,
@@ -2554,7 +2555,7 @@ fn resolve_model_switch(
     let spec = if input.contains('/') {
         input.to_string()
     } else {
-        let provider = cfg.active_provider()?;
+        let provider = cfg.active_group()?;
         format!("{provider}/{input}")
     };
     // next_for 与引擎走同一 spec→credential 解析;拿得到客户端即视为可用。
@@ -2576,7 +2577,10 @@ fn spawn_model_catalog_listing(state: &UiState, event_tx: &mpsc::UnboundedSender
         });
         return;
     };
-    let provider = cfg.active_provider().unwrap_or_default();
+    // 上游 8da90e5(v2 模型组唯一接入):`active_provider()` 改名
+    // `active_group()`,返回 `Option<String>`(组 id 为动态值,非 'static),
+    // `fetch_catalog` / `format_catalog` 收 `&str`。
+    let provider = cfg.active_group().unwrap_or_default();
     let section = cfg.model_discovery.clone().unwrap_or_default();
     let timeout_secs = section
         .timeout_secs
@@ -2585,9 +2589,9 @@ fn spawn_model_catalog_listing(state: &UiState, event_tx: &mpsc::UnboundedSender
     let current = state.status_model.clone();
     let tx = event_tx.clone();
     tokio::spawn(async move {
-        let text = match zhuye_config::fetch_catalog(reg.as_ref(), provider, timeout_secs).await {
+        let text = match zhuye_config::fetch_catalog(reg.as_ref(), &provider, timeout_secs).await {
             Ok(catalog) => crate::model_list::format_catalog(
-                provider,
+                &provider,
                 &catalog.models,
                 &rules,
                 current.as_deref(),

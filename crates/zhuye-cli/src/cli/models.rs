@@ -69,13 +69,15 @@ fn load_registry() -> anyhow::Result<(ReflectConfig, Arc<ModelRegistry>)> {
     Ok((cfg, registry))
 }
 
-/// 解析目标 provider:显式参数 > 配置里的 active provider。
+/// 解析目标 provider:显式参数 > 配置里的活跃模型组(v2 起组 id 即
+/// provider 名;本文件当前未在 `cli/mod.rs` 声明,属待接线保留件,
+/// API 与上游 8da90e5 的 `active_group()` 保持同步)。
 fn target_provider(cfg: &ReflectConfig, explicit: Option<&str>) -> anyhow::Result<String> {
     if let Some(p) = explicit.map(str::trim).filter(|p| !p.is_empty()) {
         return Ok(p.to_string());
     }
-    cfg.active_provider().map(str::to_string).ok_or_else(|| {
-        anyhow::anyhow!("no active provider: set [active] provider in config, or pass --provider")
+    cfg.active_group().map(str::to_string).ok_or_else(|| {
+        anyhow::anyhow!("no active model group: declare [[model_group]] in config, or pass --provider")
     })
 }
 

@@ -56,7 +56,7 @@ when done; see the "CLI subcommands" section of the README for usage.
 
 | Variable | Purpose |
 |------|------|
-| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Provider credentials; pick one to get started |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Env fallback credentials for the same-named model groups (`id = "openai"` / `"anthropic"`); pick one to get started (since v2 the fixed access sections are gone; other groups never read env) |
 | `ZHUYE_MODEL` | Override the model spec; `=mock/mock-1` selects the built-in mock provider — offline, zero network |
 | `ZHUYE_HOME` | Data directory, defaults to `~/.zhuye` |
 | `ZHUYE_CLI_FULLSCREEN` | `=1` enables alternate-screen fullscreen mode (equivalent to `--fullscreen`) |
@@ -65,12 +65,24 @@ when done; see the "CLI subcommands" section of the README for usage.
 
 ## 4. Common config.toml Sections
 
+Since v2 (upstream 8da90e5) the config surface is **model-group only**:
+`[[model_group]]` is the single unit of model access. The v1 fixed sections
+(`[anthropic]` / `[openai]` / `[ollama]`) no longer appear in written-back
+configs — old configs are migrated automatically into equivalent model groups
+on load, no manual edit required.
+
 ```toml
 [active]
-provider = "openai"
+group = "openai"                    # active model-group id (falls back by
+                                    # resolution order when absent:
+                                    # env ZHUYE_PROVIDER → ZHUYE_MODEL mock
+                                    # special-case → [active].group →
+                                    # ZHUYE_MODEL prefix → first credentialed group)
 # bundled_skills = true            # explicitly enable the bundled skill pack (off by default)
 
-[openai]                            # [anthropic] has the same shape
+[[model_group]]                     # group id = model spec prefix (<id>/<model>)
+id = "openai"                       # required, unique, no '/'; group id = registry pool name
+endpoint = "openai"                 # wire format: openai | anthropic | ollama
 api_key = ""                        # can stay empty for keyless endpoints
 base_url = "https://api.kilo.ai/api/gateway"
 model = "free"                      # "free" resolves to a real model at runtime
@@ -97,9 +109,11 @@ document):
 | `[notifications.tui]` | Terminal notification toggles and channels |
 | `[telemetry]` | `redact` / `max_bytes` / `record_tool_schemas`, etc. |
 | `[model_discovery]` | Runtime resolution rules for `model = "free"` |
+| `[plugins]` | `enabled_plugins` / `disabled_plugins` — gated bundled plugin toggles (web-search / notebook on by default; explicit disable = tool unregistered) |
+| `[subagent_models]` | Subagent-only model endpoints (v1 section name `[subagent_providers]`; the old name migrates on load) |
 
 ## 5. Further Reading
 
-- [zhuye-agent/docs/configuration.en.md](../zhuye-agent/docs/configuration.en.md) —— complete config.toml field definitions (external link, submodule)
+- [zhuye-agent/docs/configuration.en.md](../zhuye-agent/docs/configuration.en.md) —— complete config.toml field definitions (external link, submodule; includes the v1 → v2 migration table)
 - [slash-commands.md](slash-commands.en.md) —— runtime adjustment entry points such as `/model` and `/permissions`
 - [SECURITY.md](../SECURITY.en.md) —— the security perspective on the permission chain, sandbox, and redaction

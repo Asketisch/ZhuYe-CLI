@@ -76,7 +76,7 @@
 | B7 | Ctrl+C 退出 | 退出码 0 + 无 panic |
 | B8 | Ctrl+D 退出 | 退出码 0 |
 | B9 | 窗口 resize 重绘 | 进程存活 + 无 panic |
-| B10 | 缺 provider 快速失败 | 非 0 退出 + 错误含 `provider` |
+| B10 | 缺模型组快速失败 | 非 0 退出 + 错误含 `模型组` 与 `[[model_group]]`(v2 口径,上游 8da90e5;旧文案为「provider 段」) |
 | B11 | `--fullscreen` 进备用屏 | raw 含 `ESC[?1049h` + banner 块字 + composer 占位符(`draw_fullscreen` 独立渲染路径) |
 | B12 | 全屏模式退出还原主屏 | raw 含 `ESC[?1049l` + 退出码 0 |
 | B13 | `model = "free"` 走清单发现 | 非 0 退出 + 错误含 `模型清单`(未接线时会拿占位串 `provider/free` 照常启动) |
@@ -255,7 +255,7 @@
 | W7c | `--resume` 跨天会话(完整 UUID) | `↩ 已恢复历史会话 <id> · 回放 1 条消息` |
 | W8 | 200 条消息大会话恢复 | 不挂死、可继续对话、无 panic(旧消息进原生 scrollback,pyte 视口不可见) |
 | W9 | 坏 config.toml | 终端给出显式告警(`解析失败` + 路径),并回落默认配置,TUI 照常启动 |
-| W10 | 非法 `ZHUYE_MODEL` | 非 0 退出 + 错误含 `provider` |
+| W10 | 非法 `ZHUYE_MODEL` | 非 0 退出 + 错误含 `模型组`(v2 口径,上游 8da90e5) |
 | W11 | SIGTERM | rc=-15(死于信号)+ 无 panic + 会话文件已落盘 |
 | W12 | stdin 非 tty(管道) | 非 0 退出 + `Error: Device not configured`,不挂死 |
 | W13 | 有效 config.toml 热重载 | 原子替换后 `配置已重载` + `sandbox` 通知上屏,进程存活且无 panic |
@@ -277,8 +277,11 @@
 | G2 | slash 弹窗注入插件命令 | 弹窗列出 `demo:hello` |
 | G3 | 插件命令不被未知命令校验拦下 | 无 `Unrecognized`,命令上屏 |
 | G4 | `/plugin` overlay | 展示真实已装插件(id / version / enabled) |
+| G5 | 门控插件默认态零变化(上游 8da90e5) | 空 `[plugins]` 下 `tool_search` 命中 `web_search [builtin]`(默认开 + 升级零影响) |
+| G6 | `disabled_plugins` = 注册门控 | `[plugins].disabled_plugins = ["web-search"]` 后 `tool_search` 报 `No tools matched`,直调报 `tool not found`(区别于可见性过滤与缺 key 执行错误) |
 
-> 前置:submodule 构建出的 `reflect` CLI(用于安装示例插件)。缺失则整组 SKIP。
+> 前置:G1–G4 依赖 submodule 构建出的 `reflect` CLI(用于安装示例插件),
+> 缺失则 SKIP;G5 / G6 只依赖本仓二进制 + mock provider,恒跑。
 
 ### U 组 测试设施自身(`test_pty_helpers.py`)
 
@@ -458,10 +461,10 @@
 | `functional/test_render.py` | 9 条(渲染与视觉) |
 | `functional/test_pty_helpers.py` | 8 条 |
 | `functional/test_session.py` | 9 条 |
-| `functional/test_plugin.py` | 4 条 |
+| `functional/test_plugin.py` | 6 条(G1–G4 插件 e2e 依赖示例插件,缺失 SKIP;G5/G6 门控恒跑) |
 | `functional/test_coverage_audit.py` | 4 条 |
 | `functional/test_http_mock.py` | 7 条(真实 HTTP + SSE + busy + failover + Ctrl+C + 跨 provider + 动态发现) |
-| **能力覆盖层合计** | **222 条** |
+| **能力覆盖层合计** | **224 条** |
 | `rust/cli_core.sh` | 45 断言(含退出码) |
 | `rust/cli_modules.sh` | 56 断言(含退出码) |
 | `rust/build_tooling.sh` | 18 断言(文件系统结果断言) |
