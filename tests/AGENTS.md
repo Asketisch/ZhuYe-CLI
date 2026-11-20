@@ -59,8 +59,9 @@ live 端到端四类。分层判据与用例规模的正式说明见 [tests/READ
 
 ## 本地契约 / 同步点
 
-1. **行为级断言只写在 `functional/`**:`tests/rust/*.sh` 只管 CLI 参数面
-   (`cli_core.sh` 顶层参数 / `cli_modules.sh` session+traces 参数),不重复写行为断言。
+1. **行为级断言只写在 `functional/`**:`tests/rust/*.sh` 只管**命令行面**
+   (`cli_core.sh` 顶层参数 / `cli_modules.sh` session+traces 参数 /
+   `build_tooling.sh` 构建工具面),不重复写行为断言。
 2. 新增 slash 命令必须补 `test_slash.py` 的 MATRIX(结局类别 + 期望屏幕文本),
    否则 `make coverage-audit` 失败 —— 双通道细节见 history_render / tui 篇。
 3. `COVERAGE.md` 随能力增删同步:新增能力补「能力 × 覆盖层」行,移除入

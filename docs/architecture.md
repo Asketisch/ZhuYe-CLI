@@ -93,7 +93,23 @@ wire 协议(Submission / Op / EventMsg)的演进属于引擎仓库,本仓库只�
 引擎侧的分层架构(六层 crate 组织、StateGraph 状态转移)见 submodule 的
 [zhuye-agent/docs/architecture.md](../zhuye-agent/docs/architecture.md)。
 
-## 6. 深入阅读
+## 6. 构建 profile 策略
+
+- `[profile.release]`:thin LTO + `codegen-units = 1` + `strip = "symbols"`,
+  供发布分发。
+- `[profile.release-fast]`:无 LTO、`opt-level = 2`、`incremental = true`,
+  供本地快速迭代(`scripts/build.sh --fast`);产物落在
+  `target/release-fast/`,增量目录不会被 cargo 自动回收 —— 由 `make gc` 清理。
+- `[profile.dev]`:刻意关闭 `incremental` —— cargo 不会自动 GC
+  `target/<profile>/incremental/`,开启增量会让磁盘占用无界增长;代价是
+  首次构建略慢。
+- `[profile.test]`:`debug = 1`(仅行号)+ `codegen-units = 256`,
+  加速测试产物的编译与链接。
+
+清理面的完整语义(含交叉编译产物根 `target/<triple>/<profile>/`)见根
+`Makefile` 的 `gc` / `gc-deep` 目标。
+
+## 7. 深入阅读
 
 - [AGENTS.md](../AGENTS.md) —— AI 助手工作契约:模块分层、关键约束、开发流程检查表
 - [docs/configuration.md](configuration.md) —— 数据目录、启动参数、环境变量

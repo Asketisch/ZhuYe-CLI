@@ -30,7 +30,8 @@ make test-fast                  # cargo nextest(需已安装 cargo-nextest)
 make test-suite                 # ./tests/run_all.sh:全功能套件
 make test-suite-fast            # 只跑能力覆盖层(跳过 cargo 编译面)
 make coverage-audit             # 覆盖自审:slash 命令 × 测试矩阵差集核对
-make gc                         # 清 target/debug 中 cargo 不自动 GC 的中间产物
+make gc                         # 清产物根下全部 profile 的 incremental 缓存(不触发重编)
+make gc-deep                    # 深清理:再清 deps/.fingerprint/examples(下次构建接近冷构建)
 ```
 
 任何改动提交前:`cargo fmt --all -- --check` +

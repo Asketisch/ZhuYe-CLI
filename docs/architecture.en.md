@@ -109,7 +109,25 @@ For the engine-side layered architecture (the six-layer crate organization,
 StateGraph transitions) see the submodule's
 [zhuye-agent/docs/architecture.en.md](../zhuye-agent/docs/architecture.en.md).
 
-## 6. Further Reading
+## 6. Build Profile Strategy
+
+- `[profile.release]`: thin LTO + `codegen-units = 1` + `strip = "symbols"`,
+  for release distribution.
+- `[profile.release-fast]`: no LTO, `opt-level = 2`, `incremental = true`, for
+  fast local iteration (`scripts/build.sh --fast`); artifacts land in
+  `target/release-fast/`, and cargo never reclaims that incremental
+  directory — `make gc` does.
+- `[profile.dev]`: `incremental` is deliberately disabled — cargo does not
+  garbage-collect `target/<profile>/incremental/`, so leaving it on makes disk
+  usage grow without bound; the cost is a slightly slower first build.
+- `[profile.test]`: `debug = 1` (line tables only) + `codegen-units = 256`, to
+  speed up compiling and linking test artifacts.
+
+For the full cleanup semantics (including cross-compilation roots
+`target/<triple>/<profile>/`) see the `gc` / `gc-deep` targets in the root
+`Makefile`.
+
+## 7. Further Reading
 
 - [AGENTS.md](../AGENTS.md) —— AI-assistant working contract: module layout, key constraints, development checklist (in Chinese)
 - [configuration.md](configuration.en.md) —— data directory, CLI flags, environment variables

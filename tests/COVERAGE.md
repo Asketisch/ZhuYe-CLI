@@ -20,6 +20,7 @@
 | **能力覆盖层**(主) | `tests/functional/` | **Rust 代码在真产物上的行为**(真二进制 + pty + pyte 屏幕快照) | ❌ | 222 条 |
 | **覆盖自审层** | `tests/tools/coverage_audit.py` | 「声明了什么」× 「测了什么」的**机械差集** | ❌ | 4 条门禁 |
 | CLI 参数面 | `tests/rust/cli_core.sh`、`cli_modules.sh` | 17 个子命令的**参数矩阵**与输出契约(bash,含退出码) | ❌ | 101 断言 |
+| 构建工具面 | `tests/rust/build_tooling.sh` | Makefile 清理目标 `gc` / `gc-deep` 的**语义**(清什么 / 保留什么;产物根跟随 `CARGO_TARGET_DIR`) | ❌ | 18 断言 |
 | CLI 语义面 | `tests/functional/test_cli.py` | CLI 输出的**语义**(列结构、预览条数、统计口径) | ❌ | 10 条 |
 | **TUI 版本差分层** | `tests/functional/test_differential.py` | baseline/candidate 两个真二进制在同一 mock 场景下的**行为语义对比**(rollout / 副作用 / 屏幕标记 / panic);纯比较器自测始终运行,真实差分需 ZHUYE_DIFF=1 | ❌ | 自测 6 条 + 差分场景 3 条 + 跨版本恢复 1 条 |
 | Rust 单测 | `crates/zhuye-cli/src/**` | 内部单元与集成(既有基线);`9332aa9` 接线后 git 三件套本地单测随实现移入 submodule(由 `zhuye-git` 自带测试承接),新增 side-channel 转换 ×3 + CommandRunner 桥接 ×2 | — | 1450 条(lib,不含 vendored) |
@@ -29,6 +30,7 @@
 - 断言「用户真的看到了什么 / 真的落了什么盘」→ **能力覆盖层**;
 - 断言「某个 CLI 参数组合的输出契约」→ bash 参数面;
 - 断言「CLI 输出的语义口径」→ CLI 语义面;
+- 断言「Makefile 清理目标清了什么、**保留**了什么」→ 构建工具面;
 - **新增能力断言只落能力覆盖层一处** —— 不要在多处重复写。
 
 > 为什么要把能力面与参数面分开:参数面只验「命令跑通了」,能力面验
@@ -55,6 +57,7 @@
 | TUI 版本差分(rollout / 副作用 / 屏幕标记 / panic;3 场景 × 双二进制,另有发布版到候选版恢复与续写) | D 组(`test_differential.py`,需 ZHUYE_DIFF=1) | — | — |
 | ANSI 解析 / 文本截断 / JSON 紧凑化不变量(任意输入不 panic、可见文本保持、字素上限、幂等、JSON 语义保持) | —(Rust 属性测试:`ansi_escape::tests` + `text_formatting::property_tests`,proptest) | — | — |
 | Rust 编译面 | — | workspace_tests(cargo test/clippy/fmt/doc) | — |
+| 构建工具面(`gc` / `gc-deep` 清理语义、产物根跟随 `CARGO_TARGET_DIR`) | — | build_tooling(bash,文件系统结果断言) | — |
 
 ---
 
@@ -461,6 +464,7 @@
 | **能力覆盖层合计** | **222 条** |
 | `rust/cli_core.sh` | 45 断言(含退出码) |
 | `rust/cli_modules.sh` | 56 断言(含退出码) |
+| `rust/build_tooling.sh` | 18 断言(文件系统结果断言) |
 | 另有 `cargo test --workspace` / clippy / fmt / doc | 既有基线 |
 
 ---

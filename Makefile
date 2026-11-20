@@ -1,8 +1,13 @@
 # ── ZhuYe-CLI Makefile ──────────────────────────────────────────
 # 终端 TUI 独立仓库 —— Reflect-Agent 核心 crate 通过 submodule 复用。
-.PHONY: build run test test-fast test-suite test-suite-fast test-suite-live coverage-audit release-check check check-fast watch clean gc dist dist-dry install release help
+.PHONY: build run test test-fast test-suite test-suite-fast test-suite-live coverage-audit release-check check check-fast watch clean gc gc-deep dist dist-dry install release help
 
 BINARY_NAME := zhuye-cli
+
+# 产物根目录:默认 target/;若外部设置了 CARGO_TARGET_DIR 则跟随它
+# (cargo 把产物写到 CARGO_TARGET_DIR,清理必须跟到同一个地方)。
+# 命令行可覆盖:make gc TARGET_DIR=/path/to/target
+TARGET_DIR ?= $(or $(CARGO_TARGET_DIR),target)
 
 ## build: Compile the TUI in release mode
 build:
@@ -73,11 +78,30 @@ watch:
 clean:
 	cargo clean
 
-## gc: 清掉 debug 里 cargo 不会自动 GC 的旧中间产物
+## gc: 清 cargo 不会自动 GC 的中间产物(低痛感,不触发重编)。
+##
+## 清理面覆盖整个产物根:
+##   $(TARGET_DIR)/<profile>/incremental/          —— release-fast profile(incremental=true)会无界增长
+##   $(TARGET_DIR)/<triple>/<profile>/incremental/ —— 交叉编译(--target=<triple>)的同一问题
+##
+## 不删 .fingerprint:删掉它会让下次 cargo build 把所有依赖判为「从未构建」
+## (cargo DirtyReason::FreshBuild)而全量重编,代价远大于它占的体积;
+## .fingerprint 与 deps 的清理由 gc-deep 承担。
+## 日常开发循环使用。
 gc:
-	rm -rf target/debug/incremental target/debug/.fingerprint
-	rm -rf target/debug/examples
-	@echo "✅ removed target/debug/{incremental,.fingerprint,examples}"
+	rm -rf $(TARGET_DIR)/*/incremental $(TARGET_DIR)/*/*/incremental
+	@echo "✅ removed $(TARGET_DIR)/**/incremental"
+
+## gc-deep: 深清理,仅在磁盘告警时使用。
+##
+## 在 gc 之外再清 deps(最大的占用方)与 .fingerprint。
+## 注意:删 .fingerprint 会让下次 cargo build 全量重编(接近冷构建)——
+## 这里是有意的取舍:磁盘告警时先要空间,其次才是编译速度。
+gc-deep: gc
+	rm -rf $(TARGET_DIR)/*/deps $(TARGET_DIR)/*/*/deps
+	rm -rf $(TARGET_DIR)/*/.fingerprint $(TARGET_DIR)/*/*/.fingerprint
+	rm -rf $(TARGET_DIR)/*/examples $(TARGET_DIR)/*/*/examples
+	@echo "✅ removed $(TARGET_DIR)/**/{deps,.fingerprint,examples}(下次构建接近冷构建)"
 
 ## help: Show this message
 help:
@@ -99,4 +123,5 @@ help:
 	@echo "  check-fast    - cargo check 单 crate:make check-fast C=<crate>"
 	@echo "  watch         - 文件变更自动 check"
 	@echo "  clean         - Remove all build artifacts"
-	@echo "  gc            - 清 incremental/.fingerprint/examples"
+	@echo "  gc            - 清产物根下全部 profile 的 incremental(低痛感,不触发重编)"
+	@echo "  gc-deep       - 同 gc,再清 deps/.fingerprint/examples(下次构建接近冷构建)"

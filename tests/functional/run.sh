@@ -17,6 +17,7 @@
 #      - test_pty_helpers.py   测试设施自检
 #      - test_coverage_audit.py 覆盖自审门禁
 #   2. tests/rust/cli_core.sh + cli_modules.sh  CLI 参数矩阵
+#   3. tests/rust/build_tooling.sh             构建工具面(Makefile 清理目标语义)
 #
 # 前置:release 二进制(入口每次 cargo 增量校验新鲜)、Python 3 + pytest + pyte。
 # 缺少必测依赖时报基础设施错误(退出码 2),不允许整层跳过后仍全绿。
@@ -44,7 +45,7 @@ ensure_release_binary
 
 echo
 echo "════════════════════════════════════════════════"
-echo "  1/2 能力覆盖层(pytest,真二进制 + pty)"
+echo "  1/3 能力覆盖层(pytest,真二进制 + pty)"
 echo "════════════════════════════════════════════════"
 
 if require_cmd python3; then
@@ -67,10 +68,16 @@ fi
 
 echo
 echo "════════════════════════════════════════════════"
-echo "  2/2 CLI 参数矩阵"
+echo "  2/3 CLI 参数矩阵"
 echo "════════════════════════════════════════════════"
 bash "$HERE/../rust/cli_core.sh" || TOTAL_RC=1
 bash "$HERE/../rust/cli_modules.sh" || TOTAL_RC=1
+
+echo
+echo "════════════════════════════════════════════════"
+echo "  3/3 构建工具面(Makefile 清理目标语义)"
+echo "════════════════════════════════════════════════"
+bash "$HERE/../rust/build_tooling.sh" || TOTAL_RC=1
 
 echo
 if [ "$TOTAL_RC" -eq 0 ]; then

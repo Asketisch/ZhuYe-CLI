@@ -5,6 +5,22 @@
 
 ## [Unreleased]
 
+### 构建
+
+- `make gc` 的清理面从 `target/debug/incremental` 扩至整个产物根:
+  `target/*/incremental` 与 `target/<triple>/<profile>/incremental`,覆盖
+  `release-fast` profile(唯一开 `incremental = true` 的 profile,实测一次构建
+  产生 1.3 GB 增量目录)与交叉编译(`--target=<triple>`)两类此前漏掉的布局。
+- 新增 `make gc-deep`:在 `gc` 之外再清 `deps` / `.fingerprint` / `examples`
+  (会触发接近冷构建,仅磁盘告警时使用)。日常 `gc` 不再删 `.fingerprint` ——
+  删它会让 cargo 把所有依赖判为「从未构建」(`DirtyReason::FreshBuild`)而全量
+  重编,代价远大于它占的体积。
+- 清理面走 `$(TARGET_DIR)`:默认 `target/`,跟随 `CARGO_TARGET_DIR`,亦可
+  `make gc TARGET_DIR=<路径>` 覆盖。
+- 新增 `tests/rust/build_tooling.sh`(18 条断言):在临时产物根上跑真实 `make`,
+  断言到「哪些目录被清、哪些被保留」;已挂进 `tests/rust/run.sh` 与
+  `tests/functional/run.sh`(CI 门禁入口)。
+
 ### 文档
 
 - 修复成对文档顶部语言切换条在 GitHub 上的渲染:切换条位于 `<p align="center">`

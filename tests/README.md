@@ -42,6 +42,7 @@ make coverage-audit    # = 覆盖自审(有未覆盖命令即失败)
 | **能力覆盖层**(主) | `functional/` | **真二进制 + pty 上的行为**:渲染出的文字、按键路由、落盘的文件 | 199 条 |
 | **覆盖自审层** | `tools/coverage_audit.py` | 「声明了什么」×「测了什么」的**机械差集** | 4 条门禁 |
 | **CLI 参数面** | `rust/*.sh` | 子命令的**参数矩阵**与输出契约(bash) | 100+ 断言 |
+| **构建工具面** | `rust/build_tooling.sh` | Makefile 清理目标的**语义**(清什么 / 不清什么) | 18 断言 |
 | Rust 编译面 | `rust/workspace_tests.sh` | `cargo test` / `clippy -D warnings` / `fmt` / `doc` | 既有基线 |
 
 **判据**:
@@ -74,6 +75,7 @@ make coverage-audit    # = 覆盖自审(有未覆盖命令即失败)
 | `rust/workspace_tests.sh` | `cargo test` + `clippy` + `fmt` + `doc` |
 | `rust/cli_core.sh` | 顶层 CLI 参数矩阵(--help / --version / --cwd / 分派) |
 | `rust/cli_modules.sh` | `session` / `traces` 参数矩阵与输出契约 |
+| `rust/build_tooling.sh` | 构建工具面:Makefile 清理目标 `gc` / `gc-deep` 的语义 |
 | `tools/coverage_audit.py` | 覆盖自审工具(可独立运行,出报告) |
 | `tools/probe_slash_commands.py` | slash 命令运行时行为**探针**(产出真值表,不判定) |
 | `live/` | live 端到端(真实 LLM + 真实工具,需 API key) |

@@ -33,7 +33,8 @@ make test-fast                  # cargo nextest (requires cargo-nextest)
 make test-suite                 # ./tests/run_all.sh: full functional suite
 make test-suite-fast            # capability coverage only (skips the cargo compile surface)
 make coverage-audit             # coverage audit: slash commands × test-matrix diff
-make gc                         # clean intermediate artifacts cargo does not auto-GC from target/debug
+make gc                         # clear incremental caches under all profiles in the target dir (no rebuild)
+make gc-deep                    # deep clean: also drop deps/.fingerprint/examples (next build ~ cold build)
 ```
 
 Before submitting any change: `cargo fmt --all -- --check` +

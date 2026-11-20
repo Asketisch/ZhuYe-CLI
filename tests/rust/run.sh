@@ -5,6 +5,7 @@
 #   1. workspace_tests.sh   cargo test / clippy / fmt / doc
 #   2. cli_core.sh          顶层 CLI 参数矩阵(--help / --version / --cwd / 分派)
 #   3. cli_modules.sh       session / traces 参数矩阵与输出契约
+#   4. build_tooling.sh     构建工具面(Makefile 清理目标 gc / gc-deep 语义)
 #
 # `REFLECT_SKIP_WORKSPACE=1` 时跳过第 1 步 —— CI 的功能门禁入口用此模式:
 # 那部分由既有 CI job 覆盖,避免重复消耗 CI 时间。
@@ -30,27 +31,33 @@ TOTAL_RC=0
 if [ "${REFLECT_SKIP_WORKSPACE:-0}" = "1" ]; then
     echo
     echo "════════════════════════════════════════════════"
-    echo "  1/3 workspace 测试 —— 跳过(REFLECT_SKIP_WORKSPACE=1)"
+    echo "  1/4 workspace 测试 —— 跳过(REFLECT_SKIP_WORKSPACE=1)"
     echo "════════════════════════════════════════════════"
 else
     echo
     echo "════════════════════════════════════════════════"
-    echo "  1/3 workspace 测试(cargo test + clippy + fmt + doc)"
+    echo "  1/4 workspace 测试(cargo test + clippy + fmt + doc)"
     echo "════════════════════════════════════════════════"
     bash "$HERE/workspace_tests.sh" || TOTAL_RC=1
 fi
 
 echo
 echo "════════════════════════════════════════════════"
-echo "  2/3 顶层 CLI 参数矩阵"
+echo "  2/4 顶层 CLI 参数矩阵"
 echo "════════════════════════════════════════════════"
 bash "$HERE/cli_core.sh" || TOTAL_RC=1
 
 echo
 echo "════════════════════════════════════════════════"
-echo "  3/3 session / traces 参数矩阵"
+echo "  3/4 session / traces 参数矩阵"
 echo "════════════════════════════════════════════════"
 bash "$HERE/cli_modules.sh" || TOTAL_RC=1
+
+echo
+echo "════════════════════════════════════════════════"
+echo "  4/4 构建工具面(Makefile 清理目标语义)"
+echo "════════════════════════════════════════════════"
+bash "$HERE/build_tooling.sh" || TOTAL_RC=1
 
 echo
 if [ "$TOTAL_RC" -eq 0 ]; then
