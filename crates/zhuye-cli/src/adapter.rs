@@ -186,6 +186,23 @@ pub enum UiEventKind {
         prompt: String,
         secret: bool,
     },
+    /// v1.12:一个挂起交互(审批 / 问答 / 询问 / plan)已按**任意路径**
+    /// 了结,与请求事件按 `request_id` 配对(plan 类别的 request_id 即
+    /// plan_id)。挂起态的权威事实在引擎侧,本地弹条只是投影 —— TTL 过期 /
+    /// 取消 / 中断 / 通道关闭没有别的回执事件,apply_event 据此无条件清理
+    /// 对应挂起投影;非 `Answered` 结局补 Notice 说明弹条为何消失。
+    InteractionResolved {
+        request_id: String,
+        kind: zhuye_protocol::InteractionKind,
+        outcome: zhuye_protocol::InteractionOutcome,
+    },
+    /// v1.12:上下文组成快照(六类估算分解)。引擎按类别序列指纹去重,
+    /// 组成无变化时省略不发;apply_event 只存数据面(`context_usage`
+    /// 的 `composition`),`/status` 渲染分解,不发 Notice(组成随回合
+    /// 增长每回合都变,发通知等于刷屏)。
+    ContextComposition {
+        categories: Vec<zhuye_protocol::CompositionCategory>,
+    },
     /// 上下文窗口配置(SessionConfigured 携带的 context_window_size)。
     ContextWindowConfigured {
         window_size: Option<u32>,
@@ -753,6 +770,83 @@ pub fn apply_event(state: &mut UiState, event: UiEvent) -> Vec<Line<'static>> {
                 prompt,
                 secret,
             });
+        }
+        UiEventKind::InteractionResolved {
+            request_id,
+            kind,
+            outcome,
+        } => {
+            // v1.12:挂起交互已了结 —— 无条件清理本地挂起投影(引擎是权威
+            // 事实)。五类挂起态全部按 id 配对:plan 类别的 request_id 即
+            // plan_id(plan 审批条与进入确认条共用),其余用各自 request_id。
+            // 用户自己应答(Answered)的路径弹条已由 handle_key 清理,这里
+            // 再清一次是幂等兜底,不会误伤别的待办交互(按 id 精确匹配)。
+            if state
+                .pending_approval
+                .as_ref()
+                .is_some_and(|p| p.id == request_id)
+            {
+                state.pending_approval = None;
+            }
+            if state
+                .plan_approval
+                .as_ref()
+                .is_some_and(|p| p.plan_id == request_id)
+            {
+                state.plan_approval = None;
+            }
+            if state
+                .plan_enter_request
+                .as_ref()
+                .is_some_and(|p| p.plan_id == request_id)
+            {
+                state.plan_enter_request = None;
+            }
+            if state
+                .pending_question
+                .as_ref()
+                .is_some_and(|p| p.request_id == request_id)
+            {
+                state.pending_question = None;
+            }
+            if state
+                .pending_ask_user
+                .as_ref()
+                .is_some_and(|p| p.request_id == request_id)
+            {
+                state.pending_ask_user = None;
+            }
+            // 非应答结局:引擎 fail-closed 或通道级了结,用户需要知道弹条
+            // 为何消失(否则「没批准怎么继续跑了」无从解释)。Answered 是
+            // 用户显式决策,对话流里已有结果,静默即可。
+            if outcome != zhuye_protocol::InteractionOutcome::Answered {
+                let reason = match outcome {
+                    zhuye_protocol::InteractionOutcome::Expired => "已过期(fail-closed 拒绝)",
+                    zhuye_protocol::InteractionOutcome::Cancelled => "已取消",
+                    zhuye_protocol::InteractionOutcome::Interrupted => "已随回合中断",
+                    zhuye_protocol::InteractionOutcome::ChannelClosed => "因通道关闭被丢弃",
+                    // 上方已排除;match 需穷尽。
+                    zhuye_protocol::InteractionOutcome::Answered => "已应答",
+                };
+                let what = match &kind {
+                    zhuye_protocol::InteractionKind::Tool { tool_name } => {
+                        format!("工具审批({tool_name})")
+                    }
+                    zhuye_protocol::InteractionKind::Hook { hook_name } => {
+                        format!("hook 审批({hook_name})")
+                    }
+                    zhuye_protocol::InteractionKind::Question => "结构化问答".to_string(),
+                    zhuye_protocol::InteractionKind::AskUser => "自由文本询问".to_string(),
+                    zhuye_protocol::InteractionKind::Plan { .. } => "plan 审批".to_string(),
+                };
+                state
+                    .history
+                    .push(UiHistoryItem::Notice(format!("⚠ {what}{reason}")));
+            }
+        }
+        UiEventKind::ContextComposition { categories } => {
+            // v1.12:只存数据面,/status 渲染分解;不发 Notice(见变体注释)。
+            state.context_usage.composition = categories;
         }
         UiEventKind::ContextWindowConfigured { window_size, model } => {
             state.context_usage.window_size = window_size;
@@ -1836,6 +1930,156 @@ mod tests {
         assert!(
             !state.interrupt_requested,
             "回合收尾(TurnCompleted 兼收 TurnAborted)应复位中断标记"
+        );
+    }
+
+    // ── v1.12:挂起交互了结(InteractionResolved)与上下文组成 ──
+
+    use zhuye_protocol::{InteractionKind, InteractionOutcome};
+
+    /// 挂起交互按 id 精确清理:只清配对的那一个,其余挂起态不受牵连。
+    #[test]
+    fn interaction_resolved_clears_only_matching_pending_states() {
+        let mut state = UiState::default();
+        state.pending_approval = Some(PendingApproval {
+            id: "req-a".into(),
+            summary: "bash".into(),
+            kind: zhuye_protocol::ApprovalKind::Tool {
+                tool_name: "bash".into(),
+                args: serde_json::json!({"cmd": "ls"}),
+            },
+        });
+        state.pending_question = Some(crate::events::QuestionPromptState::new(
+            "req-b".into(),
+            vec![zhuye_protocol::Question {
+                header: "Q".into(),
+                question: "q?".into(),
+                options: vec![],
+                multi_select: false,
+            }],
+        ));
+
+        apply_event(
+            &mut state,
+            ev(UiEventKind::InteractionResolved {
+                request_id: "req-a".into(),
+                kind: InteractionKind::Tool {
+                    tool_name: "bash".into(),
+                },
+                outcome: InteractionOutcome::Expired,
+            }),
+        );
+        assert!(
+            state.pending_approval.is_none(),
+            "配对 id 的审批弹条必须清理"
+        );
+        assert!(state.pending_question.is_some(), "不配对的问答面板不得误伤");
+    }
+
+    /// plan 类别的 request_id 即 plan_id:plan 审批条与进入确认条同清。
+    #[test]
+    fn interaction_resolved_plan_clears_both_plan_states() {
+        let mut state = UiState::default();
+        state.plan_approval = Some(crate::events::PlanApprovalState::new(
+            "plan-1".into(),
+            "task".into(),
+            "# plan".into(),
+            None,
+        ));
+        state.plan_enter_request = Some(crate::events::PlanEnterRequestState {
+            plan_id: "plan-1".into(),
+            task: "task".into(),
+        });
+
+        apply_event(
+            &mut state,
+            ev(UiEventKind::InteractionResolved {
+                request_id: "plan-1".into(),
+                kind: InteractionKind::Plan {
+                    plan_id: "plan-1".into(),
+                },
+                outcome: InteractionOutcome::Cancelled,
+            }),
+        );
+        assert!(state.plan_approval.is_none(), "plan 审批条应清理");
+        assert!(state.plan_enter_request.is_none(), "plan 进入确认条应清理");
+    }
+
+    /// 非应答结局补 Notice 解释弹条去向;Answered(用户显式决策)静默。
+    #[test]
+    fn interaction_resolved_expired_emits_notice_answered_stays_silent() {
+        let mut state = UiState::default();
+        state.pending_ask_user = Some(crate::events::AskUserPendingState {
+            request_id: "req-9".into(),
+            prompt: "输入路径".into(),
+            secret: false,
+        });
+
+        // TTL 过期:弹条清理 + Notice 说明(fail-closed 拒绝必须可见)。
+        apply_event(
+            &mut state,
+            ev(UiEventKind::InteractionResolved {
+                request_id: "req-9".into(),
+                kind: InteractionKind::AskUser,
+                outcome: InteractionOutcome::Expired,
+            }),
+        );
+        assert!(state.pending_ask_user.is_none(), "过期的询问态应清理");
+        let last = state.history.last().expect("应有 Notice");
+        let text = match last {
+            UiHistoryItem::Notice(t) => t.clone(),
+            other => panic!("期望 Notice,得到 {other:?}"),
+        };
+        assert!(text.contains("自由文本询问"), "{text}");
+        assert!(text.contains("已过期"), "{text}");
+
+        // Answered:用户刚显式作答,清理幂等兜底但不发新 Notice。
+        state.pending_ask_user = Some(crate::events::AskUserPendingState {
+            request_id: "req-10".into(),
+            prompt: "再来".into(),
+            secret: false,
+        });
+        let notices_mid = state.history.len();
+        apply_event(
+            &mut state,
+            ev(UiEventKind::InteractionResolved {
+                request_id: "req-10".into(),
+                kind: InteractionKind::AskUser,
+                outcome: InteractionOutcome::Answered,
+            }),
+        );
+        assert!(state.pending_ask_user.is_none());
+        assert_eq!(
+            state.history.len(),
+            notices_mid,
+            "Answered 结局不得产生新 Notice"
+        );
+    }
+
+    /// 组成快照存数据面(/status 渲染),不产生 Notice。
+    #[test]
+    fn context_composition_stored_in_context_usage_without_notice() {
+        use zhuye_protocol::{CompositionCategory, CompositionCategoryId};
+        let mut state = UiState::default();
+        let notices_before = state.history.len();
+        apply_event(
+            &mut state,
+            ev(UiEventKind::ContextComposition {
+                categories: vec![CompositionCategory {
+                    id: CompositionCategoryId::ToolSchemas,
+                    tokens: 2_000,
+                }],
+            }),
+        );
+        assert_eq!(state.context_usage.composition.len(), 1);
+        assert_eq!(
+            state.context_usage.composition[0].id,
+            CompositionCategoryId::ToolSchemas
+        );
+        assert_eq!(
+            state.history.len(),
+            notices_before,
+            "组成快照是数据面事件,不应刷屏"
         );
     }
 }

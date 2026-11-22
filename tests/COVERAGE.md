@@ -47,9 +47,9 @@
 | 启动 / 渲染锚点 / 退出生命周期 / 全屏模式 / model 解析 | B1–B15 | cli_core(`--help`/`--version`) | — |
 | slash 命令面(86 条命令) | S1–S8 | — | ✅ 全覆盖门禁 |
 | 弹层 / 浮层 / 选择器 / 鼠标反向门禁 | O1–O12 | — | ✅ picker 数门禁 |
-| 对话轮次 / 流式 / 工具 / 统计 | T1–T11 | — | — |
+| 对话轮次 / 流式 / 工具 / 统计 | T1–T11(T10b 上下文组成分解,v1.12) | — | — |
 | 会话持久化 / 恢复 / plan 落盘 | P1–P9 | cli_modules(session) | — |
-| headless CLI 语义 | C1–C10 | cli_modules(traces) | — |
+| headless CLI 语义 | C1–C12(C11/C12 子会话血缘,v1.12) | cli_modules(traces) | — |
 | 键盘交互(权限循环 / 历史召回 / 编辑器 / 复制 / 多行 / vim) | K1–K11(无 K6) | — | — |
 | 渲染与视觉(宽字符 / 折行 / markdown / 主题 / resize / 小窗) | V1–V9 | — | — |
 | 工作流与容错(审批 / AskUser / loop / 恢复边界 / 坏输入 / 信号 / 热重载 / 子代理 / 控制序列注入) | W1–W15 | — | — |
@@ -157,6 +157,7 @@
 | T8 | 脚本耗尽回退 | `Hello from mock LLM!`(v0.1.8 起自带「mock 固定回复」标记长文案) |
 | T9 | Esc 打断回合 | 回合收尾 / 中断提示 |
 | T10 | 回合后 HUD 用量段 | `context left` |
+| T10b | `/status` 上下文组成分解(v1.12) | 一轮对话后 `context composition:` + 六类至少一类(`<snake_case> · N token(s)`;引擎指纹去重,首回合必发) |
 | T11 | 工具参数分片下发 | 调用行带参数摘要(`✓ glob (…) · *.rs`) |
 
 > **mock provider 的语义(测试必须知道)**:
@@ -203,6 +204,8 @@
 | C8 | `session stats` | per-model 表 + TOTAL 行 + token 总量 |
 | C9 | `traces spans` 过滤 | 按 session 前缀命中 / 未命中占位 |
 | C10 | `session show` 不存在的 id | 非 0 + 可读错误 |
+| C11 | `session ls` 子会话血缘(v1.12) | `session_meta.parent_session_id` 的会话行以 `↳` 前缀标注,主会话行无前缀(六列布局不变) |
+| C12 | `session show` 子会话 Parent 行(v1.12) | 子会话显示 `Parent:  <parent_id>`,主会话无该行 |
 
 ### K 组 键盘交互(`test_keys.py`)
 
@@ -259,7 +262,7 @@
 | W11 | SIGTERM | rc=-15(死于信号)+ 无 panic + 会话文件已落盘 |
 | W12 | stdin 非 tty(管道) | 非 0 退出 + `Error: Device not configured`,不挂死 |
 | W13 | 有效 config.toml 热重载 | 原子替换后 `配置已重载` + `sandbox` 通知上屏,进程存活且无 panic |
-| W14 | 离线子代理真实派发 | 父模型 `call_explorer` → 子模型结果回填工具行 → 父模型继续收尾,TUI 存活 |
+| W14 | 离线子代理真实派发 | 父模型 `call_explorer` → 子模型结果回填工具行 → 父模型继续收尾,TUI 存活;**v1.12 血缘断言**:子会话独立 JSONL(`session_meta.parent_session_id` + 继承父 workspace)+ 父 rollout Fork 记录回填 `child_session_id` |
 | W15 | 工具输出 ANSI/OSC 注入 | 清屏 / 标题 / OSC 8 链接序列被剥离;`W15_BEFORE`、`W15_LINK`、`W15_AFTER` 可见,恶意 URL 不进入 raw 输出 |
 
 > W5 的 stop 需要**空闲窗口**:busy 期间 composer 的提交会被吞且草稿
@@ -325,8 +328,8 @@
 
 | 子命令 | 参数矩阵(bash) | 语义断言(Python) |
 |---|---|---|
-| `session ls` | cli_modules | C1, C2 |
-| `session show` | cli_modules | C3, C4, C5, C10 |
+| `session ls` | cli_modules | C1, C2, C11 |
+| `session show` | cli_modules | C3, C4, C5, C10, C12 |
 | `session rm` | cli_modules | — |
 | `session fork` | cli_modules | — |
 | `session rename` | cli_modules | P6 |
@@ -378,6 +381,9 @@
 | 目标模式校验 / 预算 | `reflect_goal` + `Op::EnterGoalMode` | `/goal <目标> --verify <cmd> --budget <n>` |
 | OS 级沙箱状态 | `reflect_sandbox::OsSandbox::status_line` | `/status` 的 `sandbox:` 段 |
 | 终端通知开关 / 通道 | `reflect_config::TuiNotificationsSection` | `[notifications.tui]` 的 `enabled` / `on_*` / `channels` 真正生效 |
+| 挂起交互了结(InteractionResolved,v1.12) | `tui/conversion.rs` + `adapter.rs`(五类挂起态按 id 清理) | TTL 过期 / 取消 / 中断 → 弹条清理 + `⚠ <类别>已…` 通知行;用户应答(Answered)静默幂等 |
+| 上下文组成(ContextComposition,v1.12) | `tui/conversion.rs` + `adapter.rs`(入 `context_usage.composition`)+ `statusline::format_composition` | `/status` 的 `context composition:` 段(六类 snake_case 分解;引擎组成无变化时省略不发) |
+| 子代理会话血缘(v1.12) | `bootstrap_wiring.rs::build_m5`(`set_rollout_base` / `set_workspace`) | 子会话独立 JSONL(`parent_session_id`)+ `session ls` 的 `↳` 行 + `session show` 的 `Parent:` 行 + 父 Fork 回填 `child_session_id`(W14) |
 
 ---
 
@@ -454,17 +460,17 @@
 | `functional/test_slash.py` | 96 条(89 行命令矩阵覆盖 86 条命令 + 7 条独立用例) |
 | `functional/test_overlay.py` | 20 条(10 条可达弹层 + 9 条不可达弹层反向门禁 + 1 条鼠标反向门禁) |
 | `functional/test_boot.py` | 15 条(含 2 条全屏模式 + 3 条 model 解析) |
-| `functional/test_flow.py` | 17 条(审批 / AskUser / loop / 恢复边界 / 容错 / 信号 / 热重载 / 子代理 / 控制序列注入) |
-| `functional/test_turn.py` | 12 条 |
+| `functional/test_flow.py` | 17 条(审批 / AskUser / loop / 恢复边界 / 容错 / 信号 / 热重载 / 子代理(含 v1.12 血缘断言) / 控制序列注入) |
+| `functional/test_turn.py` | 13 条(T10b 为 v1.12 上下文组成) |
 | `functional/test_keys.py` | 11 条(键盘交互) |
-| `functional/test_cli.py` | 10 条 |
+| `functional/test_cli.py` | 12 条(C11/C12 为 v1.12 子会话血缘) |
 | `functional/test_render.py` | 9 条(渲染与视觉) |
 | `functional/test_pty_helpers.py` | 8 条 |
 | `functional/test_session.py` | 9 条 |
 | `functional/test_plugin.py` | 6 条(G1–G4 插件 e2e 依赖示例插件,缺失 SKIP;G5/G6 门控恒跑) |
 | `functional/test_coverage_audit.py` | 4 条 |
 | `functional/test_http_mock.py` | 7 条(真实 HTTP + SSE + busy + failover + Ctrl+C + 跨 provider + 动态发现) |
-| **能力覆盖层合计** | **224 条** |
+| **能力覆盖层合计** | **227 条** |
 | `rust/cli_core.sh` | 45 断言(含退出码) |
 | `rust/cli_modules.sh` | 56 断言(含退出码) |
 | `rust/build_tooling.sh` | 18 断言(文件系统结果断言) |

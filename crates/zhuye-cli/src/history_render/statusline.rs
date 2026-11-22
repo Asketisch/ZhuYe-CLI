@@ -80,6 +80,11 @@ pub struct ContextUsage {
     pub last_model: Option<String>,
     /// v1.x:按模型累计的实时用量(按首次出现顺序)。
     pub per_model: Vec<ModelTokenUsage>,
+    /// v1.12:最近一次上下文组成快照(`ContextComposition` 事件,六类
+    /// 估算分解)。引擎按类别序列指纹去重、组成无变化时省略不发,故空表
+    /// = 尚无快照(回合还没跑过 / 旧引擎)。数据面字段,`/status` 渲染
+    /// 分解,状态栏不渲染(一行 HUD 放不下六类)。
+    pub composition: Vec<zhuye_protocol::CompositionCategory>,
 }
 
 impl ContextUsage {
@@ -111,6 +116,35 @@ impl ContextUsage {
             });
         }
     }
+}
+
+/// v1.12:上下文组成快照的人读多行形式(`/status` 追加段)。
+///
+/// 首行 `context composition:`,其后每类一行 `  <类别> · <tokens> token(s)`。
+/// 类别名用 wire 形态的 snake_case(与 `CompositionCategoryId` 的 serde
+/// 命名一致,便于和引擎文档 / JSONL 对照)。空快照(尚无数据)返回
+/// `None`,调用方整段省略。
+pub fn format_composition(categories: &[zhuye_protocol::CompositionCategory]) -> Option<String> {
+    if categories.is_empty() {
+        return None;
+    }
+    let label = |id: zhuye_protocol::CompositionCategoryId| -> &'static str {
+        use zhuye_protocol::CompositionCategoryId as C;
+        match id {
+            C::SystemPrompt => "system_prompt",
+            C::Memory => "memory",
+            C::Skills => "skills",
+            C::ToolSchemas => "tool_schemas",
+            C::McpTools => "mcp_tools",
+            C::Messages => "messages",
+            C::Unknown => "unknown",
+        }
+    };
+    let mut out = String::from("context composition:");
+    for c in categories {
+        out.push_str(&format!("\n  {} · {} token(s)", label(c.id), c.tokens));
+    }
+    Some(out)
 }
 
 /// 渲染 identity 行(第 1 行)。
@@ -673,6 +707,29 @@ mod tests {
         let mut usage = ContextUsage::default();
         usage.record_model_call(None, 100);
         assert!(usage.per_model.is_empty());
+    }
+
+    #[test]
+    fn format_composition_renders_snake_case_labels_or_none() {
+        // v1.12:/status 的组成分解段 —— 类别名用 wire 形态 snake_case,
+        // 空快照(尚无数据)整段省略。
+        use zhuye_protocol::{CompositionCategory, CompositionCategoryId};
+        assert!(format_composition(&[]).is_none(), "空快照必须返回 None");
+
+        let cats = vec![
+            CompositionCategory {
+                id: CompositionCategoryId::SystemPrompt,
+                tokens: 1_200,
+            },
+            CompositionCategory {
+                id: CompositionCategoryId::McpTools,
+                tokens: 800,
+            },
+        ];
+        let text = format_composition(&cats).expect("非空快照应有输出");
+        assert!(text.starts_with("context composition:"), "{text}");
+        assert!(text.contains("system_prompt · 1200 token(s)"), "{text}");
+        assert!(text.contains("mcp_tools · 800 token(s)"), "{text}");
     }
 
     #[test]

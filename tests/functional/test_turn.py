@@ -213,6 +213,38 @@ def test_token_stats_appear_after_turn(tui, mock_script) -> None:
         )
 
 
+def test_status_shows_context_composition_after_turn(tui, mock_script) -> None:
+    """T10b 一轮对话后 `/status` 出现上下文组成分解(v1.12)。
+
+    引擎在每次 LLM 请求组装后计量六类组成(`ContextComposition` 事件,
+    组成无变化时省略不发),TUI 记入数据面;`/status` 渲染分解段:
+    `context composition:` + 每类一行 `<snake_case> · <N> token(s)`。
+    """
+    script = mock_script([text_reply("T10B_DONE")])
+    with tui(script=script) as s:
+        s.wait_boot(timeout=30)
+        s.type_text("go")
+        s.key("enter")
+        s.wait_text("T10B_DONE", timeout=30)
+        s._pump(settle=1.0, max_wait=2.0)
+        s.type_text("/status")
+        s.key("enter")
+        txt = s.wait_text("context composition:", timeout=30)
+        # 六类至少应命中一类(mock 最小装配也有内置工具 schema / messages)。
+        assert any(
+            f"{cat} ·" in txt
+            for cat in (
+                "system_prompt",
+                "memory",
+                "skills",
+                "tool_schemas",
+                "mcp_tools",
+                "messages",
+            )
+        ), f"组成分解应至少列出六类中的一类:\n{txt[-800:]}"
+        assert not s.has_panic(), f"/status 渲染组成不应 panic:\n{txt[-500:]}"
+
+
 def test_tool_args_streamed_into_call_line(tui, mock_script) -> None:
     """T11 工具参数分片下发 → 调用行带上参数摘要。
 

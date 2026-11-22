@@ -46,6 +46,9 @@ fn format_window_secs(secs: u64) -> String {
 
 pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
     use zhuye_protocol::event_msg::EventMsg::*;
+    // v1.12:`event.seq` 是会话扇出出口统一赋的单调序号,契约面向「断线
+    // 重连的客户端」做缺口检测;TUI 内嵌引擎直连(mpsc 通道不会丢事件),
+    // seq 在此无消费面,有意忽略。
     let kind = match event.msg {
         TurnStarted(ts) => UiEventKind::TurnStarted {
             turn_id: ts.turn_id,
@@ -132,6 +135,23 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
             request_id: ai.request_id,
             prompt: ai.prompt,
             secret: ai.secret.unwrap_or(false),
+        },
+        // v1.12:挂起交互了结通知 —— 与请求事件按 `request_id` 配对(plan
+        // 类别的 request_id 即 plan_id)。TTL 过期 / 取消 / 中断 / 通道关闭
+        // 这些路径**没有**对应回执事件,不接这条线,本地挂起的审批弹条 /
+        // 问题面板会永远挂着卡键盘。投影给 apply_event 无条件清理挂起态;
+        // 非应答结局补 Notice 说明弹条为何消失。
+        InteractionResolved(ev) => UiEventKind::InteractionResolved {
+            request_id: ev.request_id,
+            kind: ev.kind,
+            outcome: ev.outcome,
+        },
+        // v1.12:上下文组成快照(六类估算分解;引擎按类别序列指纹去重,
+        // 组成无变化时省略不发)。只存数据面(apply_event 记入
+        // `context_usage.composition`,/status 渲染分解),不发 Notice ——
+        // 组成随回合增长每回合都变,发通知等于刷屏。
+        ContextComposition(ce) => UiEventKind::ContextComposition {
+            categories: ce.categories,
         },
         TokenCount(tc) => UiEventKind::TokenCount {
             input_tokens: tc.input_tokens,
@@ -1015,5 +1035,79 @@ mod tests {
             other => panic!("期望 Notice,得到 {other:?}"),
         };
         assert!(text.contains("已关闭"), "{text}");
+    }
+
+    // ── v1.12:挂起交互了结 + 上下文组成(additive 协议变体的投影)──
+
+    #[test]
+    fn interaction_resolved_projects_structured_event() {
+        // 了结通知必须保留结构化三元组(request_id / kind / outcome),
+        // 不能降级成 Notice 文本 —— apply_event 按 id 精确清理挂起投影。
+        use zhuye_protocol::{InteractionKind, InteractionOutcome};
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            zhuye_protocol::event_msg::EventMsg::InteractionResolved(
+                zhuye_protocol::InteractionResolvedEvent {
+                    request_id: "req-1".into(),
+                    kind: InteractionKind::Tool {
+                        tool_name: "bash".into(),
+                    },
+                    outcome: InteractionOutcome::Expired,
+                },
+            ),
+        );
+        let out = convert_event(ev).expect("应转换为 UiEvent");
+        match out.kind {
+            UiEventKind::InteractionResolved {
+                request_id,
+                kind,
+                outcome,
+            } => {
+                assert_eq!(request_id, "req-1");
+                assert_eq!(
+                    kind,
+                    InteractionKind::Tool {
+                        tool_name: "bash".into()
+                    }
+                );
+                assert_eq!(outcome, InteractionOutcome::Expired);
+            }
+            other => panic!("期望 InteractionResolved,得到 {other:?}"),
+        }
+    }
+
+    #[test]
+    fn context_composition_projects_categories() {
+        // 组成快照只投影数据面(apply_event 存 context_usage,/status 渲染),
+        // 不在这里降级成 Notice 刷屏。
+        use zhuye_protocol::{CompositionCategory, CompositionCategoryId};
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            zhuye_protocol::event_msg::EventMsg::ContextComposition(
+                zhuye_protocol::ContextCompositionEvent {
+                    categories: vec![
+                        CompositionCategory {
+                            id: CompositionCategoryId::SystemPrompt,
+                            tokens: 1_200,
+                        },
+                        CompositionCategory {
+                            id: CompositionCategoryId::Messages,
+                            tokens: 3_400,
+                        },
+                    ],
+                },
+            ),
+        );
+        let out = convert_event(ev).expect("应转换为 UiEvent");
+        match out.kind {
+            UiEventKind::ContextComposition { categories } => {
+                assert_eq!(categories.len(), 2);
+                assert_eq!(categories[0].id, CompositionCategoryId::SystemPrompt);
+                assert_eq!(categories[0].tokens, 1_200);
+                assert_eq!(categories[1].id, CompositionCategoryId::Messages);
+                assert_eq!(categories[1].tokens, 3_400);
+            }
+            other => panic!("期望 ContextComposition,得到 {other:?}"),
+        }
     }
 }

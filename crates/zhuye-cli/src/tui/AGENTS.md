@@ -39,6 +39,14 @@
    不一致,新增 / 改命令两边都要看(根篇关键约束 8)。
 5. **embed 模式**另有一条内嵌分发 `tui_core/chatwidget/slash_dispatch.rs`,
    契约归 [tui_core 篇](../tui_core/AGENTS.md)。
+6. **v1.12 挂起交互的权威事实在引擎**:`InteractionResolved`(conversion 投影
+   → apply_event)按 id 无条件清理五类挂起态(审批 / plan 审批 / plan 进入
+   确认 / 问答 / 询问;plan 的 request_id 即 plan_id)—— TTL 过期 / 取消 /
+   中断 / 通道关闭这些了结路径**没有**别的回执事件,`UiState` 新增挂起态
+   字段时必须同步该清理臂(适配 `conversion.rs` 单测 + W 组行为);
+   非 `Answered` 结局补 Notice 说明弹条去向。`Event.seq`(会话扇出单调
+   序号)面向断线重连客户端,TUI 内嵌直连无缺口面,有意忽略(conversion
+   头注释)。
 
 ## 禁止事项
 

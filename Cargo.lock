@@ -6718,7 +6718,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-agent-def"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -6733,7 +6733,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-ast"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "ignore",
@@ -6776,14 +6776,14 @@ dependencies = [
 
 [[package]]
 name = "zhuye-bm25"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "rankfns",
 ]
 
 [[package]]
 name = "zhuye-cli"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "arboard",
@@ -6877,7 +6877,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-compact"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "chrono",
@@ -6900,7 +6900,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-config"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "dirs 5.0.1",
  "fs2",
@@ -6929,7 +6929,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-core"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -6969,7 +6969,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-discussion"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6995,7 +6995,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-fs"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "dirs 5.0.1",
  "rustix 1.1.6",
@@ -7004,7 +7004,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-git"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "libc",
  "pretty_assertions",
@@ -7020,7 +7020,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-goal"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7040,7 +7040,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-hooks"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "filetime",
@@ -7061,7 +7061,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-integration"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "reqwest 0.12.28",
  "serde",
@@ -7073,7 +7073,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-llm"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -7100,7 +7100,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-lsp"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "globset",
@@ -7121,7 +7121,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-mcp"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -7144,7 +7144,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-memory"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "chrono",
  "parking_lot",
@@ -7163,7 +7163,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-notes"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7182,7 +7182,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-permissions"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "fs2",
@@ -7201,7 +7201,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-plugin"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7231,7 +7231,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-prompt"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "minijinja",
  "serde",
@@ -7247,7 +7247,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-protocol"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7262,7 +7262,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-recovery"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "chrono",
  "parking_lot",
@@ -7278,7 +7278,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-rollout"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -7300,7 +7300,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-sandbox"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "serde",
@@ -7313,7 +7313,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-sanitize"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "once_cell",
  "regex",
@@ -7324,7 +7324,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-skills"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "flate2",
@@ -7346,7 +7346,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-stream"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -7366,7 +7366,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-subagent"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7395,7 +7395,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-task"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "fs2",
@@ -7418,7 +7418,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-telemetry"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "chrono",
  "fs2",
@@ -7438,9 +7438,10 @@ dependencies = [
 
 [[package]]
 name = "zhuye-tools"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
+ "chrono",
  "filetime",
  "futures",
  "htmd",
@@ -7477,7 +7478,7 @@ dependencies = [
 
 [[package]]
 name = "zhuye-wasm"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "serde_json",

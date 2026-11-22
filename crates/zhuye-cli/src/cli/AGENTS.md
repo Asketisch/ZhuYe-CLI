@@ -38,6 +38,11 @@ zhuye-integration),不依赖 `tui_core`(渲染层与 headless 无关)。
    入口按是否跨 task 等待对号入座。
 5. 新增子命令同步面:README 的 CLI 子命令章节 + C 组用例 + 参数面脚本 +
    `tests/COVERAGE.md` §3(CLI 子命令清单)。
+6. **v1.12 子会话血缘标注**:`session ls` 以 `↳` 前缀标注带
+   `SessionMeta.parent_session_id` 的子代理会话(六列布局不变),
+   `session show` 对子会话打印 `Parent:` 行 —— 血缘由引擎装配点
+   (`build_m5` 的 `set_rollout_base` / `set_workspace`)落盘,本模块只做
+   读取侧标注;改标注格式先看 C11 / C12 断言锚点。
 
 ## 禁止事项
 

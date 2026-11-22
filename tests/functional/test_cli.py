@@ -230,3 +230,63 @@ def test_session_show_unknown_id_errors(sandbox) -> None:
     assert "not found" in (r.stdout + r.stderr).lower(), (
         f"应有可读错误:\n{r.stdout}{r.stderr}"
     )
+
+
+# ── v1.12:子代理会话血缘(session_meta.parent_session_id)────────────────
+
+
+def _write_child_session(sandbox, child_sid: str, parent_sid: str) -> None:
+    """写入一条**真实形态**的子代理会话(session_meta 带父血缘)。
+
+    形态对齐引擎 v1.12 的子代理落盘:SessionMeta 增 `parent_session_id`
+    (serde 缺省省略,旧文件 / 主会话无此字段)。
+    """
+    day = Path("2026/01/01")
+    path = sandbox.home / ".zhuye" / "sessions" / day / f"{child_sid}.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "type": "session_meta",
+                "session_id": child_sid,
+                "model": "mock/mock-1",
+                "started_at": "2026-01-01T00:00:02Z",
+                "parent_session_id": parent_sid,
+            }
+        )
+        + "\n"
+    )
+
+
+def test_session_ls_marks_child_session_with_lineage_prefix(sandbox, seeded) -> None:
+    """C11 `session ls` 用 `↳` 前缀标注子代理会话,主会话行保持无前缀。
+
+    v1.12 起子代理落独立 JSONL(装配点传 rollout_base),血缘标注让
+    列表能分辩父子;六列布局不变(C1 的口径不受影响)。
+    """
+    child_sid = "55555555-4444-4555-8666-777777777777"
+    _write_child_session(sandbox, child_sid, seeded)
+
+    r = run_cli(sandbox, "session", "ls")
+    assert r.returncode == 0, f"rc={r.returncode}: {r.stderr}"
+    lines = [ln for ln in r.stdout.splitlines()[1:] if ln.strip()]
+    parent_row = next((ln for ln in lines if seeded in ln), None)
+    child_row = next((ln for ln in lines if child_sid in ln), None)
+    assert parent_row is not None, f"主会话行应保留:\n{r.stdout}"
+    assert child_row is not None, f"子会话行应出现:\n{r.stdout}"
+    assert not parent_row.lstrip().startswith("↳"), f"主会话不得带子会话前缀:\n{parent_row}"
+    assert child_row.lstrip().startswith("↳"), f"子会话行应以 ↳ 标注:\n{child_row}"
+
+
+def test_session_show_prints_parent_line_for_child_session(sandbox, seeded) -> None:
+    """C12 `session show <child>` 应显示 Parent 血缘行;主会话无该行。"""
+    child_sid = "66666666-4444-4555-8666-777777777777"
+    _write_child_session(sandbox, child_sid, seeded)
+
+    r = run_cli(sandbox, "session", "show", child_sid)
+    assert r.returncode == 0, f"rc={r.returncode}: {r.stderr}"
+    assert f"Parent:  {seeded}" in r.stdout, f"子会话应显示父会话:\n{r.stdout}"
+
+    r2 = run_cli(sandbox, "session", "show", seeded)
+    assert r2.returncode == 0, f"rc={r2.returncode}: {r2.stderr}"
+    assert "Parent:" not in r2.stdout, f"主会话不得显示 Parent 行:\n{r2.stdout}"

@@ -427,12 +427,16 @@ def test_valid_config_reload_shows_notice_and_keeps_tui_alive(tui, sandbox) -> N
         assert s.alive(), "热重载后 TUI 应保持运行"
 
 
-def test_subagent_dispatch_returns_child_result_to_parent(tui, mock_script) -> None:
+def test_subagent_dispatch_returns_child_result_to_parent(tui, mock_script, sandbox) -> None:
     """W14 离线触发真实 `call_explorer` 派发链路。
 
     mock 脚本按模型调用顺序消费三行:父模型发起 `call_explorer`、子模型
     返回最终答案、父模型基于工具结果收尾。这样可以覆盖 TUI 默认子代理
     spec 注册、工具可见、工厂 spawn、子代理结果回填与父回合继续。
+
+    v1.12 起装配点传 rollout_base:子代理落**独立 JSONL** 并带父血缘
+    (session_meta.parent_session_id),父 rollout 的 Fork 记录回填
+    child_session_id —— 侧栏树形展示与 `session ls` 血缘标注的数据地基。
     """
     script = mock_script(
         [
@@ -452,6 +456,51 @@ def test_subagent_dispatch_returns_child_result_to_parent(tui, mock_script) -> N
         txt = s.wait_text("W14_PARENT_RESULT", timeout=30)
         assert not s.has_panic(), "子代理真实派发不应 panic"
         assert s.alive(), "父回合结束后 TUI 应保持可用"
+
+        # v1.12:血缘落盘断言(父回合已完成,落盘应已发生)。
+        sessions_dir = sandbox.home / ".zhuye" / "sessions"
+        jsonl_files = sorted(sessions_dir.rglob("*.jsonl"))
+        assert jsonl_files, f"会话应落盘:\n{sessions_dir}"
+
+        def read_meta(path):
+            first = path.read_text().splitlines()[0]
+            return json.loads(first)
+
+        def read_records(path):
+            return [json.loads(ln) for ln in path.read_text().splitlines() if ln.strip()]
+
+        child_paths = [
+            p
+            for p in jsonl_files
+            if read_meta(p).get("parent_session_id") is not None
+        ]
+        assert len(child_paths) == 1, (
+            f"应恰好一条带父血缘的子会话 JSONL,实际 {len(child_paths)}:\n"
+            + "\n".join(str(p) for p in jsonl_files)
+        )
+        child_meta = read_meta(child_paths[0])
+        child_sid = child_meta["session_id"]
+        parent_sid = child_meta["parent_session_id"]
+        # workspace 继承父会话(装配点 set_workspace;不继承会落「未归属」组)。
+        # resolve 比较:macOS 的 /var → /private/var 符号链接会让引擎侧
+        # current_dir() 与 mkdtemp 字面路径不一致。
+        assert (
+            Path(child_meta.get("workspace") or "").resolve() == sandbox.cwd.resolve()
+        ), (
+            f"子会话 workspace 应继承父会话:\n{child_meta}"
+        )
+
+        parent_path = next(
+            p
+            for p in jsonl_files
+            if read_meta(p).get("session_id") == parent_sid
+            and read_meta(p).get("parent_session_id") is None
+        )
+        forks = [r for r in read_records(parent_path) if r.get("type") == "fork"]
+        assert forks, f"父 rollout 应有 Fork 血缘记录:\n{parent_path}"
+        assert any(
+            f.get("child_session_id") == child_sid for f in forks
+        ), f"Fork 记录应回填 child_session_id={child_sid}:\n{forks}"
 
 
 def test_tool_output_ansi_and_osc_do_not_control_terminal(tui, mock_script) -> None:

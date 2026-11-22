@@ -55,6 +55,13 @@ src/ 约 489 个 `.rs`、18 万行,其中 `tui_core/` 约占 82% —— 真正�
    (build_engine 前)、bootstrap_lsp 的 `lsp_plugin_disabled` 参数
    (`plugins.is_disabled("lsp")`,config 激活语义不变)。改插件装配时三处同步。
 9. **导出 / 落盘统一走 `zhuye_fs::write_atomic`**,不要手写 temp+rename。
+10. **v1.12 子代理装配点**(`bootstrap_wiring::build_m5`):引擎 `c34c5a1`
+    起要求装配点传 `factory.set_rollout_base(zhuye_rollout::path::default_base())`
+    与 `factory.set_workspace(workspace)` —— 子代理落**独立 JSONL**
+    (`SessionMeta.parent_session_id` 指回父会话)且 workspace 继承父
+    (否则子会话落「未归属」组)。升级 submodule 时若 `SubAgentFactory`
+    增删装配点,同步本仓 `build_m5` 与 exec `bootstrap_m5` 对齐;
+    读取侧血缘标注见 [cli 篇](src/cli/AGENTS.md) 契约 6。
 
 ## 桩层
 

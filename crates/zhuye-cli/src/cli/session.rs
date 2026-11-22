@@ -54,9 +54,16 @@ pub fn ls(limit: usize, model_filter: Option<&str>) -> anyhow::Result<()> {
             Some(c) => format!("${:.2}", c),
             None => String::from("--"),
         };
+        // v1.12:子代理会话(SessionMeta 带 parent_session_id)以 `↳` 前缀
+        // 标注 —— 保持六列布局不变,血缘分辩靠前缀;父会话照旧。
+        let id_cell = if s.parent_session_id.is_some() {
+            format!("↳ {}", s.session_id)
+        } else {
+            s.session_id.to_string()
+        };
         println!(
             "{:<36}  {:<32}  {:<12}  {:>6}  {:>10}  {:>10}",
-            s.session_id.to_string(),
+            id_cell,
             model,
             s.started_at.format("%Y-%m-%d"),
             s.message_count,
@@ -105,6 +112,11 @@ pub fn show(id: &str) -> anyhow::Result<()> {
                 let started = v.get("started_at").and_then(|s| s.as_str()).unwrap_or("?");
                 println!("Model:   {model}");
                 println!("Started: {started}");
+                // v1.12:子代理会话标注父会话(SessionMeta.parent_session_id;
+                // 旧文件 / 主会话无此字段 → 省略)。
+                if let Some(parent) = v.get("parent_session_id").and_then(|p| p.as_str()) {
+                    println!("Parent:  {parent}");
+                }
                 if let Some(s) = &stats {
                     print_stats_summary(s);
                 }

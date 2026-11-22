@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-22
+
 ### 构建
 
 - `make gc` 的清理面从 `target/debug/incremental` 扩至整个产物根:

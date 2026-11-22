@@ -465,7 +465,7 @@ pub(crate) fn build_m5(
     initial_cfg: &zhuye_config::ReflectConfig,
     tools: &Arc<ToolRegistry>,
 ) -> Arc<SubAgentFactory> {
-    let _ = (workspace, agent_name);
+    let _ = agent_name;
     // v1.x 功能 1:`[subagent_models]`(v2 段名,旧名 `[subagent_providers]`
     // 由引擎 load 迁移接管)独立 child registry(独立
     // base_url + api_key + model);`None` = 父子共享。
@@ -479,6 +479,13 @@ pub(crate) fn build_m5(
         CancellationToken::new(),
         Some(parent_recorder),
     ));
+    // v1.12:子代理会话落盘 + workspace 继承(引擎 c34c5a1 的装配点契约,
+    // 与 exec bootstrap_m5 同口径):子会话落**独立 JSONL**(<sessions 根>/
+    // <child_id>.jsonl,SessionMeta 带 parent_session_id 与父 workspace),
+    // `zhuye-cli session ls` 据血缘标注子会话。未装配时旧行为 = 内存即丢,
+    // 只在父 rollout 记 Fork 血缘。
+    factory.set_rollout_base(zhuye_rollout::path::default_base());
+    factory.set_workspace(workspace.to_path_buf());
     factory.set_subagent_registry(m4.subagent_registry.clone());
     // 注入父 skills catalog,让 subagent 也能 LoadSkill。
     factory.set_parent_skills(m4.skills.clone());

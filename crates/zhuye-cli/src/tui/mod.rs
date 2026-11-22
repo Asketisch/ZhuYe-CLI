@@ -1854,6 +1854,13 @@ fn dispatch_slash_command(
                 state.busy
             );
             state.history.push(UiHistoryItem::Notice(status));
+            // v1.12:上下文组成分解(六类估算;引擎组成无变化时省略不发,
+            // 空快照 = 尚无数据,整段省略)。
+            if let Some(comp) =
+                history_render::statusline::format_composition(&state.context_usage.composition)
+            {
+                state.history.push(UiHistoryItem::Notice(comp));
+            }
         }
         SlashCommand::Goal => {
             // v1.5:无参 → 显示目标模式状态快照(权威读口 `goal_snapshot()`);
@@ -3713,6 +3720,13 @@ fn handle_key(
                             ));
                         }
                         state.history.push(adapter::UiHistoryItem::Notice(detail));
+                    }
+                    // v1.12:上下文组成分解(六类估算;引擎组成无变化时省略
+                    // 不发,空快照 = 尚无数据,整段省略)。
+                    if let Some(comp) = history_render::statusline::format_composition(
+                        &state.context_usage.composition,
+                    ) {
+                        state.history.push(adapter::UiHistoryItem::Notice(comp));
                     }
                     // F01:安全段 —— 查 prompt_guard 裁决统计,应答事件经
                     // 事件泵送达后在对话流渲染(见 conversion::GuardStats)。
