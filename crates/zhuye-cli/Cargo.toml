@@ -129,9 +129,6 @@ zhuye-skills   = { workspace = true }
 # 用 trait object,因为 `InMemoryStore` / `FileMemoryStore` / `CompositeMemoryStore`
 # 三个 impl 都要塞进同一个字段。
 zhuye-memory   = { workspace = true }
-# S2:`/tasks ls/show/clear` 反射 `TaskManager::list_tasks`(async),通过
-# `pollster::block_on` 在 sync App 方法里 block 调用。
-pollster         = { workspace = true }
 # S5a:`/permissions ls/allow/deny` 反射 `PermissionResolver` + `PermissionStore`。
 zhuye-permissions = { workspace = true }
 zhuye-hooks       = { workspace = true }

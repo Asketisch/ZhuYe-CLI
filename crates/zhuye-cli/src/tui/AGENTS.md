@@ -47,6 +47,13 @@
    非 `Answered` 结局补 Notice 说明弹条去向。`Event.seq`(会话扇出单调
    序号)面向断线重连客户端,TUI 内嵌直连无缺口面,有意忽略(conversion
    头注释)。
+7. **引擎 additive 事件族的承接口径**(指针 e246299 起):`EventMsg` 新增变体
+   属 additive(协议注释「客户端须容忍未知 type」),但 `convert_event` 的
+   match **无通配臂** —— 引擎每加变体本仓必须显式补臂,否则 E0004 编译失败
+   (有意的接线门:防新事件静默丢失)。当前承接:诊断推送族(`StreamRecovery*`
+   4 臂 / `CacheWarming`)→ Notice 进度行;`McpElicitation` → Notice 说明宿主已
+   fail-closed cancel(交互面未建,见 [crate 篇](../../AGENTS.md) 契约 11)。
+   三者均有 conversion 单测锚定文案关键字。
 
 ## 禁止事项
 

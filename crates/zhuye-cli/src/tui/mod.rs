@@ -5595,6 +5595,8 @@ mod draw_tests {
             credential_label: None,
             // v1.x:模型级 token 统计字段(本次调用命中的模型 spec)。
             model: None,
+            // v1.x:单次调用快照(非回合累计)。
+            turn_total: false,
         };
         let ev = zhuye_protocol::Event::new("id-tc", EventMsg::TokenCount(tc));
         let ui = conversion::convert_event(ev).unwrap();
@@ -5602,6 +5604,30 @@ mod draw_tests {
         let _ = adapter::apply_event(&mut state, ui);
         assert_eq!(state.context_usage.last_input_tokens, Some(5000));
         assert_eq!(state.context_usage.last_cached_tokens, Some(1000));
+    }
+
+    #[test]
+    fn token_count_turn_total_is_dropped() {
+        // v1.x:回合收尾补发的累计 TokenCount(provider/model 均 None)与
+        // 逐次快照一并累计会翻倍(协议字段文档明示)—— TUI 无回合累计
+        // 视图,投影层整条忽略,状态不得被累计值污染。
+        let tc = zhuye_protocol::TokenCountEvent {
+            input_tokens: 9999,
+            output_tokens: 999,
+            cached_tokens: 0,
+            cache_write_tokens: 0,
+            total_tokens: 10998,
+            cost_usd: Some(0.5),
+            provider: None,
+            credential_label: None,
+            model: None,
+            turn_total: true,
+        };
+        let ev = zhuye_protocol::Event::new("id-tc-total", EventMsg::TokenCount(tc));
+        assert!(
+            conversion::convert_event(ev).is_none(),
+            "turn_total 事件应被投影层丢弃"
+        );
     }
 
     #[test]
@@ -5618,6 +5644,7 @@ mod draw_tests {
             provider: Some("openai".into()),
             credential_label: None,
             model: Some("openai/gpt-4o".into()),
+            turn_total: false,
         };
         let ev = zhuye_protocol::Event::new("id-tc-model", EventMsg::TokenCount(tc));
         let ui = conversion::convert_event(ev).unwrap();
@@ -5646,6 +5673,7 @@ mod draw_tests {
             provider: None,
             credential_label: None,
             model: None,
+            turn_total: false,
         };
         let ev = zhuye_protocol::Event::new("id-tc-nomodel", EventMsg::TokenCount(tc));
         let ui = conversion::convert_event(ev).unwrap();

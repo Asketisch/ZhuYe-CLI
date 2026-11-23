@@ -62,6 +62,14 @@ src/ 约 489 个 `.rs`、18 万行,其中 `tui_core/` 约占 82% —— 真正�
     (否则子会话落「未归属」组)。升级 submodule 时若 `SubAgentFactory`
     增删装配点,同步本仓 `build_m5` 与 exec `bootstrap_m5` 对齐;
     读取侧血缘标注见 [cli 篇](src/cli/AGENTS.md) 契约 6。
+11. **MCP 生命周期事件双臂**(`bootstrap_wiring::bootstrap_m6` 同款转发 task,
+    指针 e246299 起):`ToolsChanged` 按注册表现状求差集反注册消失工具、
+    新工具绑活连接重挂(注册表是 LLM 可见面唯一真相,差集辅助函数
+    `removed_mcp_tools` 有单测);`Elicitation` 因本构建**无交互面**按
+    fail-closed 立即以 `cancel` 回执(不登记 waiter,不等 TTL;事件仍转发,
+    conversion.rs 渲染 Notice 保证可见性)。将来补表单 UI 时,需改为登记
+    `thread.config().approval_context.mcp_elicitations` 共享表 + TTL 兜底
+    (对齐 exec `bootstrap_m6`:登记必须先于发事件)。
 
 ## 桩层
 

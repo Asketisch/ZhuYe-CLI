@@ -549,6 +549,24 @@ pub(crate) fn build_m5(
 
 // ── M6:MCP ─────────────────────────────────────────────────────────────
 
+/// 求「注册表里该 server 已注册、但新清单消失」的工具名差集。
+/// `registered` 是注册表现状(权威面),`new_names` 是刷新后的完整清单,
+/// `prefix` 是该 server 的工具全名前缀(`mcp__<server>__`)。
+/// 事件里不带 removed:刷新与启动注册的先后不可预知,以注册表为准
+/// (与 zhuye-exec bootstrap_m6 的求差集口径一致)。
+fn removed_mcp_tools(
+    registered: &[(String, ToolSource)],
+    new_names: &std::collections::HashSet<String>,
+    prefix: &str,
+) -> Vec<String> {
+    registered
+        .iter()
+        .map(|(name, _)| name)
+        .filter(|name| name.starts_with(prefix) && !new_names.contains(*name))
+        .cloned()
+        .collect()
+}
+
 /// 启动 `[mcp_servers]` 配置的 MCP server 集合(与 exec 的 `bootstrap_m6`
 /// 同逻辑;差异:`tools` 走参数,生命周期事件发到 caller 给的 channel)。
 ///
@@ -572,6 +590,10 @@ pub(crate) async fn bootstrap_mcp(
 
     // 后台 task:MCP 生命周期事件 → protocol Event → TUI 事件循环。
     let event_tx_clone = event_tx.clone();
+    // ToolsChanged 刷新需要:注册表(权威面,求「消失的工具」差集)与
+    // 活连接句柄(新工具必须绑到该 server 的现有 peer,不能新建连接)。
+    let registry_for_task = tools.clone();
+    let manager_for_task = manager.clone();
     tokio::spawn(async move {
         while let Some(evt) = internal_rx.recv().await {
             let msg = match evt {
@@ -600,6 +622,55 @@ pub(crate) async fn bootstrap_mcp(
                     },
                 ),
                 McpLifecycleEvent::Stopped { server: _ } => continue,
+                // v1.x:服务端通知 `notifications/tools/list_changed` 后重拉的
+                // 完整清单 —— 注册表是 LLM 可见面的唯一真相,不同步会让模型
+                // 调用已下线的工具(报错)或看不见新工具。与 zhuye-exec
+                // bootstrap_m6 同口径:「消失的」按注册表现状求差集(事件里
+                // 不带 removed,刷新与启动注册的先后不可预知);新工具绑到该
+                // server 的活连接上重挂。
+                McpLifecycleEvent::ToolsChanged { server, tools } => {
+                    let prefix = format!("mcp__{server}__");
+                    let new_names: std::collections::HashSet<String> =
+                        tools.iter().map(|d| d.full_name.clone()).collect();
+                    let registered = registry_for_task.list_with_source();
+                    for name in removed_mcp_tools(&registered, &new_names, &prefix) {
+                        if registry_for_task.unregister(&name) {
+                            tracing::info!(server = %server, tool = %name, "MCP 工具已下线,反注册");
+                        }
+                    }
+                    let Some((client, timeout)) = manager_for_task.server_client(&server).await
+                    else {
+                        tracing::warn!(server = %server, "工具清单刷新时找不到活连接,跳过注册");
+                        continue;
+                    };
+                    for desc in &tools {
+                        let adapter = McpToolAdapter::from_descriptor(
+                            client.clone(),
+                            desc,
+                            &server,
+                            timeout,
+                            Some(event_tx_clone.clone()),
+                        );
+                        let arc: Arc<dyn zhuye_tools::Tool> = Arc::new(adapter);
+                        // 与启动注册同口径:`ToolSource::Mcp` 安全 floor,重名不覆盖。
+                        registry_for_task.register_if_absent_with_floor(ToolSource::Mcp, arc);
+                    }
+                    tracing::info!(server = %server, current = tools.len(), "MCP 工具清单已刷新");
+                    continue;
+                }
+                // v1.x MCP elicitation:server 请求宿主用户交互(form 表单 /
+                // url 引导)。本构建暂无交互面(UI 留待后续迭代),按 fail-closed
+                // 立即以 cancel 回执 —— 不登记 waiter、不让 server 侧干等 TTL
+                // (zhuye-exec 的 300s 兜底在此等价收敛为即时了结)。事件仍
+                // 转发,TUI 转换层渲染 Notice 保证可见性。
+                McpLifecycleEvent::Elicitation { event, respond } => {
+                    let _ = respond.send(zhuye_protocol::McpElicitationResponse {
+                        id: event.request_id.clone(),
+                        action: "cancel".into(),
+                        content: None,
+                    });
+                    zhuye_protocol::event_msg::EventMsg::McpElicitation(event)
+                }
             };
             if event_tx_clone
                 .send(Event::new(EVENT_ID_NONE, msg))
@@ -976,5 +1047,38 @@ mod tests {
         let tracker = build_quota_tracker(&cfg).expect("合法组仍应产生 tracker");
         assert!(!tracker.is_tracked("bad/id", "x"));
         assert!(tracker.is_tracked("good", "plan-a"));
+    }
+
+    #[test]
+    fn removed_mcp_tools_diffs_by_server_prefix() {
+        // 「消失了哪些」按注册表现状求差集:该 server 前缀下、新清单没有
+        // 的全名;其它 server 的工具与新清单共有的工具都不动。
+        let registered = vec![
+            ("mcp__a__keep".to_string(), ToolSource::Mcp),
+            ("mcp__a__gone".to_string(), ToolSource::Mcp),
+            ("mcp__b__other_server".to_string(), ToolSource::Mcp),
+            ("bash".to_string(), ToolSource::Builtin),
+        ];
+        let new_names: std::collections::HashSet<String> =
+            ["mcp__a__keep".to_string(), "mcp__a__fresh".to_string()].into();
+        assert_eq!(
+            removed_mcp_tools(&registered, &new_names, "mcp__a__"),
+            vec!["mcp__a__gone".to_string()]
+        );
+    }
+
+    #[test]
+    fn removed_mcp_tools_empty_new_list_unregisters_all_of_server() {
+        // server 清单刷新为空(服务端下线全部工具)→ 该前缀下全部反注册,
+        // 别的 server 与内置工具不受影响。
+        let registered = vec![
+            ("mcp__a__t1".to_string(), ToolSource::Mcp),
+            ("mcp__b__t2".to_string(), ToolSource::Mcp),
+        ];
+        let new_names: std::collections::HashSet<String> = std::collections::HashSet::new();
+        assert_eq!(
+            removed_mcp_tools(&registered, &new_names, "mcp__a__"),
+            vec!["mcp__a__t1".to_string()]
+        );
     }
 }

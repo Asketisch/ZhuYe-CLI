@@ -56,6 +56,7 @@
 | 真实 HTTP 链路(Anthropic/OpenAI SSE / 跨天恢复 / busy 窗口 Esc·Ctrl+C 中断 / 凭据 failover / 跨 provider 降级 / 动态免费模型发现) | H1–H7 | — | — |
 | TUI 版本差分(rollout / 副作用 / 屏幕标记 / panic;3 场景 × 双二进制,另有发布版到候选版恢复与续写) | D 组(`test_differential.py`,需 ZHUYE_DIFF=1) | — | — |
 | ANSI 解析 / 文本截断 / JSON 紧凑化不变量(任意输入不 panic、可见文本保持、字素上限、幂等、JSON 语义保持) | —(Rust 属性测试:`ansi_escape::tests` + `text_formatting::property_tests`,proptest) | — | — |
+| 引擎 additive 诊断事件族投影(流恢复 `StreamRecovery*` ×4 / 缓存保温 `CacheWarming` / MCP 交互请求 `McpElicitation` → Notice 行;`convert_event` 无通配臂,E0004 即接线门) | —(Rust 单测:`tui/conversion.rs` tests,锚定文案关键字;差集辅助函数 `removed_mcp_tools` 同) | — | — |
 | Rust 编译面 | — | workspace_tests(cargo test/clippy/fmt/doc) | — |
 | 构建工具面(`gc` / `gc-deep` 清理语义、产物根跟随 `CARGO_TARGET_DIR`) | — | build_tooling(bash,文件系统结果断言) | — |
 
@@ -450,6 +451,7 @@
 | D13 | **满载下 Ctrl+G 按键间歇丢失**:套件满载连续跑时 `ctrl+g`(0x07)偶发未被处理 —— 编辑器未拉起、无任何通知、composer 草稿原样保留;单跑稳定复现不了 | K3 / K3b 实证(2026-10-27,合并 submodule `e4560bc` 后):全套件跑复现 2 次(K3+K3b 同批)+ 单跑复现 1 次,随后单跑连 7 次全过;失败批次均在 7 分钟连续 pty 压测的高负载窗口。 ede1639 长驻阻塞读取任务事件循环下出现,基线(每轮 spawn poll 任务)同批次未复现 | 未修(记录)。疑与高负载下 fork 版 crossterm poll/read 或输入通道交接时序有关;复现率低,先挂观察 |
 | D15 | **checkpoint 前缀随 submodule 更名,旧 tag 失联**:`9332aa9` 把 checkpoint 实现收编进 `zhuye_git::checkpoint` 时前缀从 `reflect-checkpoint:` / `reflect-cp/` 改名为 `zhuye-checkpoint:` / `zhuye-cp/`;`/checkpoint` 列表按新前缀过滤,**develop 接线前**创建的历史 checkpoint 不再显示、也无法 rewind(提交仍在仓库里,手工 `git reset` 可达) | `zhuye-agent/crates/resources/zhuye-git/src/checkpoint.rs:27-31`;`git tag \| grep reflect-cp` 可列出失联旧 tag | 未修(记录)。更名是 submodule 的既定口径(烛夜更名),属一次性迁移代价 |
 | D14 | **套件入口二进制新鲜度缺陷(假绿通道)**:`run_all.sh` / `functional/run.sh` 旧写法「release 二进制不存在才构建」,submodule 指针升级后旧二进制继续冒充新行为 —— v0.1.8 升级实证:本地与 CI macos job 全绿,唯 ubuntu(缓存冷、真重建)暴露行为回归 | `tests/run_all.sh:29-33`(修复前);复盘见 §T 组 mock 语义段 | **已修**:入口统一 `ensure_release_binary`(tests/lib.sh),每次 `cargo build --release --locked` 增量校验;外部 `ZHUYE_CLI_BIN` 覆盖时旁路信任 |
+| D16 | **MCP elicitation 无交互面,请求即时取消**:v1.x 起 MCP server 可经 `elicitation/create` 请求用户输入(form 表单 / url 引导),TUI 尚无表单 UI —— 宿主装配侧按 fail-closed 立即以 `cancel` 回执(不让 server 干等 exec 同款 300s TTL),屏幕仅 Notice 提示「谁在请求、请求什么、已取消」 | `bootstrap_wiring.rs`(Elicitation 臂,指针 e246299)+ `tui/conversion.rs` McpElicitation 臂(单测锚定) | 未修(记录)。补表单 UI 时改为登记 `approval_context.mcp_elicitations` 共享表 + TTL 兜底(对齐 exec `bootstrap_m6`,crate 篇契约 11) |
 
 ---
 

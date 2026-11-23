@@ -153,13 +153,23 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
         ContextComposition(ce) => UiEventKind::ContextComposition {
             categories: ce.categories,
         },
-        TokenCount(tc) => UiEventKind::TokenCount {
-            input_tokens: tc.input_tokens,
-            cached_tokens: tc.cached_tokens,
-            cost_usd: tc.cost_usd,
-            // v1.x:模型级统计 —— 透传实际命中的模型 spec。
-            model: tc.model,
-        },
+        TokenCount(tc) => {
+            // v1.x:`turn_total` = 回合收尾补发的**累计**计量(provider /
+            // credential_label / model 均 None)。它与逐次快照语义不同:
+            // HUD「最近一次调用」、/status 的按模型累计与费用累计若把它
+            // 一并计入会翻倍(协议字段文档明示)。TUI 无回合累计视图,
+            // 此事件整条忽略,保持逐次快照的既有口径。
+            if tc.turn_total {
+                return None;
+            }
+            UiEventKind::TokenCount {
+                input_tokens: tc.input_tokens,
+                cached_tokens: tc.cached_tokens,
+                cost_usd: tc.cost_usd,
+                // v1.x:模型级统计 —— 透传实际命中的模型 spec。
+                model: tc.model,
+            }
+        }
         SessionConfigured(sc) => UiEventKind::ContextWindowConfigured {
             window_size: sc.context_window_size,
             // sc.model 已包含完整模型名(如 `minimax/minimax-m3`),直接用。
@@ -282,6 +292,23 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
             if e.will_retry { " (will retry)" } else { "" }
         )),
         McpToolInvoked(_) => return None,
+        // v1.x MCP elicitation:server 请求宿主用户交互(form 表单 / url 引导)。
+        // 本构建暂无交互面(表单 UI 留待后续迭代),宿主装配侧按 fail-closed
+        // 立即以 cancel 回执(不让 server 侧干等 TTL);此处只做可见性提示,
+        // 告知用户请求发生过且已被取消。引擎侧 fail-closed 兜底见
+        // zhuye-exec bootstrap_m6(与审批门同口径)。
+        McpElicitation(me) => UiEventKind::Notice(match &me.kind {
+            zhuye_protocol::McpElicitationKind::Form { fields } => format!(
+                "🔌 MCP「{}」请求交互:{}(表单 {} 项,本构建暂未支持应答,请求已自动取消)",
+                me.server,
+                me.message,
+                fields.len()
+            ),
+            zhuye_protocol::McpElicitationKind::Link { url } => format!(
+                "🔌 MCP「{}」请求交互:{}(引导链接 {url},本构建暂未支持应答,请求已自动取消)",
+                me.server, me.message
+            ),
+        }),
         // v1.3 SDK 远程工具执行请求仅存在于 serve 模式(SDK 客户端经
         // Op::RegisterTools 注册远程工具后,core 请客户端本地执行并等回执)。
         // TUI 内置运行 agent、不注册远程工具,此事件按构造不可能出现,忽略。
@@ -342,15 +369,30 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
         // v1.6.1 `/prompt list` 的应答:可用提示词层 + 当前模型生效层。
         // active_layers 只记录用户目录层的命中(内嵌层不记录),空 = 全部
         // 走内嵌默认。作为 Notice 进对话流(选择 overlay 留待后续迭代)。
-        PromptList(pl) => UiEventKind::Notice(format!(
-            "📋 提示词 · 模型 {} · 选择 {:?} · 方案 {} · 生效层: {} · 可用: {} {}",
-            pl.current_spec,
-            pl.selection,
-            pl.profile,
-            format_prompt_layers(&pl.active_layers),
-            pl.available.join(", "),
-            pl.fallback_reason.unwrap_or_default(),
-        )),
+        // v1.7:两级目录分组(工具 → 模型变体)非空时附分组摘要;空清单
+        // (旧引擎 / 目录损坏)按 available 平铺,与协议退化口径一致。
+        PromptList(pl) => UiEventKind::Notice({
+            let groups = if pl.groups.is_empty() {
+                String::new()
+            } else {
+                let summary: Vec<String> = pl
+                    .groups
+                    .iter()
+                    .map(|g| format!("{}({})×{}", g.label, g.id, g.variants.len()))
+                    .collect();
+                format!(" · 分组: {}", summary.join(", "))
+            };
+            format!(
+                "📋 提示词 · 模型 {} · 选择 {:?} · 方案 {} · 生效层: {} · 可用: {} {}{}",
+                pl.current_spec,
+                pl.selection,
+                pl.profile,
+                format_prompt_layers(&pl.active_layers),
+                pl.available.join(", "),
+                pl.fallback_reason.unwrap_or_default(),
+                groups
+            )
+        }),
         // v1.6.1 `/prompt reload` 的应答:提示词库已重扫,下一 turn 即用
         // 新文案。action 为触发词(`reload`,预留聚焦切换的层名)。
         PromptSwitched(ps) => UiEventKind::Notice(format!(
@@ -385,6 +427,57 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
             gs.definitions_reviewed,
             gs.outputs_blocked,
             gs.outputs_reviewed,
+        )),
+        // v1.x prompt cache 保温:引擎主动推的诊断事件(无对应 Op),记录
+        // 空闲期 / 回合内廉价重放刷新 provider prompt cache TTL 的决策与
+        // 结果;与 TokenCount 的 cached_tokens 对照可验证保温收益。
+        // 按动作给一行人读结论,`at` / `model` 等审计字段不在 TUI 展开。
+        CacheWarming(cw) => UiEventKind::Notice({
+            use zhuye_protocol::CacheWarmingAction as A;
+            use zhuye_protocol::CacheWarmingPhase as P;
+            let phase = match cw.phase {
+                P::Turn => "回合内",
+                P::Idle => "回合间",
+            };
+            match cw.action {
+                A::Scheduled => format!("🔥 缓存保温周期已建立({phase})"),
+                A::Executed => format!(
+                    "🔥 缓存保温完成({phase})· 命中 {} tokens · 成本 ${:.6}",
+                    cw.warm_cached_tokens.unwrap_or(0),
+                    cw.warm_cost_usd.unwrap_or(0.0)
+                ),
+                A::Skipped => format!(
+                    "🔥 缓存保温跳过({phase})· 原因:{}",
+                    cw.reason.as_deref().unwrap_or("未知")
+                ),
+                A::Cancelled => format!(
+                    "🔥 缓存保温取消({phase})· 原因:{}",
+                    cw.reason.as_deref().unwrap_or("未知")
+                ),
+            }
+        }),
+        // v1.x 流锚点恢复(4):SSE 中断越过 provider 层重试边界后的恢复
+        // 过程事件化,全部是可观察诊断事件,不改变既有 stream_error /
+        // agent_message_reset 的语义与顺序 —— Notice 提示进度即可。
+        StreamRecoveryStarted(sr) => UiEventKind::Notice(format!(
+            "🔄 流恢复启动 · 第 {} 次尝试(原因:{})",
+            sr.attempt, sr.reason_code
+        )),
+        StreamRecoveryAnchorSelected(sr) => UiEventKind::Notice(format!(
+            "🔄 流恢复 · 选定锚点 {}(第 {} 次尝试)",
+            sr.anchor.as_deref().unwrap_or("previous_message"),
+            sr.attempt
+        )),
+        StreamRecoveryTailDiscarded(sr) => UiEventKind::Notice(format!(
+            "🔄 流恢复 · 丢弃的尾部输出已留痕(正文 {} 字符 / 思考 {} 字符,resume 不回放)",
+            sr.discarded_text_chars.unwrap_or(0),
+            sr.discarded_thinking_chars.unwrap_or(0)
+        )),
+        StreamRecoveryRetryStarted(sr) => UiEventKind::Notice(format!(
+            "🔄 流恢复 · 已从锚点重开请求{}",
+            sr.retry_in_ms
+                .map(|ms| format!(",建议等待 {ms} ms"))
+                .unwrap_or_default()
         )),
     };
     Some(UiEvent { kind })
@@ -591,6 +684,8 @@ mod tests {
                 selection: zhuye_protocol::PromptSelection::Default,
                 profile: "default".into(),
                 fallback_reason: None,
+                // v1.7 两级目录分组:空 = 按可用层平铺(退化口径)。
+                groups: Vec::new(),
             }),
         );
         let out = convert_event(ev).expect("应转换为 UiEvent");
@@ -614,6 +709,7 @@ mod tests {
                 selection: zhuye_protocol::PromptSelection::Default,
                 profile: "default".into(),
                 fallback_reason: None,
+                groups: Vec::new(),
             }),
         );
         let out = convert_event(ev).unwrap();
@@ -1108,6 +1204,176 @@ mod tests {
                 assert_eq!(categories[1].tokens, 3_400);
             }
             other => panic!("期望 ContextComposition,得到 {other:?}"),
+        }
+    }
+
+    #[test]
+    fn convert_mcp_elicitation_form_notice_reports_fields_and_cancel() {
+        // v1.x MCP elicitation:本构建无交互面,宿主已 fail-closed cancel,
+        // Notice 须让用户看到「谁在请求、请求什么、已被取消」。
+        use zhuye_protocol::event_msg::EventMsg;
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            EventMsg::McpElicitation(zhuye_protocol::McpElicitationEvent {
+                request_id: "req-1".into(),
+                server: "github".into(),
+                message: "需要仓库授权".into(),
+                kind: zhuye_protocol::McpElicitationKind::Form {
+                    fields: vec![
+                        zhuye_protocol::McpElicitationField {
+                            name: "token".into(),
+                            title: None,
+                            description: None,
+                            required: true,
+                            kind: zhuye_protocol::McpElicitationFieldKind::Text { secret: true },
+                        },
+                        zhuye_protocol::McpElicitationField {
+                            name: "ttl".into(),
+                            title: None,
+                            description: None,
+                            required: false,
+                            kind: zhuye_protocol::McpElicitationFieldKind::Number { integer: true },
+                        },
+                    ],
+                },
+            }),
+        );
+        let out = convert_event(ev).expect("McpElicitation 不应被丢弃");
+        match out.kind {
+            UiEventKind::Notice(text) => {
+                assert!(text.contains("github"), "应含 server 名:{text}");
+                assert!(text.contains("需要仓库授权"), "应含提示语:{text}");
+                assert!(text.contains("2 项"), "应含表单项数:{text}");
+                assert!(text.contains("已自动取消"), "应说明已取消:{text}");
+            }
+            other => panic!("期望 Notice,得到 {other:?}"),
+        }
+    }
+
+    #[test]
+    fn convert_mcp_elicitation_link_notice_shows_url() {
+        use zhuye_protocol::event_msg::EventMsg;
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            EventMsg::McpElicitation(zhuye_protocol::McpElicitationEvent {
+                request_id: "req-2".into(),
+                server: "oauth".into(),
+                message: "去浏览器完成登录".into(),
+                kind: zhuye_protocol::McpElicitationKind::Link {
+                    url: "https://example.com/auth".into(),
+                },
+            }),
+        );
+        let out = convert_event(ev).expect("McpElicitation 不应被丢弃");
+        match out.kind {
+            UiEventKind::Notice(text) => {
+                assert!(
+                    text.contains("https://example.com/auth"),
+                    "应含引导链接:{text}"
+                );
+            }
+            other => panic!("期望 Notice,得到 {other:?}"),
+        }
+    }
+
+    #[test]
+    fn convert_cache_warming_executed_notice_reports_hit_and_cost() {
+        use zhuye_protocol::event_msg::EventMsg;
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            EventMsg::CacheWarming(zhuye_protocol::CacheWarmingEvent {
+                action: zhuye_protocol::CacheWarmingAction::Executed,
+                phase: zhuye_protocol::CacheWarmingPhase::Idle,
+                reason: None,
+                prompt_tokens: Some(12_000),
+                warm_cached_tokens: Some(11_500),
+                warm_cost_usd: Some(0.001_2),
+                expected_savings_usd: None,
+                model: None,
+                at: std::time::SystemTime::UNIX_EPOCH,
+            }),
+        );
+        let out = convert_event(ev).expect("CacheWarming 不应被丢弃");
+        match out.kind {
+            UiEventKind::Notice(text) => {
+                assert!(text.contains("11500"), "应含命中 tokens:{text}");
+                assert!(text.contains("回合间"), "应含保温阶段:{text}");
+                assert!(text.contains('$'), "应含成本:{text}");
+            }
+            other => panic!("期望 Notice,得到 {other:?}"),
+        }
+    }
+
+    #[test]
+    fn convert_cache_warming_skipped_notice_reports_reason() {
+        use zhuye_protocol::event_msg::EventMsg;
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            EventMsg::CacheWarming(zhuye_protocol::CacheWarmingEvent {
+                action: zhuye_protocol::CacheWarmingAction::Skipped,
+                phase: zhuye_protocol::CacheWarmingPhase::Turn,
+                reason: Some("below_threshold".into()),
+                prompt_tokens: None,
+                warm_cached_tokens: None,
+                warm_cost_usd: None,
+                expected_savings_usd: None,
+                model: None,
+                at: std::time::SystemTime::UNIX_EPOCH,
+            }),
+        );
+        let out = convert_event(ev).expect("CacheWarming 不应被丢弃");
+        match out.kind {
+            UiEventKind::Notice(text) => {
+                assert!(text.contains("跳过"), "应说明跳过:{text}");
+                assert!(text.contains("below_threshold"), "应含原因码:{text}");
+            }
+            other => panic!("期望 Notice,得到 {other:?}"),
+        }
+    }
+
+    #[test]
+    fn convert_stream_recovery_family_renders_progress() {
+        // 恢复过程 4 事件全部渲染为 Notice 进度行,不丢弃也不改变
+        // stream_error / agent_message_reset 的既有语义。
+        use zhuye_protocol::event_msg::EventMsg;
+        let mk = |attempt: u32| zhuye_protocol::StreamRecoveryEvent {
+            attempt,
+            reason_code: "provider_stream_error".into(),
+            transient: Some("provider_stream_error".into()),
+            anchor: Some("previous_message".into()),
+            discarded_text_chars: Some(120),
+            discarded_thinking_chars: Some(30),
+            retry_in_ms: Some(800),
+        };
+        let cases = [
+            (
+                EventMsg::StreamRecoveryStarted(mk(1)),
+                vec!["流恢复启动", "第 1 次尝试", "provider_stream_error"],
+            ),
+            (
+                EventMsg::StreamRecoveryAnchorSelected(mk(1)),
+                vec!["锚点", "previous_message"],
+            ),
+            (
+                EventMsg::StreamRecoveryTailDiscarded(mk(1)),
+                vec!["留痕", "120", "30"],
+            ),
+            (
+                EventMsg::StreamRecoveryRetryStarted(mk(1)),
+                vec!["重开请求", "800"],
+            ),
+        ];
+        for (msg, expects) in cases {
+            let ev = zhuye_protocol::Event::new("t", msg);
+            let out = convert_event(ev).expect("流恢复事件不应被丢弃");
+            match out.kind {
+                UiEventKind::Notice(text) => {
+                    for expect in expects {
+                        assert!(text.contains(expect), "Notice 应含「{expect}」:{text}");
+                    }
+                }
+                other => panic!("期望 Notice,得到 {other:?}"),
+            }
         }
     }
 }
