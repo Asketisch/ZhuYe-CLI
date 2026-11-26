@@ -35,12 +35,13 @@ ZhuYe-CLI (本仓库)  ──submodule──► zhuye-agent
 
 | 模块 | 职责 |
 |------|------|
-| `src/bin/main.rs` | 薄二进制:clap 路由。无子命令 → TUI;`session`/`traces` → headless 执行完退出 |
+| `src/bin/main.rs` | 薄二进制:clap 路由。无子命令 → TUI;`session`/`traces`/`workspace`/`discussion`/`security` → headless 执行完退出 |
 | `bootstrap.rs` | 加载 config、构建 ModelRegistry / provider / ToolRegistry / AgentThread,进入 TUI |
 | `tui/` + `events.rs` + `adapter.rs` | **本地**事件循环、布局、`UiEvent`/`UiState` 状态机、协议事件适配边界 |
 | `tui_core/` | 自包含呈现原语(自定义终端后端、流式历史插入、CJK 换行、composer 等) |
-| `history_render/`、`transcript_pager.rs`、`tasks_pager.rs` | 历史行渲染、滚动回放、任务面板 |
-| `cli/{session,traces}.rs` | headless 子命令实现(调 zhuye-rollout / zhuye-telemetry) |
+| `history_render/`(根 `history_render.rs` + 目录) | 历史行渲染、statusline、slash legacy 通道 |
+| `cli/`(session / traces / discussion / security / workspace;models.rs 未接线) | headless 子命令实现(调 zhuye-rollout / zhuye-telemetry / zhuye-discussion / zhuye-integration) |
+| `views/`、`term/`、`utils/`、`crate_stubs/`、`compat/` | 原 src 根平铺文件按功能归组:人读渲染/overlay 视图、终端基础设施、辅助函数、`zhuye_*` 引擎桩、兼容垫片(旧路径经 lib.rs 垫片兼容) |
 
 依赖方向严格单向:`tui` → `tui_core` / `adapter` / `events` /
 `history_render` / `terminal`,任何模块不得反向引用 `crate::tui`。

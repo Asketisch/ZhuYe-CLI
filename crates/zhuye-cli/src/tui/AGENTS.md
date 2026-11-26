@@ -1,8 +1,8 @@
 # AGENTS.md — tui/(事件循环与枚举通道)
 
 > **何时读我**:改事件循环、按键路由、UiState 状态机、协议事件投影或 slash 枚举通道
-> 分发前,先读本篇。本篇契约域 = `tui/` + src 根的 `events.rs` / `adapter.rs` /
-> `terminal.rs`(后三者与事件循环内聚,故归本篇;目录位置在 src 根)。
+> 分发前,先读本篇。本篇契约域 = `tui/` + src 根的 `events.rs` / `adapter.rs` +
+> `term/terminal.rs`(三者与事件循环内聚,故归本篇;terminal 已归入 src/term/)。
 
 ## 模块概述
 
@@ -18,7 +18,7 @@
 | `tui/conversion.rs` | 协议事件 → UI 事件的转换与内容格式化(从 mod.rs 抽出的唯一转换边界) |
 | `events.rs` | `UiState`(:152)、`LoopState`(:137)、`PendingApproval`(:20)、`PlanApprovalState`(:33) |
 | `adapter.rs` | `UiEventKind`(:56)、`UiEvent`(:241)、`UiHistoryItem`(:246)、状态归约器 `apply_event`(:359,返回需 flush 进 scrollback 的行) |
-| `terminal.rs` | `TerminalGuard` / `poll_event` / `is_exit_key`(fork 版 crossterm 封装) |
+| `term/terminal.rs` | `TerminalGuard` / `poll_event` / `is_exit_key`(fork 版 crossterm 封装) |
 
 ## 本地契约 / 同步点
 
@@ -63,7 +63,7 @@
 
 ## 注意事项
 
-- `terminal.rs` 的 Sixel 透传是**诚实降级**(TODO,返回 `None`),不要假装修好了。
+- `term/terminal.rs` 的 Sixel 透传是**诚实降级**(TODO,返回 `None`),不要假装修好了。
 - `picker/` 由本模块 `draw` 叠加调用,选择器契约见 [crate 篇](../../AGENTS.md) §picker。
 
 ## 深入阅读

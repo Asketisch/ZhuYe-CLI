@@ -239,7 +239,7 @@
 | V3 | 超长回复折行 | `V3_HEAD` 与 `V3_TAIL` 都在屏幕上(无整段丢失) |
 | V4 | markdown 代码块 | 围栏内容(`fn probe_render_fn`)上屏 |
 | V5 | markdown 表格 / 列表 | `CELLKEY42` / `LISTITEM_*` 上屏 |
-| V6 | `NO_COLOR=1` 分支 | 首屏锚点齐全(theme.rs `resolve_startup`) |
+| V6 | `NO_COLOR=1` 分支 | 首屏锚点齐全(`term/theme.rs` `resolve_startup`) |
 | V7 | `REFLECT_TUI_THEME=light` 分支 | 首屏锚点齐全 |
 | V8 | resize 布局锚点 | 80x24 → 120x40 → 80x24,HUD 模型名 + composer 占位符始终可见(升级 B9) |
 | V9 | 极小窗口 40x10 | 存活 + 有渲染输出 + 交互不崩 |
@@ -371,7 +371,7 @@
 | 权限模式 | `Op::CyclePermissionMode` | HUD `[prompt]` / `[plan]` 段 |
 | 工具参数流(`ToolCallArgsDelta`) | `tui/conversion.rs` + `adapter.rs` | 调用行参数摘要 `✓ glob (…) · *.rs` |
 | 会话恢复回放(任意日期 + 轮转副本 + 双 id) | `resume.rs::replay_all`(`reflect_rollout::reader::replay`) | 旧日期会话 `--resume` 历史回填 + 续写原文件(P8);按内部 session id 恢复(P9) |
-| 路由事件(failover / 冷却 / 跨模型降级) | `tui/conversion.rs` + `routing_status.rs` | `↻ 路由切换 · main: …` / `↘ 模型降级 · …` 通知行 |
+| 路由事件(failover / 冷却 / 跨模型降级) | `tui/conversion.rs` + `views/routing_status.rs` | `↻ 路由切换 · main: …` / `↘ 模型降级 · …` 通知行 |
 | 目标模式状态快照 | `tui/mod.rs`(`AgentThread::goal_snapshot`) | `/goal` 无参 → `目标模式 · 进行中` + 进度行 |
 | provider 模型清单 + 免费判定 | `reflect_config::fetch_catalog` + `reflect_llm::model_catalog` | `/model` 无参 → 清单行 + `免费` / `免费?` 标记 |
 | 配置热重载 | `reflect_config::ConfigWatcher` + `config_reload.rs` | `🔄 配置已重载(…)· 变更段: …` 通知行 |
@@ -397,10 +397,10 @@
 - **`/theme` `/keymap` `/statusline` 等的配置持久化是桩**
   (`tui_core/legacy_core.rs:362-372` 的 `ConfigEditsBuilder`):`/theme` 的
   apply 只回写内存态并提示「display only」。
-- **feature flag 恒全关**(`features.rs:22-31`):15 个 flag 的 `is_enabled`
-  恒 `false`,且**没有任何切换途径**(不读 config / env / CLI)。
-- **`login.rs` / `cloud_config.rs` / `models_manager.rs` / `connectors.rs` /
-  `core_plugins.rs` 都是桩**:鉴权只有 API key 一条路径。
+- **feature flag 恒全关**(`crate_stubs/features.rs:22-31`):15 个 flag 的
+  `is_enabled` 恒 `false`,且**没有任何切换途径**(不读 config / env / CLI)。
+- **`crate_stubs/` 桩族(`login.rs` / `cloud_config.rs` / `models_manager.rs` /
+  `connectors.rs` / `core_plugins.rs`)都是桩**:鉴权只有 API key 一条路径。
 - **`tui_core/chatwidget/` 整体不可达**:live TUI 只用 `tui_core` 的呈现
   原语;模型弹窗 / service tier / onboarding 都在未接线路径上。
   `tui_core/app.rs:1-5` 自述是「桩」。
@@ -443,7 +443,7 @@
 | D5 | **picker 的 `Nop` 键位不吞键**:在 image/keymap/statusline/theme/skills_hub 里按 `j`/`k` 既移动选择又往 composer 输入框打字;keymap / skills_hub / statusline 的 `Enter` 也是 `Nop`(会提交草稿) | `tui/mod.rs:2594, 2721, 2737, 2772, 2788, 2804, 2848` | 未修(记录)。本套件一律用 `Esc` 关闭弹层以规避 |
 | D6 | **`REFLECT_TUI_UPDATE_CHECK` 无人读取**:旧 harness 设它以屏蔽启动期更新探测,但本 fork 的 `update_action.rs:29-33` 恒返回 `None` | `crates/zhuye-cli/src/tui_core/update_action.rs:29-33` | 未修(记录)。无害,但属残留 |
 | D7 | **mock provider 一次提交触发多次模型调用**:实测 4 次,导致脚本行与最终落盘的 assistant 消息不是一一对应 | `zhuye-agent/crates/abilities/reflect-llm/src/providers/mock.rs:163` | 引擎侧行为,记录 |
-| D8 | **`Ctrl+Shift+D` 快捷键在真实终端不可达**:终端无法区分 Ctrl+D 与 Ctrl+Shift+D(同为字节 `0x04`),crossterm 把 `0x04` 解析成 `Char('d') + CONTROL`(**不带 SHIFT**),而 `keymap.rs` 的 `OpenDiff` 分支要求 `CONTROL|SHIFT` —— 该分支永远命中不了,实际落到 `Ctrl+D → Exit` | `crates/zhuye-cli/src/keymap.rs:88-94`(要求 SHIFT)vs `:60-65`(Ctrl+D 排除 SHIFT);实测见 `test_overlay.py::test_ctrl_shift_d_is_unreachable_from_a_terminal` | 未修(记录)。diff overlay 的实际入口只有 `/diff` |
+| D8 | **`Ctrl+Shift+D` 快捷键在真实终端不可达**:终端无法区分 Ctrl+D 与 Ctrl+Shift+D(同为字节 `0x04`),crossterm 把 `0x04` 解析成 `Char('d') + CONTROL`(**不带 SHIFT**),而 `keymap.rs` 的 `OpenDiff` 分支要求 `CONTROL|SHIFT` —— 该分支永远命中不了,实际落到 `Ctrl+D → Exit` | `crates/zhuye-cli/src/term/keymap.rs:88-94`(要求 SHIFT)vs `:60-65`(Ctrl+D 排除 SHIFT);实测见 `test_overlay.py::test_ctrl_shift_d_is_unreachable_from_a_terminal` | 未修(记录)。diff overlay 的实际入口只有 `/diff` |
 | D9 | ~~**坏 `config.toml` 静默回落**~~:`this is [ not valid toml {{{` 这类非法内容不产生任何用户可见告警,TUI 以默认配置照常启动 —— 用户改了配置却不生效时无从得知 | W9 实证(2026-10):进程存活、无 panic、raw 无 config 相关输出 | **已修**:bootstrap 启动前显式体检 config.toml,解析失败在终端打印 `⚠ 警告:<路径> 解析失败(...)`,仍回落默认配置不挡启动 |
 | D10 | **busy 窗口内的 composer 提交被吞且草稿保留**:回合进行中按 Enter,提交内容不上传也不清框;`/loop stop` 在迭代 busy 窗口内提交即失效,且残留草稿会污染后续输入(与 `/loop` 的自动提交叠加尤其明显) | W5 调试实证(2026-10):第 2 轮触发后立刻 stop 无效,拖到空闲窗口才生效;残留草稿使后续 stop 拼成非法命令 | 未修(记录) |
 | D11 | ~~**Shift+Tab 权限模式循环与注释不符**~~:`keymap.rs` 注释宣称五模式循环,旧实测 HUD 可见循环只有三态 Auto → AcceptEdits → Plan → Auto,Prompt / Bypass 到不了 | K1 实证(2026-10):连续 6 次 Shift+Tab 交替出现 `[accept_edits]`/`[plan]`/无标记 | **已对齐**:核心 81776217 起三段工作模式,轮换即 Auto → Prompt(Ask)→ Plan → Auto(`next_in_ui_cycle`),accept_edits/deny/bubble/bypass 弃用、不进循环;CLI 侧注释与 `/mode` 帮助同步(b905335),K1 锚点已更新 |

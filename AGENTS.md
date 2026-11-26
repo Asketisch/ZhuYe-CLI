@@ -83,7 +83,8 @@ make gc-deep                    # 深清理:再清 deps/.fingerprint/examples(�
 | `bootstrap.rs` | 加载 config、构建 ModelRegistry / provider / ToolRegistry / AgentThread,进入 TUI |
 | `tui/` + `events.rs` + `adapter.rs` | **本地**事件循环、布局、`UiEvent`/`UiState` 状态机、协议事件适配边界 |
 | `tui_core/` | 自包含呈现原语(自定义终端后端、流式历史插入、CJK 换行、composer 等) |
-| `history_render/`、`transcript_pager.rs`、`tasks_pager.rs` | 历史行渲染、滚动回放、任务面板 |
+| `history_render/`(根 `history_render.rs` + 目录) | 历史行渲染、statusline、slash legacy 通道 |
+| `views/`、`term/`、`utils/`、`crate_stubs/`、`compat/` | src 根平铺按功能归组:人读渲染/overlay 视图、终端基础设施、辅助函数、引擎桩、兼容垫片(旧路径经 lib.rs 垫片兼容;归组细节见 crate 篇) |
 | `cli/`(session / traces / discussion / security / workspace;models.rs 未接线) | headless 子命令实现(调 zhuye-rollout / zhuye-telemetry / zhuye-discussion / zhuye-integration) |
 
 ### 核心引擎(submodule,只读消费,勿改)

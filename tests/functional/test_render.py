@@ -5,7 +5,7 @@
 
 锚点字面量来源(2026-10 实证,证据见 `tests/COVERAGE.md` §V 组):
   - 首屏锚点 `/help for commands` / `Send a message` / 块字 banner `███`
-  - 主题分支:`theme.rs resolve_startup` 读 NO_COLOR > REFLECT_TUI_THEME > 持久化
+  - 主题分支:`term/theme.rs resolve_startup` 读 NO_COLOR > REFLECT_TUI_THEME > 持久化
   - resize:`TuiSession.resize` 发 TIOCSWINSZ + `ESC[8;R;Ct` 触发重排
 """
 

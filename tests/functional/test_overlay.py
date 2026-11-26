@@ -99,7 +99,7 @@ def test_ctrl_shift_d_is_unreachable_from_a_terminal(tui) -> None:
 
     终端无法区分 Ctrl+D 与 Ctrl+Shift+D:两者都是字节 `0x04`。crossterm
     把 `0x04` 解析成 `Char('d') + CONTROL`(**不带 SHIFT**),因此
-    `keymap.rs` 里要求 `CONTROL|SHIFT` 的 `OpenDiff` 分支永远命中不了,
+    `term/keymap.rs` 里要求 `CONTROL|SHIFT` 的 `OpenDiff` 分支永远命中不了,
     落到 `Ctrl+D → Exit`。本用例锁定这一现状(见 COVERAGE.md §6 D8)。
 
     换言之:diff overlay 的实际入口只有 `/diff`。

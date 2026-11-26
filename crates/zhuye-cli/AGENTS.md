@@ -1,13 +1,14 @@
 # AGENTS.md — zhuye-cli crate
 
 > **何时读我**:改本 crate 的构建面(Cargo / feature / patch)、src 根文件群(bootstrap /
-> terminal / viewport 等)、桩层或 `picker/`,或新增 / 移除 src 模块目录前,先读本篇。
+> adapter / events 等)、`utils/`、`term/`、`views/`、`compat/`、`crate_stubs/`、桩层或
+> `picker/`,或新增 / 移除 src 模块目录前,先读本篇。
 
 ## 模块概述
 
 本 crate 是 ZhuYe 的 TUI 表现层(lib `zhuye_cli` + thin binary `zhuye-cli`),引擎
 (AgentThread / StateGraph / 工具 / 协议)全部经 path 依赖来自 `zhuye-agent/` submodule。
-src/ 约 489 个 `.rs`、18 万行,其中 `tui_core/` 约占 82% —— 真正的"层"在 src 模块
+src/ 约 497 个 `.rs`、18 万行,其中 `tui_core/` 约占 82% —— 真正的"层"在 src 模块
 目录,不在 `crates/*`。全局约定与验证矩阵见根 [AGENTS.md](../../AGENTS.md)。
 
 ## src 模块速览(改哪个目录读哪篇)
@@ -20,8 +21,11 @@ src/ 约 489 个 `.rs`、18 万行,其中 `tui_core/` 约占 82% —— 真正�
 | `src/history_render.rs` + `src/history_render/` | 历史行渲染、statusline、slash legacy 通道 | [src/history_render/AGENTS.md](src/history_render/AGENTS.md) |
 | `src/cli/` + `src/bin/main.rs` | headless 子命令与 clap 路由 | [src/cli/AGENTS.md](src/cli/AGENTS.md) |
 | `src/picker/` | overlay 选择器(keymap / theme / model / traces 等 12 个) | 本篇 §picker |
-| 桩层:`protocol_compat/`、`app_server_protocol/`、`config_compat/`、`app_server_client.rs` | 上游 crate 类型的本地重声明,供 tui_core 消费 | 本篇 §桩层 |
-| 其余 src 根文件(`bootstrap.rs`、`bootstrap_wiring.rs`、`terminal.rs`、`viewport.rs`、`user_messages.rs`、`transcript_pager.rs`、`tasks_pager.rs` 等) | 装配、终端基础设施、滚动回放 | 本篇 |
+| 桩层:`protocol_compat/`、`app_server_protocol/`、`config_compat/`、`app_server_client.rs`、`crate_stubs/`、`compat/` | 上游 crate 类型与本地桩的声明面,供 tui_core 消费 | 本篇 §桩层 |
+| `src/utils/` | 通用辅助函数族(原 src 根 `utils_*.rs` 12 个) | 本篇 |
+| `src/term/` | 终端基础设施(terminal / terminal_probe / viewport / keymap / theme) | 本篇 |
+| `src/views/` | 人读渲染与 overlay 视图(todo_view / goal_state_view / split_view / routing_status / model_list / tasks_pager / transcript_pager / tool_args / approval_scope) | 本篇 |
+| 其余 src 根文件(`bootstrap.rs`、`bootstrap_wiring.rs`、`adapter.rs`、`events.rs`、`config_reload.rs`、`logging.rs`、`resume.rs`、`install_context.rs`、`shell_command.rs`、`ansi_escape.rs`、`prompt_history.rs`) | 装配与入口、事件边界、启动恢复 | 本篇与 [src/tui/AGENTS.md](src/tui/AGENTS.md) |
 
 ## 本地契约 / 同步点
 
@@ -75,12 +79,20 @@ src/ 约 489 个 `.rs`、18 万行,其中 `tui_core/` 约占 82% —— 真正�
 
 `protocol_compat`(约 1.6K 行)/ `app_server_protocol`(约 2.9K)/ `config_compat`
 (约 1.3K)/ `app_server_client.rs` 是给 `tui_core/` vendored 代码用的本地类型桩,
-**覆盖范围由 tui_core 内的 `crate::<桩层>` 引用驱动**(`protocol_compat/mod.rs:1-12`):
+**覆盖范围由 tui_core 内的 `crate::<桩层>` 引用驱动**(`protocol_compat/mod.rs:1-12`)。
+restructure 批 2/3 起,原 src 根平铺的 `zhuye_*` 引擎桩 19 个归入 `crate_stubs/`
+(arg0 / cloud_config / connectors / core_plugins / exec_server / features / feedback /
+file_search / git_utils / login / mcp / message_history / model_provider /
+model_provider_info / models_manager / otel / plugin / rollout / state),兜上游 API
+的兼容垫片 2 个归入 `compat/`(tui_compat / random_range_compat):
 
 - tui_core 引用为大头(抽样约:protocol_compat 280 处 / app_server_protocol 189 /
   config_compat 72),增删引用时桩层类型随之增删,桩层不追求与上游一一对应;
 - 不要把桩层升级成"真实现":引擎能力一律走 submodule 公开 API;
-- 桩层类型改动只影响 tui_core 编译面,跑 `make check` 即可暴露。
+- 桩层类型改动只影响 tui_core 编译面,跑 `make check` 即可暴露;
+- **旧路径垫片是临时物**:`lib.rs` 以 `pub use` / `use` 保 `crate::<旧名>` 兼容
+  (restructure 批 1-5),引用迁往 `crate::<目录>::<name>` 新路径后整体移除;
+  新代码一律写新路径。
 
 ## picker/
 
@@ -95,7 +107,8 @@ plugin / skills-hub / statusline / theme / traces 等),`picker/mod.rs:1-4`:由
 - 不要把核心 crate 列入 `workspace.members`,也不要删根清单里的 zhuye-* 镜像声明。
 - 不要在 TUI 路径引入多线程 runtime;不要绕过 SAFETY 注释新增 `unsafe` 环境变量写。
 - 不要在桩层复刻引擎逻辑;不要让 `src/cli/` 依赖 `tui_core`(headless 不碰渲染层)。
-- 不要新增 src 模块目录而不建篇 / 不更新本篇速览表与根导航表。
+- 不要新增 src 模块目录而不入速览表(有独立漂移契约的才建篇;只作路由归组的
+  以本篇一行承载即可);导航目标增删同步本篇速览表与根导航表。
 
 ## 深入阅读
 
