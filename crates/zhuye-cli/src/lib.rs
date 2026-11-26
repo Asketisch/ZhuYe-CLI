@@ -49,37 +49,17 @@ mod wrapping;
 pub mod ansi_escape;
 pub mod app_server_client;
 pub mod app_server_protocol;
-pub mod arg0;
 /// Headless 子命令(fork / rename / export / traces),由顶层二进制 dispatch。
 pub mod cli;
-pub mod cloud_config;
 pub mod config_compat;
-pub mod connectors;
-pub mod core_plugins;
-pub mod exec_server;
-pub mod features;
-pub mod feedback;
-pub mod file_search;
-// v0.1.8-develop 接线:/checkpoint 的 git 实现收编进 submodule 的 zhuye-git
-// crate(checkpoint / 分支与 PR 探测 / assistant 指令解析),本仓库删除
-// git_checkpoint / branch_summary / git_action_directives 三份本地实现。
-pub mod git_utils;
+/// `zhuye_*` 引擎 crate 的本地桩实现族(原 src 根平铺,restructure 批 2)。
+pub mod crate_stubs;
 pub mod install_context;
-pub mod login;
-pub mod mcp;
-pub mod message_history;
-pub mod model_provider;
-pub mod model_provider_info;
-pub mod models_manager;
-pub mod otel;
-pub mod plugin;
 pub mod prompt_history;
 pub mod protocol_compat;
 pub mod random_range_compat;
 pub mod resume;
-pub mod rollout;
 pub mod shell_command;
-pub mod state;
 pub mod theme;
 pub mod tui_compat;
 pub mod utils;
@@ -99,6 +79,18 @@ pub use utils::plugins as utils_plugins;
 pub use utils::sandbox_summary as utils_sandbox_summary;
 pub use utils::sleep_inhibitor as utils_sleep_inhibitor;
 pub use utils::string as utils_string;
+
+// 原 src 根 `zhuye_*` crate 桩 19 个已归入 `src/crate_stubs/`;旧路径
+// `crate::<name>` / `zhuye_cli::<name>` 经再导出保持兼容(临时垫片,
+// 引用迁往 `crate::crate_stubs::` 后移除)。
+// v0.1.8-develop 接线:/checkpoint 的 git 实现收编进 submodule 的 zhuye-git
+// crate,本仓库删除 git_checkpoint / branch_summary / git_action_directives
+// 三份本地实现(git_utils 现为桩)。
+pub use crate_stubs::{
+    arg0, cloud_config, connectors, core_plugins, exec_server, features, feedback, file_search,
+    git_utils, login, mcp, message_history, model_provider, model_provider_info, models_manager,
+    otel, plugin, rollout, state,
+};
 
 use clap::Args;
 
