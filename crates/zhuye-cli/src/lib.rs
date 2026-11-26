@@ -27,13 +27,11 @@ mod config_reload;
 mod events;
 mod history_render;
 mod logging;
-mod markdown;
 mod picker;
 mod term;
 mod tui;
 mod tui_core;
 mod views;
-mod wrapping;
 
 pub mod ansi_escape;
 pub mod app_server_client;

@@ -45,7 +45,7 @@ Launching without a subcommand enters the TUI; subcommands such as `session`
 | `tui/` + `events.rs` + `adapter.rs` | The **local** event loop, layout, the `UiEvent`/`UiState` state machine, and the protocol-event adaptation boundary |
 | `tui_core/` | Self-contained presentation primitives (custom terminal backend, streaming history insertion, CJK wrapping, composer, etc.) |
 | `history_render/` (root `history_render.rs` + directory) | History line rendering, statusline, the slash legacy channel |
-| `cli/` (session / traces / discussion / security / workspace; models.rs not wired) | Headless subcommand implementations (calling zhuye-rollout / zhuye-telemetry / zhuye-discussion / zhuye-integration) |
+| `cli/` (session / traces / discussion / security / workspace) | Headless subcommand implementations (calling zhuye-rollout / zhuye-telemetry / zhuye-discussion / zhuye-integration) |
 | `views/`, `term/`, `utils/`, `crate_stubs/`, `compat/` | Former src-root flat files grouped by function: human-readable/overlay views, terminal infrastructure, helpers, `zhuye_*` engine stubs, compatibility shims (old paths kept compatible via lib.rs re-exports) |
 
 Dependencies are strictly one-way: `tui` → `tui_core` / `adapter` / `events`
