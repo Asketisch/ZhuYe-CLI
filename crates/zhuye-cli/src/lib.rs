@@ -21,26 +21,18 @@
 //! 事件循环、布局与 event/adapter 边界。
 
 mod adapter;
-mod approval_scope;
 mod bootstrap;
 mod bootstrap_wiring;
 mod config_reload;
 mod events;
-mod goal_state_view;
 mod history_render;
 mod logging;
 mod markdown;
-mod model_list;
 mod picker;
-mod routing_status;
-mod split_view;
-mod tasks_pager;
 mod term;
-mod todo_view;
-mod tool_args;
-mod transcript_pager;
 mod tui;
 mod tui_core;
+mod views;
 mod wrapping;
 
 pub mod ansi_escape;
@@ -98,6 +90,14 @@ pub use compat::{random_range_compat, tui_compat};
 // 保可见性不变,theme 原为 pub mod,仍 pub use 对外导出。
 pub use term::theme;
 use term::{keymap, terminal, terminal_probe, viewport};
+
+// 原 src 根人读渲染/overlay 视图 9 个已归入 `src/views/`(原均为私有
+// mod);旧路径 `crate::<name>` 经 crate 内 use 保持兼容(临时垫片,
+// 引用迁往 `crate::views::` 后移除)。
+use views::{
+    approval_scope, goal_state_view, model_list, routing_status, split_view, tasks_pager,
+    todo_view, tool_args, transcript_pager,
+};
 
 use clap::Args;
 
