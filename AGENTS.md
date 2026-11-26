@@ -24,7 +24,7 @@ ZhuYe-CLI — ZhuYe 的终端交互式客户端(ratatui + crossterm),面向终�
 | slash 命令双通道(legacy 白名单与结局;枚举面在 tui_core、分发在 tui、门禁在 tests,见下方各行) | [src/history_render/](crates/zhuye-cli/src/history_render/AGENTS.md) |
 | 事件循环 / 按键路由 / UiState / 协议投影 | [src/tui/](crates/zhuye-cli/src/tui/AGENTS.md) |
 | 呈现原语(vendored 上游 / 换行 / composer / 快照) | [src/tui_core/](crates/zhuye-cli/src/tui_core/AGENTS.md) |
-| headless 子命令(session / traces / clap 路由) | [src/cli/](crates/zhuye-cli/src/cli/AGENTS.md) |
+| headless 子命令(session / traces / discussion / security / workspace / clap 路由) | [src/cli/](crates/zhuye-cli/src/cli/AGENTS.md) |
 | 构建面 / 依赖 / feature / bootstrap / 桩层 / picker | [crates/zhuye-cli/](crates/zhuye-cli/AGENTS.md) |
 | 测试分层 / 组字母 / coverage-audit / CI 门禁 | [tests/](tests/AGENTS.md) |
 | 构建 / 发版 / 安装脚本 | [scripts/](scripts/AGENTS.md) |
@@ -79,12 +79,12 @@ make gc-deep                    # 深清理:再清 deps/.fingerprint/examples(�
 
 | 模块 | 职责 |
 |------|------|
-| `src/bin/main.rs` | thin binary:clap 路由。无子命令 → TUI;`session`/`traces` → headless 执行完退出 |
+| `src/bin/main.rs` | thin binary:clap 路由。无子命令 → TUI;`session`/`traces`/`workspace`/`discussion`/`security` → headless 执行完退出 |
 | `bootstrap.rs` | 加载 config、构建 ModelRegistry / provider / ToolRegistry / AgentThread,进入 TUI |
 | `tui/` + `events.rs` + `adapter.rs` | **本地**事件循环、布局、`UiEvent`/`UiState` 状态机、协议事件适配边界 |
 | `tui_core/` | 自包含呈现原语(自定义终端后端、流式历史插入、CJK 换行、composer 等) |
 | `history_render/`、`transcript_pager.rs`、`tasks_pager.rs` | 历史行渲染、滚动回放、任务面板 |
-| `cli/{session,traces}.rs` | headless 子命令实现(调 zhuye-rollout / zhuye-telemetry) |
+| `cli/`(session / traces / discussion / security / workspace;models.rs 未接线) | headless 子命令实现(调 zhuye-rollout / zhuye-telemetry / zhuye-discussion / zhuye-integration) |
 
 ### 核心引擎(submodule,只读消费,勿改)
 

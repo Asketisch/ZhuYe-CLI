@@ -56,6 +56,9 @@ live 端到端四类。分层判据与用例规模的正式说明见 [tests/READ
 - **按行缩进边界提取 Rust 函数体**(非花括号配平)—— 被解析的源码必须保持
   rustfmt 风格,奇怪缩进会让提取漏臂。
 - `probe_slash_commands.py` 是探针(产出事实清单供 COVERAGE.md 实证),不做断言。
+- `functional/test_coverage_audit.py` 是门禁**自身**的行为级用例(无未覆盖差集 /
+  MATRIX 覆盖全 declared / picker 全解析 / 枚举计数稳定),随 functional 入口跑,
+  不单设组字母。
 
 ## 本地契约 / 同步点
 

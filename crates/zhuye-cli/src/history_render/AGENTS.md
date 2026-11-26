@@ -15,7 +15,7 @@
 | 文件 | 职责 |
 |---|---|
 | `history_render.rs`(src 根,约 1.7K 行) | legacy 通道本体:`SlashOutcome`(:221)、白名单 `is_legacy_passthrough_slash`(:445)、`legacy_popup_commands`(:470)、`dispatch_slash`(:490) |
-| `history_render/statusline.rs`(约 1K 行) | 状态栏渲染(theme_picker 回归测试锚点 :427) |
+| `history_render/statusline.rs`(约 1K 行) | 状态栏渲染与上下文用量(`/theme` 调色板回归锚点 `identity_line_colors_follow_palette` :460) |
 | `history_render/cells/` `marker/` `notify/` | 历史行单元 / 标记 / 通知渲染 |
 
 ## 本地契约 / 同步点
@@ -37,6 +37,11 @@
    `make coverage-audit`。
 4. `SlashOutcome` 五类结局(Handled / Clear / ConfirmClear / Exit / SubmitAsUser …)
    是 S 组断言的分类口径,新增结局类别同步 MATRIX 与 COVERAGE.md §S 组。
+5. **v1.12 上下文组成快照**:`ContextUsage.composition`(:87)由 adapter
+   `ContextComposition` 臂投影落账;`format_composition()`(:127)只供
+   `tui/mod.rs` 的 `/status` 渲染六类分解,**状态栏不渲染**(一行 HUD 放不下);
+   空快照 = 尚无数据,整段省略。改渲染口径先看 T 组
+   `test_turn.py::test_status_shows_context_composition_after_turn`。
 
 ## 禁止事项
 

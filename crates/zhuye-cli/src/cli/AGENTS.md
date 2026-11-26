@@ -20,6 +20,7 @@ zhuye-integration),不依赖 `tui_core`(渲染层与 headless 无关)。
 | `cli/discussion.rs` | `discussion run`:转发 `zhuye_discussion::cli::run` |
 | `cli/security.rs` | `security audit`:转发 `zhuye_integration::security_scan` |
 | `cli/workspace.rs` | `workspace clone`:git clone 辅助 |
+| `cli/models.rs` | **未接线**:文档注释宣称 `zhuye-cli models list / pick`,但 `cli/mod.rs` 未声明本模块、`bin/main.rs` 无对应 clap 路由,当前不参与编译、命令不可用(与 submodule `reflect models` 同源移植的遗留)。若要启用:补 `pub mod models;` + main.rs 路由,并按契约 5 同步四个落点 |
 | `src/bin/main.rs` | clap 路由与各入口的 runtime 选择 |
 
 ## 本地契约 / 同步点
