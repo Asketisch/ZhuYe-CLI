@@ -82,18 +82,23 @@ pub mod shell_command;
 pub mod state;
 pub mod theme;
 pub mod tui_compat;
-pub mod utils_absolute_path;
-pub mod utils_approval_presets;
-pub mod utils_cli;
-pub mod utils_elapsed;
-pub mod utils_fuzzy_match;
-pub mod utils_oss;
-pub mod utils_path;
-pub mod utils_path_uri;
-pub mod utils_plugins;
-pub mod utils_sandbox_summary;
-pub mod utils_sleep_inhibitor;
-pub mod utils_string;
+pub mod utils;
+
+// ── restructure 垫片 ──
+// 原 src 根 `utils_*.rs` 已归入 `src/utils/`;旧路径经再导出保持兼容,
+// 属临时物,待 tui_core / 根文件引用全部迁往 `crate::utils::` 新路径后移除。
+pub use utils::absolute_path as utils_absolute_path;
+pub use utils::approval_presets as utils_approval_presets;
+pub use utils::cli as utils_cli;
+pub use utils::elapsed as utils_elapsed;
+pub use utils::fuzzy_match as utils_fuzzy_match;
+pub use utils::oss as utils_oss;
+pub use utils::path as utils_path;
+pub use utils::path_uri as utils_path_uri;
+pub use utils::plugins as utils_plugins;
+pub use utils::sandbox_summary as utils_sandbox_summary;
+pub use utils::sleep_inhibitor as utils_sleep_inhibitor;
+pub use utils::string as utils_string;
 
 use clap::Args;
 
