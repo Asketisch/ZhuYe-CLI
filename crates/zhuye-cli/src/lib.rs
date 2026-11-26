@@ -51,17 +51,17 @@ pub mod app_server_client;
 pub mod app_server_protocol;
 /// Headless 子命令(fork / rename / export / traces),由顶层二进制 dispatch。
 pub mod cli;
+/// 为 vendored tui_core 兜上游 API 的兼容垫片族(原 src 根平铺,restructure 批 3)。
+pub mod compat;
 pub mod config_compat;
 /// `zhuye_*` 引擎 crate 的本地桩实现族(原 src 根平铺,restructure 批 2)。
 pub mod crate_stubs;
 pub mod install_context;
 pub mod prompt_history;
 pub mod protocol_compat;
-pub mod random_range_compat;
 pub mod resume;
 pub mod shell_command;
 pub mod theme;
-pub mod tui_compat;
 pub mod utils;
 
 // ── restructure 垫片 ──
@@ -91,6 +91,10 @@ pub use crate_stubs::{
     git_utils, login, mcp, message_history, model_provider, model_provider_info, models_manager,
     otel, plugin, rollout, state,
 };
+
+// 原 src 根 `tui_compat.rs` / `random_range_compat.rs` 已归入 `src/compat/`;
+// 旧路径经再导出保持兼容(临时垫片,引用迁往 `crate::compat::` 后移除)。
+pub use compat::{random_range_compat, tui_compat};
 
 use clap::Args;
 
