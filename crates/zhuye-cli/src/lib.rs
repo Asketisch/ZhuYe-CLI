@@ -28,7 +28,6 @@ mod config_reload;
 mod events;
 mod goal_state_view;
 mod history_render;
-mod keymap;
 mod logging;
 mod markdown;
 mod model_list;
@@ -36,14 +35,12 @@ mod picker;
 mod routing_status;
 mod split_view;
 mod tasks_pager;
-mod terminal;
-mod terminal_probe;
+mod term;
 mod todo_view;
 mod tool_args;
 mod transcript_pager;
 mod tui;
 mod tui_core;
-mod viewport;
 mod wrapping;
 
 pub mod ansi_escape;
@@ -61,7 +58,6 @@ pub mod prompt_history;
 pub mod protocol_compat;
 pub mod resume;
 pub mod shell_command;
-pub mod theme;
 pub mod utils;
 
 // ── restructure 垫片 ──
@@ -95,6 +91,13 @@ pub use crate_stubs::{
 // 原 src 根 `tui_compat.rs` / `random_range_compat.rs` 已归入 `src/compat/`;
 // 旧路径经再导出保持兼容(临时垫片,引用迁往 `crate::compat::` 后移除)。
 pub use compat::{random_range_compat, tui_compat};
+
+// 原 src 根终端基础设施 5 个已归入 `src/term/`;旧路径 `crate::<name>` 经
+// 再导出保持兼容(临时垫片,引用迁往 `crate::term::` 后移除)。四个原本私有
+// 的模块(keymap / terminal / terminal_probe / viewport)用 crate 内 `use`
+// 保可见性不变,theme 原为 pub mod,仍 pub use 对外导出。
+pub use term::theme;
+use term::{keymap, terminal, terminal_probe, viewport};
 
 use clap::Args;
 
