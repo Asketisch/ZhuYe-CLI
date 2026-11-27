@@ -78,7 +78,7 @@ make coverage-audit    # = 覆盖自审(有未覆盖命令即失败)
 | `rust/build_tooling.sh` | 构建工具面:Makefile 清理目标 `gc` / `gc-deep` 的语义 |
 | `tools/coverage_audit.py` | 覆盖自审工具(可独立运行,出报告) |
 | `tools/probe_slash_commands.py` | slash 命令运行时行为**探针**(产出真值表,不判定) |
-| `live/` | live 端到端(真实 LLM + 真实工具,需 API key) |
+| `live/` | live 端到端(真实 LLM + 真实工具,需 API key;含场景化演练套件 `cli_e2e.sh`,本地专用不进 CI) |
 
 ## 设计要点
 

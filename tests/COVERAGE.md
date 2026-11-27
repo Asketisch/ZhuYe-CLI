@@ -25,6 +25,7 @@
 | **TUI 版本差分层** | `tests/functional/test_differential.py` | baseline/candidate 两个真二进制在同一 mock 场景下的**行为语义对比**(rollout / 副作用 / 屏幕标记 / panic);纯比较器自测始终运行,真实差分需 ZHUYE_DIFF=1 | ❌ | 自测 6 条 + 差分场景 3 条 + 跨版本恢复 1 条 |
 | Rust 单测 | `crates/zhuye-cli/src/**` | 内部单元与集成(既有基线);`9332aa9` 接线后 git 三件套本地单测随实现移入 submodule(由 `zhuye-git` 自带测试承接),新增 side-channel 转换 ×3 + CommandRunner 桥接 ×2 | — | 1450 条(lib,不含 vendored) |
 | live 端到端 | `tests/live/` | 真实 LLM + 真实工具(需 API key) | — | 手动跑 |
+| 场景化端到端演练 | `tests/live/cli_e2e.sh` + `cli_e2e_scenarios/` | 真模型 / mock 自检双模式的全链路演练(单轮 / 工具审批 / plan→批准→产物→git 提交 / `--resume` 回放);模型配置来自外部 toml(`ZHUYE_E2E_TOML`) | — | 本地专用,不进 CI |
 
 **判据**:
 - 断言「用户真的看到了什么 / 真的落了什么盘」→ **能力覆盖层**;

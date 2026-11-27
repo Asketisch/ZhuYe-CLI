@@ -54,6 +54,7 @@ live 端到端四类。分层判据与用例规模的正式说明见 [tests/READ
 | U | `test_pty_helpers.py` | 测试设施自检 |
 | D | `test_differential.py` | TUI 版本差分(需 `ZHUYE_DIFF_BASELINE/CANDIDATE`,经 `run_differential.sh` 显式启用) |
 | L / F | `live/test_workflow_live.py`、`live/test_full_feature_live.py` | live 层(不在默认套件) |
+| — | `live/cli_e2e.sh` + `live/cli_e2e_scenarios/` | 场景化端到端演练(本地专用,**不接 run_all.sh**;mock 自检 / 真模型双模式,配置来自外部 toml) |
 
 公共设施:`tui_pty.py`(pty 会话)、`conftest.py`、`mock_anthropic_server.py`、
 `assert_differential_report.py`。根级还有统一调度器 `runner.py`(三仓接口,
@@ -88,6 +89,12 @@ live 端到端四类。分层判据与用例规模的正式说明见 [tests/READ
    `./tests/run_all.sh functional`;`nightly-quality` 含 TUI 差分 —— 改套件结构
    先看这两个 job 的调用面。
 5. live 用例必须留在 `live/` 且默认 SKIP,不得混进离线套件。
+6. `live/cli_e2e.sh`(场景化端到端演练)是**本地专用**入口 —— 不进 CI、
+   不接 `run_all.sh` 门禁链,改它不触发四入口语义同步;模型配置来自外部
+   toml(`ZHUYE_E2E_TOML`,默认 ZhuYe 主仓 `tests/live/cli_e2e.toml`),
+   场景注册表是 `live/cli_e2e_scenarios/__init__.py` 的 `SCENARIOS`,
+   新增场景在注册表登记即被套件发现,`needs_model=False` 的场景必须带
+   mock 脚本(自检模式的确定性依据)。
 
 ## 禁止事项
 

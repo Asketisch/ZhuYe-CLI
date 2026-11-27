@@ -159,6 +159,68 @@ ZHUYE_LIVE_MODEL_COUNT=2 PRACTICE_OUT=report.md ./tests/run_all.sh live-practice
 
 **不是门禁** —— 退出码只反映脚本自身错误;模型表现差异只体现在报告里。
 
+## 场景化端到端演练(`cli_e2e` 套件,本地专用)
+
+参考 ZhuYe 主仓 `tests/live/cli_e2e.sh` 的形态:每个场景一组**结构化检查项**
+(屏幕结构标记 / 落盘产物存在性 / 终态语义)、一个独立进程(崩溃 / 超时互相
+隔离),检查项逐条折成 tcase。与上面 pytest 用例(L / F 组)的差异:那边是
+单条链路的点状用例,这边是**场景化全链路演练**,且**模型配置来自外部 toml**
+(默认取 ZhuYe 主仓 `tests/live/cli_e2e.toml` 的端点 / 模型 / 任务与验收期望),
+不写死在代码里。
+
+```bash
+# 默认跳过(不发网络请求,退出码 0)
+bash tests/live/cli_e2e.sh
+
+# 自检模式:mock provider,离线验证场景 harness 本身(不碰端点)
+ZHUYE_E2E_MOCK=1 bash tests/live/cli_e2e.sh
+
+# 真模型模式(端点来自配置 toml;真模型场景依赖它可达)
+ZHUYE_LIVE=1 bash tests/live/cli_e2e.sh
+
+# 只跑指定场景;换配置;保留临时目录翻查
+ZHUYE_LIVE=1 ZHUYE_E2E_SCENARIOS="task_main" ZHUYE_E2E_TOML=/path/my.toml \
+  ZHUYE_E2E_KEEP=1 bash tests/live/cli_e2e.sh
+```
+
+**本地专用,不进 CI、不接 `run_all.sh` 门禁链**(与 ZhuYe 主仓同名套件同定位)。
+
+### 场景清单(`cli_e2e_scenarios/` 注册表)
+
+| 场景 | mock 自检 | 内容 |
+|---|---|---|
+| `turn_basic` | ✅ | 单轮问答:回合收尾 / assistant 消息落盘 / token 用量 / 无 panic |
+| `turn_tool` | ✅ | 工具调用与审批放行:bash echo 输出上屏、`✓` 成功行 |
+| `task_main` | —(needs_model) | 消费 toml `[task]` 段的全链路:plan 模式出 plan → `[1]` 批准 → 产物落盘(`expect_artifact`)→ git 提交(`expect_commit_subject`)→ 落盘验收 |
+| `session_resume` | ✅ | 会话 JSONL 落盘 → `--resume <tid>` 重启回放重建 scrollback → 续作再落盘 |
+
+### 环境变量
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `ZHUYE_LIVE` / `ZHUYE_E2E_MOCK` | 空 | 二选一开启:真模型 / 离线自检;都不设整层 SKIP |
+| `ZHUYE_E2E_TOML` | 依次找:本目录 `cli_e2e.toml` → `../ZhuYe/tests/live/cli_e2e.toml` | 模型配置(端点 / 模型 / `[task]` 任务与验收期望);字段可用 `ZHUYE_E2E_BASE_URL` / `_API_KEY` / `_MODEL` / `_ENDPOINT` / `_CONTEXT_WINDOW` / `_EFFORT` / `_PHASE_TIMEOUT` / `_EXPECT_ARTIFACT` / `_EXPECT_COMMIT` 按名覆盖 |
+| `ZHUYE_E2E_BIN` | release 产物 | zhuye-cli 二进制(默认走 `ensure_release_binary` 保证与源码一致) |
+| `ZHUYE_E2E_SCENARIOS` | 全部 | 空格分隔的场景过滤 |
+| `ZHUYE_E2E_TIMEOUT` | `1500` | 单场景墙钟超时(秒;xhigh 思考留余量) |
+| `ZHUYE_E2E_KEEP` | `0` | 设 `1` 保留临时目录(屏幕快照 / 结果 JSON / 运行日志) |
+
+### 断言口径与失败语义
+
+- **不断言模型自由文本**;屏幕锚点只用结构标记(`[plan]` / `[1] Auto` /
+  `APPROVAL NEEDED` / `✓ <工具名>`);mock 模式下的回执标记是确定性断言。
+- 真模型「没按预期走」(没调指定工具等)判 **skip** 而非 fail —— TUI 链路
+  本身由 mock 自检覆盖,缺的是模型配合。
+- 上游限流(429 / 配额耗尽)整场景判 **skip**(测的是代码,不是配额)。
+- 隔离:每场景独立假 HOME(+ `ZHUYE_HOME`)+ 独立配置与工作区,git 身份经
+  假 HOME 的 `.gitconfig` 提供,不读不写真实 `~/.zhuye`。
+
+### 扩展点
+
+对齐 ZhuYe 主仓套件可继续补的场景(注册表 `cli_e2e_scenarios/__init__.py`
+登记即被 `cli_e2e.sh` 发现):`/compact` 手动压缩(小窗口 + 真模型)、
+`/goal` 目标模式进 / 出、plan 修订路径(`[3]` 打回重提)。
+
 ## 已知限制
 
 | 限制 | 说明 | 缓解 |
@@ -186,3 +248,7 @@ ZHUYE_LIVE_MODEL_COUNT=2 PRACTICE_OUT=report.md ./tests/run_all.sh live-practice
 | `test_workflow_live.py` | L 组 7 条真实链路用例 |
 | `test_full_feature_live.py` | F 组:全功能面在真模型下逐条跑(134 条) |
 | `practice.py` | 横向对比演练 driver(场景 × 模型 → Markdown) |
+| `cli_e2e.sh` | 场景化端到端演练入口(本地专用;mock 自检 / 真模型双模式) |
+| `cli_e2e_lib.py` | 演练共享库:配置加载(env 覆盖)/ 隔离环境 / Checks / TUI 驱动 |
+| `cli_e2e_run.py` | 单场景执行器(独立进程 → 结果 JSON → 套件入口折成 tcase) |
+| `cli_e2e_scenarios/` | 场景注册表 + 各场景(turn / task / session) |
