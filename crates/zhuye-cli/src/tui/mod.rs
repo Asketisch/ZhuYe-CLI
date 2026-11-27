@@ -234,7 +234,7 @@ pub async fn run_async(
         )));
     }
 
-    // 启动 banner:REFLECT 块字形 + braille 装饰 + 双轴渐变 24-bit,作为 history
+    // 启动 banner:雄鸡点阵画 + ZHUYE 块字形 + logo 配色多段渐变 24-bit,作为 history
     // 首条 push 进去,跟随原生 scrollback 自然滚出,被 Ctrl-T transcript 收录。
     // banner 的 lines 预渲染好,banner_cell 不在 `history_render.rs` 调用链中
     // 二次加工(避免被 marker 改写破坏渐变锚点 / 误裁切)。

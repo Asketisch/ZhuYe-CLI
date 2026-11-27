@@ -29,14 +29,31 @@ def test_boot_renders_banner_and_version_line(tui) -> None:
         assert "/help for commands" in txt, f"首屏应含 /help 提示: {txt[:300]}"
 
 
-def test_boot_shows_reflect_block_letter_art(tui) -> None:
-    """B2 启动 banner 含 "REFLECT" 块字形画(非 braille 动画帧)。"""
+def test_boot_shows_zhuye_block_letter_art(tui) -> None:
+    """B2 启动 banner 含 "ZHUYE" 块字形画(非 braille 动画帧)。"""
     with tui() as s:
         s.wait_boot(timeout=30)
         raw = s.screen_text()
-        # 块字形画用 █ / ╗ / ╝ 等制表符号绘制 "REFLECT"。
+        # 块字形画用 █ / ╗ / ╝ 等制表符号绘制 "ZHUYE"。
         assert "█" in raw, "banner 应含块字形字符"
         assert "╗" in raw or "╔" in raw, "banner 应含块字形边框"
+
+
+def test_boot_shows_logo_dot_matrix(tui) -> None:
+    """B2a 启动 banner 含雄鸡点阵画(logo 配色渐变的 braille 装饰区)。
+
+    点阵画由 logo 原图双带半调重绘(14 行 × 26 列,120×30 窗口内 banner
+    完整可见),替代旧莫比乌斯环。密集特征字形(⣾ ⣽)位于点阵中下部,
+    启动视口内可见;spinner 帧字形(⠋⠙⠹…)均为稀疏字形,不会误命中。
+    配色用 `38;2;240;…`(金/橙族 R=240)原始 SGR 锁定。
+    """
+    with tui() as s:
+        s.wait_boot(timeout=30)
+        raw = s.screen_text()
+        for glyph in ("⣾", "⣽"):
+            assert glyph in raw, f"banner 应含雄鸡点阵字形 {glyph}: {raw[:300]}"
+        # logo 配色渐变:金/橙族色标 R=240(#f0d890/#f0c060/#f09018/#f07800)。
+        assert "\x1b[38;2;240;" in s.raw_output(), "banner 应输出 logo 金橙族 RGB 前景"
 
 
 def test_hud_identity_shows_model_and_quit_hint(tui) -> None:

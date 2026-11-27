@@ -69,12 +69,13 @@
 
 | # | 用例 | 断言锚点 |
 |---|---|---|
-| B1 | 启动到稳定首屏 | `Reflect` + `/help for commands` |
+| B1 | 启动到稳定首屏 | `ZhuYe` + `/help for commands` |
 | B2 | banner 块字形画 | `█` / `╗` |
+| B2a | banner 雄鸡点阵画(logo 配色,替代旧莫比乌斯环) | 点阵特征字形 `⣾` / `⣽` + 金橙族 SGR `\x1b[38;2;240;…`(cells.rs banner_cell) |
 | B3 | HUD identity 行 | `mock/mock-1` + `Ctrl+C to quit`(statusline.rs:218) |
 | B4 | HUD metrics 行 | `no tool calls yet`(statusline.rs:273) |
 | B5 | composer 占位符 | `Send a message… (shift+enter for newline)`(events.rs:593) |
-| B6 | 终端标题(OSC 0) | `Reflect · mock/mock-1 · …`(tui/mod.rs:958-971) |
+| B6 | 终端标题(OSC 0) | `ZhuYe · mock/mock-1 · …`(tui/mod.rs:958-971) |
 | B7 | Ctrl+C 退出 | 退出码 0 + 无 panic |
 | B8 | Ctrl+D 退出 | 退出码 0 |
 | B9 | 窗口 resize 重绘 | 进程存活 + 无 panic |
