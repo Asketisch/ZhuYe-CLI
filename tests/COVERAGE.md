@@ -57,6 +57,7 @@
 | TUI 版本差分(rollout / 副作用 / 屏幕标记 / panic;3 场景 × 双二进制,另有发布版到候选版恢复与续写) | D 组(`test_differential.py`,需 ZHUYE_DIFF=1) | — | — |
 | ANSI 解析 / 文本截断 / JSON 紧凑化不变量(任意输入不 panic、可见文本保持、字素上限、幂等、JSON 语义保持) | —(Rust 属性测试:`ansi_escape::tests` + `text_formatting::property_tests`,proptest) | — | — |
 | 引擎 additive 诊断事件族投影(流恢复 `StreamRecovery*` ×4 / 缓存保温 `CacheWarming` / MCP 交互请求 `McpElicitation` / 恢复时结果未知的工具执行 `ToolExecutionUncertain` → Notice 行;回合级预算遥测 `TaskBudgetSnapshot` → 有意丢弃无消费面;`convert_event` 无通配臂,E0004 即接线门) | —(Rust 单测:`tui/conversion.rs` tests,锚定文案关键字;差集辅助函数 `removed_mcp_tools` 同) | — | — |
+| v1.x 特性段装配(`[tool_journal]` / `[turn_scheduling]` / `[task_budget]` / `[dynamic_context]` / `[provenance]` / `[cache_warming]` / `[tool_results]` → `AgentConfig`,与 exec 同口径;F01 prompt 注入 guard 默认开) | —(Rust 单测:`bootstrap_wiring::tests` apply_feature_sections ×3;热重载段比 `config_reload::tests` v1x 段名清单) | — | — |
 | Rust 编译面 | — | workspace_tests(cargo test/clippy/fmt/doc) | — |
 | 构建工具面(`gc` / `gc-deep` 清理语义、产物根跟随 `CARGO_TARGET_DIR`) | — | build_tooling(bash,文件系统结果断言) | — |
 

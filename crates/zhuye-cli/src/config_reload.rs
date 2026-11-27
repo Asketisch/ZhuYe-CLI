@@ -59,6 +59,16 @@ pub fn diff_sections(old: &ZhuyeConfig, new: &ZhuyeConfig) -> Vec<String> {
     // diff_sections 名单对齐;关闭即取消在飞保温任务,用户应看到反馈)。
     cmp_section!(cache_warming, "cache_warming");
     cmp_section!(web_search, "web_search");
+    // v1.x(e52bfda 起)新增段:与 bootstrap_wiring::apply_feature_sections
+    // 的装配面同批 —— 段改了热重载要如实报告(实际生效发生在下一进程
+    // 实例或下一回合,视段而定)。
+    cmp_section!(task_budget, "task_budget");
+    cmp_section!(provenance, "provenance");
+    cmp_section!(dynamic_context, "dynamic_context");
+    cmp_section!(tool_journal, "tool_journal");
+    cmp_section!(turn_scheduling, "turn_scheduling");
+    // 存量补漏:`[tool_results]` 段(e246299 起已在 schema,名单一直没跟上)。
+    cmp_section!(tool_results, "tool_results");
     cmp_section!(permissions, "permissions");
     // v2 新增段:TUI 补全版比引擎 exec 的名单更全(exec 只报常用段),
     // 这里保持「能 diff 的段都报」口径,Notice 不漏变更。
@@ -237,5 +247,31 @@ mod tests {
         });
         let d = diff_sections(&a, &b);
         assert!(d.iter().any(|s| s == "cache_warming"), "{d:?}");
+    }
+
+    #[test]
+    fn v1x_feature_sections_change_is_reported() {
+        // v1.x(e52bfda 起)新增的五个特性段 + 存量 `[tool_results]`,
+        // 段变更都要进热重载 Notice 列表(与 apply_feature_sections
+        // 装配面同批,名单与 schema 顶层段对齐)。
+        let a = ZhuyeConfig::default();
+        let mut b = ZhuyeConfig::default();
+        b.task_budget = Some(zhuye_config::schema::TaskBudgetSection::default());
+        b.provenance = Some(zhuye_config::schema::ProvenanceSection::default());
+        b.dynamic_context = Some(zhuye_config::schema::DynamicContextSection::default());
+        b.tool_journal = Some(zhuye_config::schema::ToolJournalSection::default());
+        b.turn_scheduling = Some(zhuye_config::schema::TurnSchedulingSection::default());
+        b.tool_results = Some(zhuye_config::schema::ToolResultsSection::default());
+        let d = diff_sections(&a, &b);
+        for name in [
+            "task_budget",
+            "provenance",
+            "dynamic_context",
+            "tool_journal",
+            "turn_scheduling",
+            "tool_results",
+        ] {
+            assert!(d.iter().any(|s| s == name), "缺 {name}:{d:?}");
+        }
     }
 }

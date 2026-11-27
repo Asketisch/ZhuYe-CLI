@@ -396,11 +396,16 @@ impl PromptSlashAction {
 }
 
 /// v1.x：reasoning effort（映射到 `Op::SetEffort::effort`）。
+/// 档位与引擎 `ReasoningEffortMirror` 五档对齐(XHigh 为 qwen3.8 批次
+/// 新增、Max 为 v1.10 deepseek 系顶档;此前本枚举只有三档,`/effort
+/// xhigh|max` 会被当未知参数拒绝)。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReasoningEffort {
     Low,
     Medium,
     High,
+    XHigh,
+    Max,
 }
 
 impl ReasoningEffort {
@@ -409,6 +414,8 @@ impl ReasoningEffort {
             Self::Low => "low",
             Self::Medium => "medium",
             Self::High => "high",
+            Self::XHigh => "xhigh",
+            Self::Max => "max",
         }
     }
     /// 解析 `/effort <name>`，未知 → None。
@@ -417,6 +424,8 @@ impl ReasoningEffort {
             "low" => Some(Self::Low),
             "medium" | "med" => Some(Self::Medium),
             "high" => Some(Self::High),
+            "xhigh" => Some(Self::XHigh),
+            "max" => Some(Self::Max),
             _ => None,
         }
     }
@@ -427,6 +436,8 @@ impl ReasoningEffort {
             Self::Low => M::Low,
             Self::Medium => M::Medium,
             Self::High => M::High,
+            Self::XHigh => M::XHigh,
+            Self::Max => M::Max,
         }
     }
 }
@@ -1354,6 +1365,21 @@ mod sanitize_tests {
             ReasoningEffort::High.to_mirror(),
             zhuye_protocol::item::ReasoningEffortMirror::High
         );
+        // v1.x 五档对齐:XHigh(qwen3.8 顶档)与 Max(deepseek 顶档)
+        // 必须可解析并映射到同档镜像 —— 此前枚举缺档,`/effort xhigh|max`
+        // 被当未知参数拒绝。
+        assert_eq!(
+            ReasoningEffort::parse("xhigh")
+                .expect("应可解析")
+                .to_mirror(),
+            zhuye_protocol::item::ReasoningEffortMirror::XHigh
+        );
+        assert_eq!(
+            ReasoningEffort::parse("max").expect("应可解析").to_mirror(),
+            zhuye_protocol::item::ReasoningEffortMirror::Max
+        );
+        assert_eq!(ReasoningEffort::XHigh.as_str(), "xhigh");
+        assert_eq!(ReasoningEffort::Max.as_str(), "max");
     }
 
     #[test]

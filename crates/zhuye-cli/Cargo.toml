@@ -68,6 +68,7 @@ zhuye-core     = { workspace = true }
 zhuye-protocol = { workspace = true }
 zhuye-llm      = { workspace = true }
 zhuye-tools    = { workspace = true }
+zhuye-sanitize = { workspace = true }
 zhuye-config   = { workspace = true }
 zhuye-stream      = { workspace = true }
 zhuye-sandbox     = { workspace = true }

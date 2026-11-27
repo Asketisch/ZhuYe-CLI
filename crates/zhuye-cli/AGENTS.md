@@ -75,6 +75,16 @@ src/ 约 497 个 `.rs`、18 万行,其中 `tui_core/` 约占 82% —— 真正�
     conversion.rs 渲染 Notice 保证可见性)。将来补表单 UI 时,需改为登记
     `thread.config().approval_context.mcp_elicitations` 共享表 + TTL 兜底
     (对齐 exec `bootstrap_m6`:登记必须先于发事件)。
+12. **v1.x 特性段装配单点**(`bootstrap_wiring::apply_feature_sections`,
+    指针 e52bfda 起):配置段 → `AgentConfig` 的映射集中在该纯函数(与 exec
+    `headless` 装配同口径)—— `[tool_journal].strict` / `[turn_scheduling].serial` /
+    `[task_budget].limits()` / `[dynamic_context].enabled` / `[provenance].mode`
+    / `[cache_warming]` 保温调度器 / `[tool_results]` 结果预算。**新增配置段时
+    两处同步**:本函数 + `config_reload::diff_sections` 段比名单,漏一边即
+    「配置改了 TUI 不生效」或「热重载 Notice 报 (无)」。F01 prompt 注入
+    guard 经 `resolve_prompt_guard_enabled`(env `ZHUYE_PROMPT_GUARD` >
+    `[prompt_guard] enabled` > 默认开)挂 `tools.set_prompt_guard` +
+    `cfg.prompt_guard/guard_stats`,依赖 `zhuye-sanitize`(根清单已镜像)。
 
 ## 桩层
 

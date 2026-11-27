@@ -911,6 +911,60 @@ fn coordinator_footer(prompt: &str) -> String {
         .collect()
 }
 
+/// v1.x:配置段 → `AgentConfig` 特性开关映射(指针 e52bfda 起,与 exec
+/// `headless` 装配同口径)。覆盖 `[tool_journal]` / `[turn_scheduling]` /
+/// `[task_budget]` / `[dynamic_context]` / `[provenance]` 五个新段,以及
+/// 此前 TUI 未接的 `[cache_warming]` 保温调度器与 `[tool_results]` 结果预算。
+/// 提取成纯函数以便单测锚定段名与语义,调用点在 `bootstrap.rs` 装配块。
+pub(crate) fn apply_feature_sections(
+    cfg: &mut zhuye_core::config::AgentConfig,
+    zhuye: &zhuye_config::ZhuyeConfig,
+) {
+    cfg.strict_tool_journal = zhuye.tool_journal.as_ref().is_some_and(|s| s.strict);
+    cfg.serial_turns = zhuye.turn_scheduling.as_ref().is_some_and(|s| s.serial);
+    cfg.task_budget_limits = zhuye.task_budget.as_ref().map(|s| s.limits());
+    cfg.dynamic_context = zhuye.dynamic_context.as_ref().is_some_and(|s| s.enabled);
+    cfg.provenance_mode = zhuye
+        .provenance
+        .as_ref()
+        .and_then(|s| s.mode.as_deref())
+        .and_then(zhuye_tools::sanitize::provenance::ProvenanceMode::parse)
+        .unwrap_or_default();
+    // v1.x:`[cache_warming]` 段 → 保温调度器设置(默认关闭,显式 opt-in;
+    // 此前 TUI 只接了 CacheWarming 事件投影,调度器从未开启,事件恒不触发)。
+    if let Some(section) = &zhuye.cache_warming {
+        cfg.enable_cache_warming(section.resolved());
+    }
+    // v1.x:`[tool_results]` 段 → 工具结果预算(超长输出落盘 + 信封)。
+    if let Some(section) = &zhuye.tool_results {
+        let resolved = section.resolved();
+        cfg.result_budget = Some(Arc::new(zhuye_tools::result_budget::ResultBudget {
+            enabled: true,
+            max_inline_bytes: resolved.max_inline_bytes,
+            preview_chars: resolved.preview_chars,
+            persist: resolved.persist,
+        }));
+    }
+}
+
+/// F01:`[prompt_guard]` 开关解析(与 exec 同口径)—— env
+/// `ZHUYE_PROMPT_GUARD`(1/true/yes 压开,0/false/no 压关)>
+/// `[prompt_guard] enabled` > 默认开启。
+pub(crate) fn resolve_prompt_guard_enabled(zhuye: &zhuye_config::ZhuyeConfig) -> bool {
+    let env = std::env::var("ZHUYE_PROMPT_GUARD")
+        .ok()
+        .map(|v| v.trim().to_ascii_lowercase());
+    match env.as_deref() {
+        Some("1") | Some("true") | Some("yes") => true,
+        Some("0") | Some("false") | Some("no") => false,
+        _ => zhuye
+            .prompt_guard
+            .as_ref()
+            .and_then(|s| s.enabled)
+            .unwrap_or(true),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -929,6 +983,92 @@ mod tests {
         let prompt = "你好,这是一个很短的 coordinator prompt。";
         let footer = coordinator_footer(prompt);
         assert_eq!(footer, prompt);
+    }
+
+    #[test]
+    fn apply_feature_sections_maps_all_v1x_sections() {
+        // v1.x(e52bfda 起)五个特性段 + cache_warming / tool_results
+        // 的装配映射:段存在 → 开关打开 / 预算就位;段缺省 → 默认关。
+        let mut zhuye = zhuye_config::ZhuyeConfig::default();
+        zhuye.tool_journal = Some(zhuye_config::schema::ToolJournalSection { strict: true });
+        zhuye.turn_scheduling = Some(zhuye_config::schema::TurnSchedulingSection { serial: true });
+        zhuye.task_budget = Some(zhuye_config::schema::TaskBudgetSection {
+            total_tokens: Some(123_456),
+            ..Default::default()
+        });
+        zhuye.dynamic_context = Some(zhuye_config::schema::DynamicContextSection { enabled: true });
+        zhuye.provenance = Some(zhuye_config::schema::ProvenanceSection {
+            mode: Some("enforce".into()),
+        });
+        zhuye.cache_warming = Some(zhuye_config::schema::CacheWarmingSection {
+            enabled: Some(true),
+            ..Default::default()
+        });
+        zhuye.tool_results = Some(zhuye_config::schema::ToolResultsSection::default());
+
+        let mut cfg = zhuye_core::config::AgentConfig::new(
+            "mock/mock-1".to_string(),
+            std::path::PathBuf::from("."),
+        );
+        apply_feature_sections(&mut cfg, &zhuye);
+        assert!(cfg.strict_tool_journal);
+        assert!(cfg.serial_turns);
+        let limits = cfg.task_budget_limits.expect("预算应就位");
+        assert_eq!(limits.total_tokens, Some(123_456));
+        assert!(cfg.dynamic_context);
+        assert_eq!(
+            cfg.provenance_mode,
+            zhuye_tools::sanitize::provenance::ProvenanceMode::Enforce
+        );
+        assert!(cfg.result_budget.is_some(), "结果预算应就位");
+    }
+
+    #[test]
+    fn apply_feature_sections_defaults_when_sections_absent() {
+        // 空配置:五个开关全默认关、预算 None、provenance 默认 Observe、
+        // 结果预算 None —— 与 exec 空配置行为一致。
+        let zhuye = zhuye_config::ZhuyeConfig::default();
+        let mut cfg = zhuye_core::config::AgentConfig::new(
+            "mock/mock-1".to_string(),
+            std::path::PathBuf::from("."),
+        );
+        apply_feature_sections(&mut cfg, &zhuye);
+        assert!(!cfg.strict_tool_journal);
+        assert!(!cfg.serial_turns);
+        assert!(cfg.task_budget_limits.is_none());
+        assert!(!cfg.dynamic_context);
+        assert_eq!(
+            cfg.provenance_mode,
+            zhuye_tools::sanitize::provenance::ProvenanceMode::default()
+        );
+        assert!(cfg.result_budget.is_none());
+    }
+
+    #[test]
+    fn provenance_mode_parses_off_and_observe() {
+        // provenance mode 词表(off/observe/enforce)解析对齐引擎 parse。
+        let mut zhuye = zhuye_config::ZhuyeConfig::default();
+        let mut cfg = zhuye_core::config::AgentConfig::new(
+            "mock/mock-1".to_string(),
+            std::path::PathBuf::from("."),
+        );
+        zhuye.provenance = Some(zhuye_config::schema::ProvenanceSection {
+            mode: Some("off".into()),
+        });
+        apply_feature_sections(&mut cfg, &zhuye);
+        assert_eq!(
+            cfg.provenance_mode,
+            zhuye_tools::sanitize::provenance::ProvenanceMode::Off
+        );
+        // 未知词 → 默认 Observe(与 exec 的 unwrap_or_default 同口径)。
+        zhuye.provenance = Some(zhuye_config::schema::ProvenanceSection {
+            mode: Some("bogus".into()),
+        });
+        apply_feature_sections(&mut cfg, &zhuye);
+        assert_eq!(
+            cfg.provenance_mode,
+            zhuye_tools::sanitize::provenance::ProvenanceMode::Observe
+        );
     }
 
     #[test]

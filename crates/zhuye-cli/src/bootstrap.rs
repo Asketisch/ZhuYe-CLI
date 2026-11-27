@@ -189,6 +189,23 @@ async fn bootstrap_and_run(args: TuiArgs) -> Result<()> {
         gates,
     );
 
+    // F01:prompt 注入 guard(与 exec 同口径,默认开启;env
+    // `ZHUYE_PROMPT_GUARD` / `[prompt_guard] enabled=false` 可关)。开启后
+    // 工具输出进模型上下文前被扫描,外部源(MCP/插件)工具注册定义时扫描;
+    // builtin 直通不扫,故挂在 register_builtin_tools_with_gates 之后、
+    // 任何外部源注册之前。
+    let prompt_guard_enabled = crate::bootstrap_wiring::resolve_prompt_guard_enabled(&zhuye_cfg);
+    let prompt_guard = prompt_guard_enabled.then(|| {
+        tracing::info!(
+            "[prompt_guard] enabled(F01 起默认开启,置 [prompt_guard] enabled=false 或 \
+             ZHUYE_PROMPT_GUARD=0 可关闭):工具输出与外部工具定义将做注入扫描"
+        );
+        Arc::new(zhuye_sanitize::prompt_guard::PromptGuard::new())
+    });
+    let guard_stats =
+        prompt_guard_enabled.then(|| Arc::new(zhuye_sanitize::guard_stats::GuardStats::new()));
+    tools.set_prompt_guard(prompt_guard.clone(), guard_stats.clone());
+
     // 3. Task / team 存储。
     let task_store: Arc<dyn zhuye_task::TaskStore> = if args.ephemeral_tasks {
         Arc::new(zhuye_task::InMemoryTaskStore::default())
@@ -408,6 +425,11 @@ async fn bootstrap_and_run(args: TuiArgs) -> Result<()> {
         // YOLO 分类器:与 headless 一致,PermissionMode::Bubble/Bypass 下
         // 由启发式判定哪些调用可静默放行。
         c.yolo_classifier = Some(Arc::new(zhuye_permissions::HeuristicYoloClassifier));
+        // v1.x:配置段 → 特性开关(与 exec headless 装配同口径),另把
+        // guard 句柄挂入(queue 消费:工具输出进上下文前扫描)。
+        crate::bootstrap_wiring::apply_feature_sections(&mut c, &zhuye_cfg);
+        c.prompt_guard = prompt_guard.clone();
+        c.guard_stats = guard_stats.clone();
         c
     };
     // registry / tools clone：AgentThread 持有 Arc clone。
