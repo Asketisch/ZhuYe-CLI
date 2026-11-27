@@ -1763,7 +1763,11 @@ fn dispatch_slash_command(
 ) -> bool {
     match cmd {
         SlashCommand::Compact => {
-            emit_op(thread, event_tx, zhuye_protocol::Op::Compact);
+            emit_op(
+                thread,
+                event_tx,
+                zhuye_protocol::Op::Compact { instructions: None },
+            );
             state.history.push(UiHistoryItem::Notice(
                 "/compact: Context compaction requested. Next turn will compact.".into(),
             ));
@@ -2556,7 +2560,7 @@ fn personality_layer_name(name: &str) -> String {
 /// 校验失败 → None(保持当前模型)。
 fn resolve_model_switch(
     registry: &zhuye_llm::ModelRegistry,
-    cfg: &zhuye_config::ReflectConfig,
+    cfg: &zhuye_config::ZhuyeConfig,
     input: &str,
 ) -> Option<String> {
     let spec = if input.contains('/') {
@@ -3534,8 +3538,10 @@ fn handle_key(
                     let thread = Arc::clone(thread);
                     let tx = event_tx.clone();
                     tokio::spawn(async move {
-                        let sub =
-                            Submission::with_id(uuid::Uuid::new_v4().to_string(), Op::Compact);
+                        let sub = Submission::with_id(
+                            uuid::Uuid::new_v4().to_string(),
+                            Op::Compact { instructions: None },
+                        );
                         let mut handle = thread.submit(sub).await;
                         while let Some(protocol_event) = handle.next().await {
                             if let Some(ui_event) = conversion::convert_event(protocol_event) {

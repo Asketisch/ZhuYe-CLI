@@ -14,14 +14,14 @@
 
 use std::sync::Arc;
 
-use zhuye_config::ReflectConfig;
+use zhuye_config::ZhuyeConfig;
 use zhuye_core::AgentConfig;
 use zhuye_llm::ModelRegistry;
 
 /// 算出两份配置之间变更了哪些段(段名列表)。
 ///
 /// 段名与 `zhuye-exec` 的 `diff_sections` 对齐,便于两边行为一致。
-pub fn diff_sections(old: &ReflectConfig, new: &ReflectConfig) -> Vec<String> {
+pub fn diff_sections(old: &ZhuyeConfig, new: &ZhuyeConfig) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     macro_rules! cmp_section {
         ($field:ident, $name:literal) => {
@@ -55,6 +55,9 @@ pub fn diff_sections(old: &ReflectConfig, new: &ReflectConfig) -> Vec<String> {
     cmp_section!(telemetry, "telemetry");
     cmp_section!(analytics, "analytics");
     cmp_section!(notifications, "notifications");
+    // v1.x:`[cache_warming]` 段变更 → reload 报告(与引擎 exec 的
+    // diff_sections 名单对齐;关闭即取消在飞保温任务,用户应看到反馈)。
+    cmp_section!(cache_warming, "cache_warming");
     cmp_section!(web_search, "web_search");
     cmp_section!(permissions, "permissions");
     // v2 新增段:TUI 补全版比引擎 exec 的名单更全(exec 只报常用段),
@@ -86,7 +89,7 @@ pub fn spawn_config_reload_task(
     registry: Arc<ModelRegistry>,
     agent_cfg: AgentConfig,
     path: std::path::PathBuf,
-    previous_cfg: ReflectConfig,
+    previous_cfg: ZhuyeConfig,
     ui_tx: tokio::sync::mpsc::UnboundedSender<crate::adapter::UiEvent>,
 ) {
     tokio::spawn(async move {
@@ -108,8 +111,8 @@ pub fn spawn_config_reload_task(
 
 /// 应用一次配置变更。返回 `Ok(())` 表示已生效并已推事件。
 fn handle_reload(
-    old_cfg: &ReflectConfig,
-    new_cfg: &ReflectConfig,
+    old_cfg: &ZhuyeConfig,
+    new_cfg: &ZhuyeConfig,
     registry: &Arc<ModelRegistry>,
     agent_cfg: &AgentConfig,
     path: &std::path::Path,
@@ -146,8 +149,8 @@ fn handle_reload(
 mod tests {
     use super::*;
 
-    fn cfg_with_model(model: &str) -> ReflectConfig {
-        ReflectConfig {
+    fn cfg_with_model(model: &str) -> ZhuyeConfig {
+        ZhuyeConfig {
             model_group: vec![zhuye_config::ModelGroupSection {
                 id: "openai".into(),
                 endpoint: "openai".into(),
@@ -180,8 +183,8 @@ mod tests {
 
     #[test]
     fn routing_change_is_reported() {
-        let a = ReflectConfig::default();
-        let mut b = ReflectConfig::default();
+        let a = ZhuyeConfig::default();
+        let mut b = ZhuyeConfig::default();
         b.routing = Some(zhuye_config::RoutingSection::default());
         let d = diff_sections(&a, &b);
         assert!(d.iter().any(|s| s == "routing"), "{d:?}");
@@ -189,8 +192,8 @@ mod tests {
 
     #[test]
     fn model_discovery_change_is_reported() {
-        let a = ReflectConfig::default();
-        let mut b = ReflectConfig::default();
+        let a = ZhuyeConfig::default();
+        let mut b = ZhuyeConfig::default();
         b.model_discovery = Some(zhuye_config::ModelDiscoverySection::default());
         let d = diff_sections(&a, &b);
         assert!(d.iter().any(|s| s == "model_discovery"), "{d:?}");
@@ -199,8 +202,8 @@ mod tests {
     #[test]
     fn model_group_change_is_reported() {
         // `[[model_group]]` 段增删改都要进热重载 Notice 的变更段列表。
-        let a = ReflectConfig::default();
-        let mut b = ReflectConfig::default();
+        let a = ZhuyeConfig::default();
+        let mut b = ZhuyeConfig::default();
         b.model_group = vec![zhuye_config::ModelGroupSection {
             id: "bigmodel".into(),
             endpoint: "openai".into(),
@@ -215,10 +218,24 @@ mod tests {
     fn subagent_models_change_is_reported() {
         // v2 段名 `[subagent_models]`(v1 旧名 `[subagent_providers]` 由
         // 引擎 load 迁移接管)—— 段变更要进 Notice 列表。
-        let a = ReflectConfig::default();
-        let mut b = ReflectConfig::default();
+        let a = ZhuyeConfig::default();
+        let mut b = ZhuyeConfig::default();
         b.subagent_models = Some(zhuye_config::schema::SubagentModelsSection::default());
         let d = diff_sections(&a, &b);
         assert!(d.iter().any(|s| s == "subagent_models"), "{d:?}");
+    }
+
+    #[test]
+    fn cache_warming_change_is_reported() {
+        // v1.x:`[cache_warming]` 段变更要进 Notice 列表(与引擎 exec 的
+        // diff_sections 名单对齐;此前漏段比,Notice 报「变更段: (无)」)。
+        let a = ZhuyeConfig::default();
+        let mut b = ZhuyeConfig::default();
+        b.cache_warming = Some(zhuye_config::schema::CacheWarmingSection {
+            enabled: Some(false),
+            ..Default::default()
+        });
+        let d = diff_sections(&a, &b);
+        assert!(d.iter().any(|s| s == "cache_warming"), "{d:?}");
     }
 }

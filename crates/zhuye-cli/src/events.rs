@@ -239,7 +239,7 @@ pub struct UiState {
     /// M3:`/model` 切换前的可用性校验(run_async 启动期注入)。
     pub model_registry: Option<std::sync::Arc<zhuye_llm::ModelRegistry>>,
     /// M3:启动期完整 config(`/model <name>` 缺 provider 时按 active 拼接)。
-    pub zhuye_config: Option<zhuye_config::ReflectConfig>,
+    pub zhuye_config: Option<zhuye_config::ZhuyeConfig>,
     /// M3:文件权限存储(审批选 always-allow 时写 Allow 规则,跨重启生效)。
     pub persistent_permissions: Option<std::sync::Arc<dyn zhuye_permissions::PermissionStore>>,
     /// 插件运行时句柄(run_async 启动期注入)。SubmitAsUser / /loop 提交

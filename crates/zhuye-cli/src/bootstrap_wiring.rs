@@ -75,7 +75,7 @@ pub(crate) fn build_sanitizer(section: Option<&zhuye_config::SanitizeSection>) -
 /// 从 `[telemetry]` 配置构造本地 trace sink(P2 `langfuse` 云端并行投递)。
 /// `enabled = false`(显式)→ `None`;缺省 → 启用,目录默认 `~/.zhuye/traces`。
 pub(crate) fn build_telemetry_sink(
-    cfg: &zhuye_config::ReflectConfig,
+    cfg: &zhuye_config::ZhuyeConfig,
 ) -> Option<Arc<zhuye_telemetry::TelemetrySink>> {
     let default_section = zhuye_config::TelemetrySection::default();
     let section = cfg.telemetry.as_ref().unwrap_or(&default_section);
@@ -139,7 +139,7 @@ pub(crate) fn build_telemetry_sink(
 /// wrap 出的 default 凭据 `quota` 恒 `None`(见 `build_group_pool`),
 /// 组级字段无需处理。provider 名取组 id,与 `apply_to_registry` 的池名一致。
 pub(crate) fn build_quota_tracker(
-    cfg: &zhuye_config::ReflectConfig,
+    cfg: &zhuye_config::ZhuyeConfig,
 ) -> Option<zhuye_llm::SharedQuotaTracker> {
     use std::sync::Arc as StdArc;
     use zhuye_config::QuotaSource;
@@ -274,7 +274,7 @@ pub(crate) fn build_m4(
     registry: &SharedModelRegistry,
     thread_id: ThreadId,
     toml_trigger_tokens: Option<u32>,
-    cfg: &zhuye_config::ReflectConfig,
+    cfg: &zhuye_config::ZhuyeConfig,
     telemetry: Option<Arc<zhuye_telemetry::TelemetrySink>>,
     recorder: Arc<dyn zhuye_protocol::RolloutRecorder>,
     tools: &Arc<ToolRegistry>,
@@ -462,7 +462,7 @@ pub(crate) fn build_m5(
     thread_id: ThreadId,
     parent_recorder: Arc<dyn zhuye_protocol::RolloutRecorder>,
     m4: &zhuye_core::config::M4Deps,
-    initial_cfg: &zhuye_config::ReflectConfig,
+    initial_cfg: &zhuye_config::ZhuyeConfig,
     tools: &Arc<ToolRegistry>,
 ) -> Arc<SubAgentFactory> {
     let _ = agent_name;
@@ -573,7 +573,7 @@ fn removed_mcp_tools(
 /// 单 server 启动失败仅 warn,不阻塞其它 server 与 agent 启动。
 /// 返回 `Arc<McpConnectionManager>` 供插件层复用(资源读取工具)。
 pub(crate) async fn bootstrap_mcp(
-    initial_cfg: &zhuye_config::ReflectConfig,
+    initial_cfg: &zhuye_config::ZhuyeConfig,
     event_tx: tokio::sync::mpsc::Sender<Event>,
     tools: Arc<ToolRegistry>,
 ) -> Option<Arc<McpConnectionManager>> {
@@ -743,7 +743,7 @@ fn transport_mirror_from_runtime(t: zhuye_mcp::McpTransport) -> zhuye_protocol::
 /// 不注册、server 不启动);激活仍始终需要 `[lsp_servers]` 定义,config
 /// 激活语义不变,插件启用无独立效果。
 pub(crate) async fn bootstrap_lsp(
-    initial_cfg: &zhuye_config::ReflectConfig,
+    initial_cfg: &zhuye_config::ZhuyeConfig,
     event_tx: tokio::sync::mpsc::Sender<Event>,
     tools: Arc<ToolRegistry>,
     lsp_plugin_disabled: bool,
@@ -832,7 +832,7 @@ pub(crate) async fn bootstrap_lsp(
 /// 根据 `[coordinator]` 配置启用/关闭 coordinator 模式(与 exec 的
 /// `apply_coordinator_from_config` 同逻辑)。
 pub(crate) fn apply_coordinator_from_config(
-    cfg: &zhuye_config::ReflectConfig,
+    cfg: &zhuye_config::ZhuyeConfig,
     workspace: &Path,
     m4: Option<&zhuye_core::config::M4Deps>,
     factory: &SubAgentFactory,
@@ -995,7 +995,7 @@ mod tests {
     fn build_quota_tracker_registers_group_credential_quota() {
         // `[[model_group]]` 显式枚举、声明 quota 的凭据,
         // 应以组 id 为 provider 名注册进 tracker。
-        let cfg = zhuye_config::ReflectConfig {
+        let cfg = zhuye_config::ZhuyeConfig {
             model_group: vec![zhuye_config::ModelGroupSection {
                 id: "bigmodel".into(),
                 endpoint: "openai".into(),
@@ -1012,7 +1012,7 @@ mod tests {
     fn build_quota_tracker_ignores_group_level_api_key() {
         // 组只有组级 api_key(未显式列 credentials)时,builder wrap 出的
         // default 凭据 quota 恒 None,不该产生 tracker。
-        let cfg = zhuye_config::ReflectConfig {
+        let cfg = zhuye_config::ZhuyeConfig {
             model_group: vec![zhuye_config::ModelGroupSection {
                 id: "bigmodel".into(),
                 endpoint: "openai".into(),
@@ -1027,7 +1027,7 @@ mod tests {
     #[test]
     fn build_quota_tracker_skips_invalid_group_id() {
         // 非法组 id(含 '/')跳过,且不影响其余合法组的注册。
-        let cfg = zhuye_config::ReflectConfig {
+        let cfg = zhuye_config::ZhuyeConfig {
             model_group: vec![
                 zhuye_config::ModelGroupSection {
                     id: "bad/id".into(),

@@ -321,6 +321,15 @@ pub(super) fn convert_event(event: zhuye_protocol::Event) -> Option<UiEvent> {
         ToolExecutionRequest(_) | ShutdownComplete | PermissionBubble(_) | CollabMessage(_) => {
             return None;
         }
+        // v1.x 流锚点恢复:恢复时发现结果未知的工具执行(进程中断/超时后
+        // 无法确认),与 StreamRecovery* 同属恢复过程 —— Notice 提示留痕。
+        ToolExecutionUncertain(e) => UiEventKind::Notice(format!(
+            "🔄 流恢复 · 工具 `{}`(调用 {})结果未知,已按未结清处理",
+            e.tool_name, e.call_id
+        )),
+        // 任务树预算快照:回合级预算记账遥测,TUI 暂无消费面
+        // (token 用量走 TokenCount / StatusUpdate),整条丢弃。
+        TaskBudgetSnapshot(_) => return None,
         // v1.x:配置热重载 —— 协议侧事件带「触发的文件 + 变更的段」。
         // 此前整条丢弃,用户改完配置不知道有没有生效。
         ConfigReloaded(cr) => UiEventKind::Notice(format!(
@@ -1375,5 +1384,50 @@ mod tests {
                 other => panic!("期望 Notice,得到 {other:?}"),
             }
         }
+    }
+
+    #[test]
+    fn convert_tool_execution_uncertain_renders_notice() {
+        // 流恢复时发现结果未知的工具执行:渲染为 Notice 留痕,含工具名与调用 id。
+        use zhuye_protocol::event_msg::EventMsg;
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            EventMsg::ToolExecutionUncertain(zhuye_protocol::ToolExecutionUncertainEvent {
+                session_id: zhuye_protocol::ThreadId::new(),
+                turn_id: zhuye_protocol::TurnId::new(),
+                call_id: "call_42".into(),
+                tool_name: "shell".into(),
+            }),
+        );
+        let out = convert_event(ev).expect("ToolExecutionUncertain 不应被丢弃");
+        match out.kind {
+            UiEventKind::Notice(text) => {
+                assert!(text.contains("流恢复"), "应说明场景:{text}");
+                assert!(text.contains("shell"), "应含工具名:{text}");
+                assert!(text.contains("call_42"), "应含调用 id:{text}");
+            }
+            other => panic!("期望 Notice,得到 {other:?}"),
+        }
+    }
+
+    #[test]
+    fn convert_task_budget_snapshot_is_dropped() {
+        // 任务树预算快照:回合级记账遥测,TUI 无消费面,整条丢弃不进历史。
+        use zhuye_protocol::event_msg::EventMsg;
+        let ev = zhuye_protocol::Event::new(
+            "t",
+            EventMsg::TaskBudgetSnapshot(zhuye_protocol::TaskBudgetSnapshotEvent {
+                task_id: "task-1".into(),
+                turn_id: zhuye_protocol::TurnId::new(),
+                estimated_tokens: 100,
+                actual_tokens: 90,
+                reserved_tokens: 10,
+                unknown_estimated_tokens: 0,
+                unknown_calls: 0,
+                estimate_overrun_tokens: 0,
+                dispatched_subagents: 1,
+            }),
+        );
+        assert!(convert_event(ev).is_none(), "预算快照应被丢弃");
     }
 }

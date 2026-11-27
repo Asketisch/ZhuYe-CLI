@@ -160,9 +160,9 @@ pub enum UiEventKind {
     /// 消费方据此刷新 `state.zhuye_config`(否则 `/model` 之类的命令
     /// 仍按旧配置解析)并向对话流推一条变更提示。
     ConfigReloaded {
-        // Box:`ReflectConfig` 是个大结构,直接内联会让本枚举的各变体
+        // Box:`ZhuyeConfig` 是个大结构,直接内联会让本枚举的各变体
         // 大小差异悬殊(clippy::large_enum_variant)。
-        config: Box<zhuye_config::ReflectConfig>,
+        config: Box<zhuye_config::ZhuyeConfig>,
         sections_changed: Vec<String>,
     },
     /// 工具/Hook 审批请求。`kind` 保留原始 `ApprovalKind`，

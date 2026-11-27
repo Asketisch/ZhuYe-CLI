@@ -56,7 +56,7 @@
 | 真实 HTTP 链路(Anthropic/OpenAI SSE / 跨天恢复 / busy 窗口 Esc·Ctrl+C 中断 / 凭据 failover / 跨 provider 降级 / 动态免费模型发现) | H1–H7 | — | — |
 | TUI 版本差分(rollout / 副作用 / 屏幕标记 / panic;3 场景 × 双二进制,另有发布版到候选版恢复与续写) | D 组(`test_differential.py`,需 ZHUYE_DIFF=1) | — | — |
 | ANSI 解析 / 文本截断 / JSON 紧凑化不变量(任意输入不 panic、可见文本保持、字素上限、幂等、JSON 语义保持) | —(Rust 属性测试:`ansi_escape::tests` + `text_formatting::property_tests`,proptest) | — | — |
-| 引擎 additive 诊断事件族投影(流恢复 `StreamRecovery*` ×4 / 缓存保温 `CacheWarming` / MCP 交互请求 `McpElicitation` → Notice 行;`convert_event` 无通配臂,E0004 即接线门) | —(Rust 单测:`tui/conversion.rs` tests,锚定文案关键字;差集辅助函数 `removed_mcp_tools` 同) | — | — |
+| 引擎 additive 诊断事件族投影(流恢复 `StreamRecovery*` ×4 / 缓存保温 `CacheWarming` / MCP 交互请求 `McpElicitation` / 恢复时结果未知的工具执行 `ToolExecutionUncertain` → Notice 行;回合级预算遥测 `TaskBudgetSnapshot` → 有意丢弃无消费面;`convert_event` 无通配臂,E0004 即接线门) | —(Rust 单测:`tui/conversion.rs` tests,锚定文案关键字;差集辅助函数 `removed_mcp_tools` 同) | — | — |
 | Rust 编译面 | — | workspace_tests(cargo test/clippy/fmt/doc) | — |
 | 构建工具面(`gc` / `gc-deep` 清理语义、产物根跟随 `CARGO_TARGET_DIR`) | — | build_tooling(bash,文件系统结果断言) | — |
 

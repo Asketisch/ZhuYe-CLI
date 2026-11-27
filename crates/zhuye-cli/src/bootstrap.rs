@@ -32,7 +32,7 @@ pub struct TuiRuntimeHandles {
     /// 模型注册表(`/model` 切换前的可用性校验)。
     pub registry: Arc<ModelRegistry>,
     /// 启动期完整 config(`/model` 解析 provider/model、状态展示)。
-    pub config: zhuye_config::ReflectConfig,
+    pub config: zhuye_config::ZhuyeConfig,
     /// M2:resume 回放出的历史消息(非 resume 启动为空)。主循环据此把
     /// 既往对话回填进 scrollback,让 `-c` / `--resume` 有连续的视觉上下文。
     pub prior_messages: Vec<zhuye_llm::ChatMessage>,
@@ -155,7 +155,7 @@ async fn bootstrap_and_run(args: TuiArgs) -> Result<()> {
     // `[plugins].disabled_plugins`。显式禁用 > 显式启用 > 默认开关表。
     let plugin_enabled_ids = zhuye_cfg.plugins.enabled_plugins.clone();
     let plugin_disabled_ids = zhuye_cfg.plugins.disabled_plugins.clone();
-    let mut hooks_cfg = zhuye_hooks::config::HooksConfig::from_reflect_section(&zhuye_cfg.hooks);
+    let mut hooks_cfg = zhuye_hooks::config::HooksConfig::from_zhuye_section(&zhuye_cfg.hooks);
     // verify-hooks 门控插件(默认关,双路径):插件启用 = 显式启用
     // verification / test_runner 两个内置 hook(与 exec 同口径,在
     // build_engine 之前注入;TUI 无 serve 的 explicit-only 收紧步骤)。
