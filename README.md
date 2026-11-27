@@ -1,8 +1,10 @@
+# ZhuYe-CLI
+
+<p align="center">“折烛夜一花，倾与二君子尝。”<br><sub>——《纂异记·嵩岳嫁女》</sub></p>
+
 <p align="center">
   <b>中文</b> · <a href="README.en.md">English</a>
 </p>
-
-# ZhuYe-CLI
 
 [![CI](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml/badge.svg)](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
