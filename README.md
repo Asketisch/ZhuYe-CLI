@@ -12,6 +12,8 @@
 
 > 注意:本仓库所有代码注释、commit message、PR 描述仍**强制使用中文**(详见 [CONTRIBUTING.md](CONTRIBUTING.md))。
 
+<p align="center"><img src="res/main.jpg" alt="烛夜官方 logo" width="1024"></p>
+
 ZhuYe 的终端交互式客户端,面向终端 AI Agent 工作流,基于 [ratatui](https://github.com/ratatui-org/ratatui)。
 
 本仓库**只包含 TUI 表现层**(`zhuye-cli` crate),agent 核心引擎(AgentThread / StateGraph / 工具 / 协议等)由 [Reflect-Agent](https://github.com/Asketisch/Reflect-Agent) 提供,通过 **git submodule** 复用。

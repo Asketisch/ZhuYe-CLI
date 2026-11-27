@@ -12,6 +12,7 @@
 
 An interactive terminal client for ZhuYe (烛夜), designed for terminal-based AI agent workflows, built on [ratatui](https://github.com/ratatui-org/ratatui).
 
+<p align="center"><img src="res/main.jpg" alt="烛夜官方 logo" width="1024"></p>
 This repository contains **only the TUI presentation layer** (`zhuye-cli` crate). The agent core engine (AgentThread, StateGraph, tools, protocol, …) is provided by [Reflect-Agent](https://github.com/Asketisch/ZhuYe) and consumed via a **git submodule**.
 
 ## Repository Layout
