@@ -9,7 +9,8 @@
 本 crate 是 ZhuYe 的 TUI 表现层(lib `zhuye_cli` + thin binary `zhuye-cli`),引擎
 (AgentThread / StateGraph / 工具 / 协议)全部经 path 依赖来自 `zhuye-agent/` submodule。
 src/ 约 497 个 `.rs`、18 万行,其中 `tui_core/` 约占 82% —— 真正的"层"在 src 模块
-目录,不在 `crates/*`。全局约定与验证矩阵见根 [AGENTS.md](../../AGENTS.md)。
+目录,不在 `crates/*`。全局约定见根 [AGENTS.md](../../AGENTS.md),验证矩阵
+单点在 [tests/AGENTS.md](../../tests/AGENTS.md)。
 
 ## src 模块速览(改哪个目录读哪篇)
 
@@ -112,5 +113,5 @@ plugin / skills-hub / statusline / theme / traces 等),`picker/mod.rs:1-4`:由
 
 ## 深入阅读
 
-- 根 [AGENTS.md](../../AGENTS.md)(全局约定 / 验证矩阵)· [CONTRIBUTING.md](../../CONTRIBUTING.md)(submodule 工作流)
+- 根 [AGENTS.md](../../AGENTS.md)(全局约定)· [tests/AGENTS.md](../../tests/AGENTS.md)(验证矩阵)· [CONTRIBUTING.md](../../CONTRIBUTING.md)(submodule 工作流)
 - [NOTICE](../../NOTICE)(fork 与 vendored 来源的许可证归属)

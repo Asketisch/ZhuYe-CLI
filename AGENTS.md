@@ -66,11 +66,9 @@ make install                    # 装到 /usr/local/bin(或 --local → ~/.local
 make gc                         # 清产物根下全部 profile 的 incremental 缓存(不触发重编)
 make gc-deep                    # 深清理:再清 deps/.fingerprint/examples(下次构建接近冷构建)
 
-# 全功能测试套件(tests/ 目录,分层见 tests/README.md,覆盖矩阵见 tests/COVERAGE.md)
+# 全功能测试套件(入口语义与分层单点见 tests/AGENTS.md;make test-suite* 为其封装)
 ./tests/run_all.sh              # 离线全量:能力覆盖层 + Rust 编译面 + 覆盖自审
-./tests/run_all.sh functional   # 只跑能力覆盖层(真二进制 + pty 行为断言 + CLI 参数矩阵)
-./tests/run_all.sh audit        # 只跑覆盖自审
-./tests/run_all.sh live         # live 端到端(真实 LLM + 真实工具,需 API key,手动跑)
+./tests/run_all.sh functional|audit|live   # 单入口:能力覆盖层 / 覆盖自审 / live(需 API key,手动跑)
 ```
 
 ## 架构
@@ -135,53 +133,29 @@ zhuye-task/subagent、zhuye-protocol。
 
 **新功能**或 **bug 修复**提交前,必须逐条走完:
 
-1. **能力覆盖脚本同步** —— 判断本次改动是否需要新增 / 更新能力覆盖用例:
-   - 改了 TUI 对外可见的行为(渲染文本、按键路由、弹层、slash 命令、
-     对话轮次、会话落盘、CLI 输出)
-     → 必须在 `tests/functional/` 有对应用例,断言到**行为级**
-     (屏幕可见文本 / 落盘文件内容 / 进程退出码),
-     **不接受**「退出码 0」或「不抛错」作为能力断言;
-   - 已有相关用例 → 检查是否需要**更新**(断言口径变了 / 新增字段 / 语义变化);
-   - 能力覆盖用例**只写在 `tests/functional/`** —— 不要在 `tests/rust/*.sh`
-     里重复写行为断言,那里只管 CLI **参数面**;
-   - 只改内部纯逻辑(渲染辅助函数、CJK 换行、状态机转换)
-     → 补 Rust 单测(`crates/zhuye-cli/src/**`),不必硬凑 pty 用例。
-2. **按改动面选测试落点** —— 能力覆盖层按面分组,新用例进对应组:
-
-   | 改动面 | 用例落点 |
-   |---|---|
-   | 启动 / 渲染锚点 / 退出生命周期 / 全屏模式 | `tests/functional/test_boot.py`(B 组) |
-   | slash 命令面 | `tests/functional/test_slash.py` 的 `MATRIX`(S 组) |
-   | 弹层 / 浮层 / 选择器 | `tests/functional/test_overlay.py`(O 组) |
-   | 对话轮次 / 流式 / 工具调用 / 统计 | `tests/functional/test_turn.py`(T 组) |
-   | 会话持久化 / 恢复 / fork / plan 落盘 | `tests/functional/test_session.py`(P 组) |
-   | headless CLI 语义 | `tests/functional/test_cli.py`(C 组) |
-   | 键盘交互 | `tests/functional/test_keys.py`(K 组) |
-   | 渲染与视觉 | `tests/functional/test_render.py`(V 组) |
-   | 审批 / AskUser / 容错 / 信号 | `tests/functional/test_flow.py`(W 组) |
-   | 插件面 | `tests/functional/test_plugin.py`(G 组) |
-   | CLI 参数矩阵 | `tests/rust/cli_core.sh`、`tests/rust/cli_modules.sh` |
-   | 内部纯逻辑 | `crates/zhuye-cli/src/**` 的 Rust 单测 |
-
-   分层判据与用例规模见 [tests/README.md](tests/README.md);
-   「能力 × 覆盖层」映射见 [tests/COVERAGE.md](tests/COVERAGE.md)。
-3. **slash 命令双通道 + 覆盖门禁** —— 新增 / 改名 / 改结局的 slash 命令:
-   - 两条分发通道都要看:`history_render::dispatch_slash`(legacy 白名单)
-     与 `tui/mod.rs::dispatch_slash_command`(枚举通道);
-   - `tests/functional/test_slash.py` 的 `MATRIX` 必须补一行,写明结局类别
-     (`wired` / `placeholder` / `unrecognized` / `exit`)与期望屏幕文本;
-   - `make coverage-audit`(`tests/tools/coverage_audit.py --strict`)会做
-     「Rust 里声明的命令 × 矩阵覆盖」的**机械差集**,漏一条直接失败。
-4. **覆盖矩阵同步** —— `tests/COVERAGE.md` 随改动更新:
-   新增能力补「能力 × 覆盖层」表的一行;移除能力移到「未覆盖项」并写明原因;
-   发现的缺陷记入「已知缺陷」。
+1. **能力覆盖脚本同步** —— 改了 TUI 对外可见行为(渲染文本、按键路由、弹层、
+   slash 命令、对话轮次、会话落盘、CLI 输出)必须在 `tests/functional/` 补
+   **行为级**用例(屏幕可见文本 / 落盘文件内容 / 进程退出码);内部纯逻辑
+   (渲染辅助、CJK 换行、状态机)补 Rust 单测即可。断言口径与落点细则单点在
+   [tests/AGENTS.md](tests/AGENTS.md):行为级断言只进 `functional/`,
+   `tests/rust/*.sh` 只管 CLI 参数面。
+2. **按改动面选测试落点** —— 改动面 × 组字母 × 用例文件的全表见
+   [tests/AGENTS.md](tests/AGENTS.md)「组字母全表」;分层判据见
+   [tests/README.md](tests/README.md),「能力 × 覆盖层」映射见
+   [tests/COVERAGE.md](tests/COVERAGE.md)。
+3. **slash 命令双通道 + 覆盖门禁** —— 新增 / 改名 / 改结局的 slash 命令
+   (两条通道见上方约束 8):`tests/functional/test_slash.py` 的 `MATRIX`
+   必须补一行,写明结局类别(`wired` / `placeholder` / `unrecognized` / `exit`)
+   与期望屏幕文本;`make coverage-audit` 做声明 × 矩阵的机械差集,漏补直接失败。
+4. **覆盖矩阵同步** —— `tests/COVERAGE.md` 随改动更新:新增能力补
+   「能力 × 覆盖层」行,移除能力入「未覆盖项」并写明原因,缺陷记「已知缺陷」。
 5. **AGENTS.md 分层索引同步** —— 修改或新增代码时,对应目录的 AGENTS.md
    (模块篇、crate 篇、根导航表)必须同步更新;契约 / 同步点 / 禁止事项
    变化即改对应篇,导航目标增删即改根表。按下表定位:
 
    | 代码改动 | 同步更新 |
    |---|---|
-   | 新增 / 移除 src 模块目录 | 新建 / 删除该篇 + crate 篇速览表 + 根导航表 |
+   | 新增 / 移除 src 模块目录 | crate 篇速览表 + 根导航表(有独立漂移契约的目录才建篇) |
    | slash 命令(枚举 / 白名单 / 分发结局) | `src/tui_core/` + `src/tui/` + `src/history_render/` + `tests/`(S 组) |
    | 事件循环 / 按键 / UiState / 协议投影 | `src/tui/` |
    | 呈现原语 / 换行 / 快照 / vendored 边界 | `src/tui_core/` |
@@ -193,25 +167,10 @@ zhuye-task/subagent、zhuye-protocol。
    | 升级 submodule 指针 / 引擎契约变化 | 按上方「submodule 侧索引」读对应篇核对消费点;本仓库适配面变化则同步 `crates/zhuye-cli/` 篇 |
 
    拿不准改哪篇时,至少更新 crate 篇与根导航表,确保索引不失真。
-6. **验证** —— 按下方「验证矩阵」跑对应命令,全绿再提交。
-7. **注释与提交信息** —— 注释一律中文;commit 用 `type(scope): 描述`
-   conventional 风格(参考 git log)。
-
-## 验证矩阵(按改动范围选跑)
-
-| 改动范围 | 必跑命令 |
-|---|---|
-| 任何改动 | `cargo fmt --all -- --check` + `cargo clippy --workspace --all-targets -- -D warnings` |
-| Rust 代码 / crate | `cargo test --workspace` |
-| TUI 行为(渲染 / 按键 / 弹层 / 轮次 / 落盘 / CLI 语义) | `./tests/run_all.sh functional` |
-| slash 命令 | `./tests/run_all.sh functional` + `make coverage-audit` |
-| CLI 子命令参数面 | `./tests/run_all.sh rust` |
-| 仅文档 / 注释 | 无需跑测试,自查链接与命令是否仍有效 |
-| 发版前 | `make release-check` |
-
-> 全程离线:`ZHUYE_MODEL=mock/mock-1` + 隔离 HOME(mktemp),
-> 不污染真实 `~/.zhuye`;缺 pytest / pyte 时能力覆盖层判基础设施错误。
-> 首次运行需 `pip install pytest pyte`(Node 不需要)。
+6. **验证** —— 按改动范围跑对应命令,全绿再提交;「验证矩阵」单点在
+   [tests/AGENTS.md](tests/AGENTS.md)。
+7. **注释与提交信息** —— 注释一律中文(见下方「约定」);commit 用
+   `type(scope): 描述` conventional 风格(参考 git log)。
 
 ## 约定
 

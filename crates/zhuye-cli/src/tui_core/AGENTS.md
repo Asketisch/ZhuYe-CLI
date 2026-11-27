@@ -65,6 +65,14 @@
    windows-sys feature 面(注释明说「一一对应」)。
 8. `history_cell/markdown_render_cache.rs:37` 对中毒锁 `unwrap_or_else(PoisonError::into_inner)`
    恢复 —— 改缓存结构时保持该恢复语义。
+9. **平铺根文件 = 移植形态,不按功能重组**:本目录根的约 70 个平铺 `.rs` 与
+   21 个子目录是一次性移植的既有形态(上游即本仓库前代 Reflect-TUI,已更名
+   ZhuYe,无外部上游需 diff;`tui-upstream-tests` 门控点约 40 处、insta 快照按
+   模块路径命名、`slash_command.rs` 是 `coverage_audit.py` 的路径钉死输入)。
+   文件扇出 / 目录扇出信号经评估**接受为移植形态产物**:唯一可成簇的前缀族
+   (`terminal_*` 5 个)不足以把扇出降到阈值以下,局部搬移需在 vendored 引用面
+   加垫片并重挂快照,扰动不抵收益。新增文件跟随既有落点:上游镜像文件落根,
+   本仓自有原语入既有子目录;`chatwidget/`、`bottom_pane/` 的内部扇出同判。
 
 ## 禁止事项
 
@@ -73,6 +81,8 @@
 - 不让本目录新增 `use crate::tui` / 对 adapter 的非测试引用(现有 adapter 引用仅
   1 处测试)。
 - 不手工删除双副本快照的一侧(见契约 6)。
+- 不按功能重组本目录根平铺文件或既有子目录(移植形态,见契约 9);模块目录
+  增删须同步本篇速览表。
 
 ## 深入阅读
 

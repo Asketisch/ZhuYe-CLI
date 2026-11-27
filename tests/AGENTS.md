@@ -21,6 +21,21 @@ live 端到端四类。分层判据与用例规模的正式说明见 [tests/READ
 无参 = 前三入口;入口先 `ensure_release_binary` 保证二进制与源码对齐;全程
 `ZHUYE_MODEL=mock/mock-1` + 隔离 HOME(mktemp),不依赖外网与 API key。
 
+## 验证矩阵(按改动范围选跑;根篇检查表步骤 6 的单点)
+
+| 改动范围 | 必跑命令 |
+|---|---|
+| 任何改动 | `cargo fmt --all -- --check` + `cargo clippy --workspace --all-targets -- -D warnings` |
+| Rust 代码 / crate | `cargo test --workspace` |
+| TUI 行为(渲染 / 按键 / 弹层 / 轮次 / 落盘 / CLI 语义) | `./tests/run_all.sh functional` |
+| slash 命令 | `./tests/run_all.sh functional` + `make coverage-audit` |
+| CLI 子命令参数面 | `./tests/run_all.sh rust` |
+| 仅文档 / 注释 | 无需跑测试,自查链接与命令是否仍有效 |
+| 发版前 | `make release-check` |
+
+缺 pytest / pyte 时能力覆盖层判基础设施错误,首次运行需
+`pip install pytest pyte`(Node 不需要)。
+
 ## 组字母全表(`functional/`)
 
 | 组 | 文件 | 面 |
