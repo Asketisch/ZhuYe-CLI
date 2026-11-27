@@ -1,7 +1,7 @@
 # ── ZhuYe-CLI cargo 配置 ──────────────────────────────────────────
 # 关键:insta snapshot 与 git submodule 嵌套 workspace 的兼容修复。
 #
-# reflect-* 核心 crate 通过 `zhuye-agent/` submodule 引入,insta 默认通过
+# zhuye-* 核心 crate 通过 `zhuye-agent/` submodule 引入,insta 默认通过
 # `cargo metadata` 发现 workspace_root,在嵌套场景下会误算 snapshot 文件路径
 # (把 submodule 根再拼一层 `zhuye-agent/...`,产生 `zhuye-agent/zhuye-agent/...`
 # 双层嵌套路径导致 `.snap` 文件匹配失败)。

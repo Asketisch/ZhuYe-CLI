@@ -462,7 +462,7 @@ mod tests {
     #[test]
     fn test_center_truncate_doesnt_truncate_short_path() {
         let sep = std::path::MAIN_SEPARATOR;
-        let path = format!("{sep}Users{sep}reflect{sep}Public");
+        let path = format!("{sep}Users{sep}zhuye{sep}Public");
         let truncated = center_truncate_path(&path, /*max_width*/ 40);
 
         assert_eq!(truncated, path);
@@ -484,11 +484,11 @@ mod tests {
     fn test_center_truncate_truncates_long_windows_path() {
         let sep = std::path::MAIN_SEPARATOR;
         let path = format!(
-            "C:{sep}Users{sep}reflect{sep}Projects{sep}super{sep}long{sep}windows{sep}path{sep}file.txt"
+            "C:{sep}Users{sep}zhuye{sep}Projects{sep}super{sep}long{sep}windows{sep}path{sep}file.txt"
         );
         let truncated = center_truncate_path(&path, /*max_width*/ 36);
 
-        let expected = format!("C:{sep}Users{sep}reflect{sep}…{sep}path{sep}file.txt");
+        let expected = format!("C:{sep}Users{sep}zhuye{sep}…{sep}path{sep}file.txt");
 
         assert_eq!(truncated, expected);
     }

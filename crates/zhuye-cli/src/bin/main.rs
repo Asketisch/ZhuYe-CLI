@@ -1,6 +1,6 @@
 //! zhuye-cli — 终端交互界面独立二进制入口。
 //!
-//! 原 Reflect-Agent(现 ZhuYe)monorepo 中,TUI 由顶层 `reflect` 二进制通过
+//! 原 ZhuYe(现 ZhuYe)monorepo 中,TUI 由顶层 `zhuye` 二进制通过
 //! `zhuye_cli::run` 进程内转发。拆仓后,TUI 自带 thin binary。
 //!
 //! v1.x:在纯 TUI 模式之外,新增 headless 子命令(`session` / `traces`),
@@ -221,7 +221,7 @@ fn main() -> anyhow::Result<()> {
         },
         Some(Command::Discussion { action }) => match action {
             DiscussionAction::Run { config, output } => {
-                // 用与 reflect-cli 同款的多线程 runtime(`Runtime::new()`):
+                // 用与 zhuye-cli 同款的多线程 runtime(`Runtime::new()`):
                 // 讨论编排里有跨 task 的等待,current_thread 可能死锁。
                 let rt = tokio::runtime::Runtime::new()
                     .map_err(|e| anyhow::anyhow!("tokio runtime 初始化失败: {e}"))?;

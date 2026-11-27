@@ -315,7 +315,7 @@ pub(crate) fn feedback_success_cell(
     } else {
         "• Feedback recorded (no logs)."
     };
-    // Reflect 不再将用户引导至外部问题跟踪器或内部 go 链接，
+    // ZhuYe 不再将用户引导至外部问题跟踪器或内部 go 链接，
     // 因此没有需要展示的后续 URL。
     let issue_url = issue_url_for_category(category, thread_id, feedback_audience);
     let _ = issue_url;
@@ -332,7 +332,7 @@ fn issue_url_for_category(
     _thread_id: &str,
     _feedback_audience: FeedbackAudience,
 ) -> Option<String> {
-    // Reflect 不会链接到外部问题跟踪器或内部 go 链接。
+    // ZhuYe 不会链接到外部问题跟踪器或内部 go 链接。
     None
 }
 
@@ -448,7 +448,7 @@ pub(crate) fn feedback_upload_consent_params(
         Line::from("Upload logs?".bold()).into(),
         Line::from("").into(),
         Line::from("The following files will be sent:".dim()).into(),
-        Line::from(vec!["  • ".into(), "reflect-logs.log".into()]).into(),
+        Line::from(vec!["  • ".into(), "zhuye-logs.log".into()]).into(),
         Line::from(vec![
             "  • ".into(),
             DOCTOR_REPORT_ATTACHMENT_FILENAME.into(),
@@ -509,7 +509,7 @@ pub(crate) fn feedback_upload_consent_params(
             super::SelectionItem {
                 name: "Yes".to_string(),
                 description: Some(
-                    "Share the current Reflect session logs and diagnostics with the team for troubleshooting."
+                    "Share the current ZhuYe session logs and diagnostics with the team for troubleshooting."
                         .to_string(),
                 ),
                 actions: vec![yes_action],

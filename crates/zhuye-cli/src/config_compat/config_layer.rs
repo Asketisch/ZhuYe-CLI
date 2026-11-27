@@ -2,7 +2,7 @@ use super::*;
 // 配置层类型
 // ===========================================================================
 
-/// 有效 Reflect 配置中某一层来源的说明。
+/// 有效 ZhuYe 配置中某一层来源的说明。
 ///
 /// 建模为带有字符串载荷的枚举，使调用方无需依赖 `AbsolutePathBuf` 即可对上游形态进行模式匹配。
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -18,8 +18,8 @@ pub enum ConfigLayerSource {
         file: PathBuf,
         profile: Option<String>,
     },
-    /// 从项目的 .reflect 目录加载的配置。
-    Project { dot_reflect_folder: PathBuf },
+    /// 从项目的 .zhuye 目录加载的配置。
+    Project { dot_zhuye_folder: PathBuf },
     /// 为当前会话提供的覆盖项。
     #[default]
     SessionFlags,
@@ -60,8 +60,8 @@ impl std::fmt::Display for ConfigLayerSource {
                 write!(f, "enterprise-managed ({name}, {id})")
             }
             Self::User { file, .. } => write!(f, "user ({})", file.display()),
-            Self::Project { dot_reflect_folder } => {
-                write!(f, "project ({})", dot_reflect_folder.display())
+            Self::Project { dot_zhuye_folder } => {
+                write!(f, "project ({})", dot_zhuye_folder.display())
             }
             Self::SessionFlags => write!(f, "session-flags"),
             Self::LegacyManagedConfigTomlFromFile { file } => {

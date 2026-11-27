@@ -11,7 +11,7 @@
 # 约定:注释一律中文;脚本自身可独立执行,退出码 0 = 全部通过。
 #
 # 与 submodule `zhuye-agent/tests/lib.sh` 的差异:
-#   submodule 测的是 headless `reflect serve`(JSONL wire),本仓测的是
+#   submodule 测的是 headless `zhuye serve`(JSONL wire),本仓测的是
 #   终端 TUI —— 因此这里额外提供 mock 脚本生成与 pty 相关的基础环境变量,
 #   但**不**提供 wire 会话设施(那由 tests/functional/ 的 pty 层负责)。
 
@@ -203,7 +203,7 @@ run_with_timeout() {
 # make_isolated_env:创建并进入隔离环境,设置:
 #   ISO_HOME / ISO_CWD(导出 HOME、cd 进去)
 #   预写 ~/.zhuye/config.toml —— 空的最小配置。
-#   说明:reflect_config::load_default() 对缺文件是「回落默认配置」而非报错,
+#   说明:zhuye_config::load_default() 对缺文件是「回落默认配置」而非报错,
 #   但显式写入可让「配置文件存在」这一前提在用例里显式成立,避免依赖
 #   宿主机残留配置(宿主机若有 provider 配置,会改变启动行为)。
 make_isolated_env() {

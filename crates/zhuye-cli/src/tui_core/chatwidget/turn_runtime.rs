@@ -306,11 +306,11 @@ impl ChatWidget {
 
     pub(super) fn handle_app_server_steer_rejected_error(
         &mut self,
-        zhuye_error_info: &AppServerReflectErrorInfo,
+        zhuye_error_info: &AppServerZhuyeErrorInfo,
     ) -> bool {
         matches!(
             zhuye_error_info,
-            AppServerReflectErrorInfo::ActiveTurnNotSteerable { .. }
+            AppServerZhuyeErrorInfo::ActiveTurnNotSteerable { .. }
         ) && self.enqueue_rejected_steer()
     }
 
@@ -353,7 +353,7 @@ impl ChatWidget {
         self.finalize_turn();
 
         let message = if message.trim().is_empty() {
-            "Reflect is currently experiencing high load.".to_string()
+            "ZhuYe is currently experiencing high load.".to_string()
         } else {
             message
         };
@@ -409,13 +409,13 @@ impl ChatWidget {
         match rate_limit_reached_type {
             Some(RateLimitReachedType::WorkspaceOwnerCreditsDepleted) => {
                 self.on_error(
-                    "You're out of credits. Your workspace is out of credits. Add credits to continue using Reflect."
+                    "You're out of credits. Your workspace is out of credits. Add credits to continue using ZhuYe."
                         .to_string(),
                 );
             }
             Some(RateLimitReachedType::WorkspaceOwnerUsageLimitReached) => {
                 self.on_error(
-                    "Usage limit reached. You've reached your usage limit. Increase your limits to continue using reflect."
+                    "Usage limit reached. You've reached your usage limit. Increase your limits to continue using zhuye."
                         .to_string(),
                 );
             }
@@ -436,7 +436,7 @@ impl ChatWidget {
     pub(super) fn handle_non_retry_error(
         &mut self,
         message: String,
-        zhuye_error_info: Option<AppServerReflectErrorInfo>,
+        zhuye_error_info: Option<AppServerZhuyeErrorInfo>,
     ) {
         if zhuye_error_info
             .as_ref()

@@ -6,14 +6,14 @@
   <a href="README.md">中文</a> · <b>English</b>
 </p>
 
-[![CI](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml/badge.svg)](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml)
+[![CI](https://github.com/Asketisch/ZhuYe-CLI/actions/workflows/ci.yml/badge.svg)](https://github.com/Asketisch/ZhuYe-CLI/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.85%20%7C%20edition%202024-orange.svg)](rust-toolchain.toml)
 
 An interactive terminal client for ZhuYe (烛夜), designed for terminal-based AI agent workflows, built on [ratatui](https://github.com/ratatui-org/ratatui).
 
 <p align="center"><img src="res/main.jpg" alt="烛夜官方 logo" width="1024"></p>
-This repository contains **only the TUI presentation layer** (`zhuye-cli` crate). The agent core engine (AgentThread, StateGraph, tools, protocol, …) is provided by [Reflect-Agent](https://github.com/Asketisch/ZhuYe) and consumed via a **git submodule**.
+This repository contains **only the TUI presentation layer** (`zhuye-cli` crate). The agent core engine (AgentThread, StateGraph, tools, protocol, …) is provided by [ZhuYe](https://github.com/Asketisch/ZhuYe) and consumed via a **git submodule**.
 
 ## Repository Layout
 
@@ -22,7 +22,7 @@ ZhuYe (core engine, provided as submodule)
   └─ crates/{protocol,abilities,resources,orchestration,integrations,runtime}
   └─ zhuye-core (AgentThread + StateGraph)
 
-ZhuYe-CLI (this repo)  ──submodule──► Reflect-Agent
+ZhuYe-CLI (this repo)  ──submodule──► ZhuYe
   └─ crates/zhuye-cli (ratatui UI + event loop)
   └─ zhuye-cli binary (terminal entry point)
 ```
@@ -31,8 +31,8 @@ ZhuYe-CLI (this repo)  ──submodule──► Reflect-Agent
 
 ```bash
 # 1. Clone (with submodules)
-git clone --recursive https://github.com/Asketisch/Reflect-TUI.git
-cd Reflect-TUI  # 仓库目录名以实际 clone 为准
+git clone --recursive https://github.com/Asketisch/ZhuYe-CLI.git
+cd ZhuYe-CLI  # 仓库目录名以实际 clone 为准
 
 # 2. Build
 make build
@@ -157,7 +157,7 @@ make help           # list all targets
 
 ## Upgrading the Core
 
-Reflect-Agent is a submodule. To bump the core to the latest:
+ZhuYe is a submodule. To bump the core to the latest:
 
 ```bash
 git submodule update --remote zhuye-agent
@@ -165,7 +165,7 @@ git add zhuye-agent
 git commit -m "chore: bump zhuye-agent submodule"
 ```
 
-For local joint development on the core: make changes in the Reflect-Agent repo → `git push` → in this repo run `git submodule update --remote`. See the "Submodule workflow" section in [CONTRIBUTING.md](CONTRIBUTING.md) for the full process (branch switching, pointer updates, joint debugging).
+For local joint development on the core: make changes in the ZhuYe repo → `git push` → in this repo run `git submodule update --remote`. See the "Submodule workflow" section in [CONTRIBUTING.md](CONTRIBUTING.md) for the full process (branch switching, pointer updates, joint debugging).
 
 ## Documentation
 
@@ -185,14 +185,14 @@ For local joint development on the core: make changes in the Reflect-Agent repo 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — How to contribute code
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Code of conduct
 - [SECURITY.md](SECURITY.md) — Vulnerability disclosure policy
-- [GitHub Discussions](https://github.com/Asketisch/Reflect-TUI/discussions) — Questions and discussion
-- [GitHub Issues](https://github.com/Asketisch/Reflect-TUI/issues) — Bug reports and feature requests
+- [GitHub Discussions](https://github.com/Asketisch/ZhuYe-CLI/discussions) — Questions and discussion
+- [GitHub Issues](https://github.com/Asketisch/ZhuYe-CLI/issues) — Bug reports and feature requests
 
 ## Attribution / Third-Party Notices
 
 This project builds on the following open-source works (full attribution in [NOTICE](NOTICE)):
 
-- [Reflect-Agent](https://github.com/Asketisch/ZhuYe) — Core engine (Apache-2.0), consumed via git submodule
+- [ZhuYe](https://github.com/Asketisch/ZhuYe) — Core engine (Apache-2.0), consumed via git submodule
 - [nornagon/ratatui](https://github.com/nornagon/ratatui) and [nornagon/crossterm](https://github.com/nornagon/crossterm) — Forks that expose unstable features (MIT)
 
 ---

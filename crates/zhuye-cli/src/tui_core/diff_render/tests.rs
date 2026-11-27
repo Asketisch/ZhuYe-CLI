@@ -177,9 +177,9 @@ fn snapshot_diff_gallery(name: &str, width: u16, height: u16) {
 #[test]
 fn display_path_prefers_cwd_without_git_repo() {
     let cwd = if cfg!(windows) {
-        PathBuf::from(r"C:\workspace\reflect")
+        PathBuf::from(r"C:\workspace\zhuye")
     } else {
-        PathBuf::from("/workspace/reflect")
+        PathBuf::from("/workspace/zhuye")
     };
     let path = cwd.join("tui").join("example.png");
 

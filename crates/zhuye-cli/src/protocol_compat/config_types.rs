@@ -16,7 +16,7 @@ pub enum ReasoningSummary {
     None,
 }
 
-/// Reflect 会话的初始协作模式。
+/// ZhuYe 会话的初始协作模式。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ModeKind {

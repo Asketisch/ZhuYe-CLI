@@ -4,7 +4,7 @@
 //! `open_permission_profiles_popup` 要求 `read-only` / `auto` /
 //! `full-access` 三条 —— 打开弹窗必然报 "missing the 'read-only'
 //! approval preset" 内部错误。语义对齐 codex 的
-//! `utils/approval-presets`,文案适配 Reflect 的权限模型。
+//! `utils/approval-presets`,文案适配 ZhuYe 的权限模型。
 
 use crate::app_server_protocol::AskForApproval;
 use crate::protocol_compat::models::{

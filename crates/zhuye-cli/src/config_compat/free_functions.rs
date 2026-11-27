@@ -9,10 +9,10 @@ pub fn format_config_layer_source(source: &ConfigLayerSource, config_toml_file: 
             format!("enterprise-managed ({name}, {id})")
         }
         ConfigLayerSource::User { file, .. } => format!("user ({})", file.display()),
-        ConfigLayerSource::Project { dot_reflect_folder } => {
+        ConfigLayerSource::Project { dot_zhuye_folder } => {
             format!(
                 "project ({}/{config_toml_file})",
-                dot_reflect_folder.display()
+                dot_zhuye_folder.display()
             )
         }
         ConfigLayerSource::SessionFlags => "session-flags".to_string(),

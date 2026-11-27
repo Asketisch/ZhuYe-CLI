@@ -1,5 +1,5 @@
 ---
-source: crates/reflect-tui/src/tui_core/exec_cell/render/tests.rs
+source: crates/zhuye-tui/src/tui_core/exec_cell/render/tests.rs
 expression: "(preview, transcript)"
 ---
 (

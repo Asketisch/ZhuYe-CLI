@@ -34,14 +34,14 @@ async fn widget_forced_chatgpt() -> (AuthModeWidget, TempDir) {
         strict_config: false,
         cloud_config_bundle: cloud_config_bundle_loader_for_storage(
             zhuye_home_path.clone(),
-            /*enable_reflect_api_key_env*/ false,
+            /*enable_zhuye_api_key_env*/ false,
             AuthCredentialsStoreMode::File,
             AuthKeyringBackendKind::default(),
             "https://chatgpt.com/backend-api/".to_string(),
             /*auth_route_config*/ None,
         )
         .await,
-        feedback: crate::feedback::ReflectFeedback::new(),
+        feedback: crate::feedback::ZhuyeFeedback::new(),
         log_db: None,
         state_db: None,
         environment_manager: Arc::new(
@@ -50,7 +50,7 @@ async fn widget_forced_chatgpt() -> (AuthModeWidget, TempDir) {
         config_warnings: Vec::new(),
         session_source: serde_json::from_value(serde_json::json!("cli"))
             .expect("cli session source should deserialize"),
-        enable_reflect_api_key_env: false,
+        enable_zhuye_api_key_env: false,
         client_name: "test".to_string(),
         client_version: "test".to_string(),
         experimental_api: true,
@@ -75,7 +75,7 @@ async fn widget_forced_chatgpt() -> (AuthModeWidget, TempDir) {
 }
 
 #[tokio::test]
-async fn api_key_flow_disabled_when_reflect_forced() {
+async fn api_key_flow_disabled_when_zhuye_forced() {
     let (mut widget, _tmp) = widget_forced_chatgpt().await;
 
     widget.start_api_key_entry();
@@ -91,7 +91,7 @@ async fn api_key_flow_disabled_when_reflect_forced() {
 }
 
 #[tokio::test]
-async fn saving_api_key_is_blocked_when_reflect_forced() {
+async fn saving_api_key_is_blocked_when_zhuye_forced() {
     let (mut widget, _tmp) = widget_forced_chatgpt().await;
 
     widget.save_api_key("sk-test".to_string());
@@ -108,12 +108,12 @@ async fn saving_api_key_is_blocked_when_reflect_forced() {
 }
 
 #[tokio::test]
-async fn existing_non_oauth_reflect_login_counts_as_signed_in() {
+async fn existing_non_oauth_zhuye_login_counts_as_signed_in() {
     for auth_mode in [AuthMode::ChatgptAuthTokens, AuthMode::PersonalAccessToken] {
         let (mut widget, _tmp) = widget_forced_chatgpt().await;
         widget.login_status = LoginStatus::AuthMode(auth_mode);
 
-        let handled = widget.handle_existing_reflect_login();
+        let handled = widget.handle_existing_zhuye_login();
 
         assert_eq!(handled, true);
         assert!(matches!(

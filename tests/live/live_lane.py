@@ -1,7 +1,7 @@
 """实模型演练层 · 免费模型车道设施(清单发现 / 能力探测 / 配置注入)。
 
 与 submodule `zhuye-agent/tests/live/` 同款车道,但驱动对象不同:
-那边驱动 headless `reflect serve`(JSONL wire),这边驱动**终端 TUI**
+那边驱动 headless `zhuye serve`(JSONL wire),这边驱动**终端 TUI**
 (pty + pyte 屏幕快照)—— 断言落在「用户真的看到了什么」。
 
 ## 车道是什么
@@ -21,13 +21,13 @@ OpenCode inference 车道:v2 客户端指纹门(UA / 会话头 / 逐字 read+she
 
 免费模型集合由**上游**决定,随时可能增删 —— 写死 id 必然腐烂:
 
-1. `REFLECT_LIVE_MODELS` 给了逗号分隔列表 → 用它;
+1. `ZHUYE_LIVE_MODELS` 给了逗号分隔列表 → 用它;
 2. 否则调 `zhuye-cli models list --free-only --json` 拿清单 ——
-   免费判定规则只有一份实现(在 Rust 侧 `reflect_llm::FreeModelRules`),
+   免费判定规则只有一份实现(在 Rust 侧 `zhuye_llm::FreeModelRules`),
    不在 Python 里复写;
 3. 逐个做**能力探测**(带 tools 的最小请求)→ 不支持 tools 的模型标为
    **跳过**而不是失败;
-4. 取前 N 个(`REFLECT_LIVE_MODEL_COUNT`)。
+4. 取前 N 个(`ZHUYE_LIVE_MODEL_COUNT`)。
 
 ## 隔离与安全
 
@@ -56,15 +56,15 @@ DEFAULT_API_KEY = ""
 
 # 清单 / 探测 / 等待预算。免费池实测首字 >30s,思考阶段可静默 60~70s,
 # 因此 live 层的事件等待预算比 mock 层宽得多。
-PROBE_TIMEOUT = float(os.environ.get("REFLECT_LIVE_PROBE_TIMEOUT", "90"))
-DRAIN_TIMEOUT = float(os.environ.get("REFLECT_LIVE_DRAIN_TIMEOUT", "240"))
-MODEL_COUNT = int(os.environ.get("REFLECT_LIVE_MODEL_COUNT", "3"))
-RETRIES = int(os.environ.get("REFLECT_LIVE_RETRIES", "2"))
-RETRY_DELAY = float(os.environ.get("REFLECT_LIVE_RETRY_DELAY", "5"))
+PROBE_TIMEOUT = float(os.environ.get("ZHUYE_LIVE_PROBE_TIMEOUT", "90"))
+DRAIN_TIMEOUT = float(os.environ.get("ZHUYE_LIVE_DRAIN_TIMEOUT", "240"))
+MODEL_COUNT = int(os.environ.get("ZHUYE_LIVE_MODEL_COUNT", "3"))
+RETRIES = int(os.environ.get("ZHUYE_LIVE_RETRIES", "2"))
+RETRY_DELAY = float(os.environ.get("ZHUYE_LIVE_RETRY_DELAY", "5"))
 
 # 宿主环境里必须清掉的变量:宿主的付费 key 会串进免费车道,宿主的
 # `ZHUYE_MODEL=mock/...` 会把真模型顶掉。置空即可 ——
-# `reflect-config` 侧对空串按「未设置」处理。
+# `zhuye-config` 侧对空串按「未设置」处理。
 HOST_CRED_VARS = (
     "OPENAI_API_KEY",
     "ANTHROPIC_API_KEY",
@@ -92,25 +92,25 @@ class ModelEntry:
 
 def live_enabled() -> bool:
     """是否启用实模型层(默认关闭 —— 不发起任何网络请求)。"""
-    return os.environ.get("REFLECT_LIVE", "").strip() not in ("", "0", "false")
+    return os.environ.get("ZHUYE_LIVE", "").strip() not in ("", "0", "false")
 
 
 def current_lane() -> Lane:
     """当前车道。
 
     - 默认:**Kilo 公共免费池**(免 Key、零外部依赖);
-    - `REFLECT_LIVE_LANE=dsh`:切到本机 dsh-our-free-model 网关(自动探测
+    - `ZHUYE_LIVE_LANE=dsh`:切到本机 dsh-our-free-model 网关(自动探测
       端口与 forwardKey);网关没起 → 回落到 Kilo 车道(并保持免 Key);
-    - `REFLECT_LIVE_BASE_URL` / `REFLECT_LIVE_API_KEY`:显式覆盖(优先)。
+    - `ZHUYE_LIVE_BASE_URL` / `ZHUYE_LIVE_API_KEY`:显式覆盖(优先)。
     """
-    explicit_url = os.environ.get("REFLECT_LIVE_BASE_URL", "").strip()
-    explicit_key = os.environ.get("REFLECT_LIVE_API_KEY")
+    explicit_url = os.environ.get("ZHUYE_LIVE_BASE_URL", "").strip()
+    explicit_key = os.environ.get("ZHUYE_LIVE_API_KEY")
     if explicit_url:
         return Lane(
             base_url=explicit_url,
             api_key=explicit_key if explicit_key is not None else DEFAULT_API_KEY,
         )
-    if os.environ.get("REFLECT_LIVE_LANE", "").strip().lower() == "dsh":
+    if os.environ.get("ZHUYE_LIVE_LANE", "").strip().lower() == "dsh":
         endpoint = dsh_gateway_endpoint()
         if endpoint is not None:
             return endpoint
@@ -164,7 +164,7 @@ def clean_env(extra: dict[str, str] | None = None) -> dict[str, str]:
     # HOME 归沙箱管 —— 绝不能从宿主继承。
     env.pop("HOME", None)
     # 屏蔽启动期 GitHub releases 探测 —— 离线/内网环境不卡启动。
-    env["REFLECT_TUI_UPDATE_CHECK"] = "0"
+    env["ZHUYE_TUI_UPDATE_CHECK"] = "0"
     if extra:
         env.update(extra)
     return env
@@ -177,11 +177,11 @@ def fetch_free_models(lane: Lane | None = None) -> list[str]:
     """拉取 provider 的免费模型清单(返回 model id 列表)。
 
     走 `zhuye-cli models list --free-only --json` —— 免费判定规则只有
-    一份实现(在 Rust 侧 `reflect_llm::FreeModelRules`),不在 Python 里
+    一份实现(在 Rust 侧 `zhuye_llm::FreeModelRules`),不在 Python 里
     重写一遍,避免规则漂移。
     """
     lane = lane or current_lane()
-    with tempfile.TemporaryDirectory(prefix="reflect-live-models-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="zhuye-live-models-") as tmp:
         home = Path(tmp) / "home"
         (home / ".zhuye").mkdir(parents=True)
         # 清单命令只需要端点;model 写 "free" 让 `models pick` 语义一致。
@@ -263,7 +263,7 @@ def resolve_matrix(lane: Lane | None = None) -> list[ModelEntry]:
     返回 `[ModelEntry]`(顺序确定:清单按 id 字典序)。
     """
     lane = lane or current_lane()
-    explicit = os.environ.get("REFLECT_LIVE_MODELS", "").strip()
+    explicit = os.environ.get("ZHUYE_LIVE_MODELS", "").strip()
     if explicit:
         candidates = [m.strip() for m in explicit.split(",") if m.strip()]
         probed: list[ModelEntry] = []
@@ -275,7 +275,7 @@ def resolve_matrix(lane: Lane | None = None) -> list[ModelEntry]:
     entries = fetch_free_models(lane)
     if not entries:
         raise RuntimeError(
-            "provider 清单里没有免费模型;检查 REFLECT_LIVE_BASE_URL / 出口地区"
+            "provider 清单里没有免费模型;检查 ZHUYE_LIVE_BASE_URL / 出口地区"
         )
     picked: list[ModelEntry] = []
     for model in sorted(entries):
@@ -289,10 +289,10 @@ def resolve_matrix(lane: Lane | None = None) -> list[ModelEntry]:
 def select_model(matrix: list[ModelEntry]) -> ModelEntry:
     """从矩阵里挑一个**能跑工具**的模型。
 
-    优先 `REFLECT_LIVE_MODEL` 指定的;否则取第一个支持 tools 的;都没有
+    优先 `ZHUYE_LIVE_MODEL` 指定的;否则取第一个支持 tools 的;都没有
     就取第一个(让用例自己撞上 400,而不是在这里静默换模型)。
     """
-    wanted = os.environ.get("REFLECT_LIVE_MODEL", "").strip()
+    wanted = os.environ.get("ZHUYE_LIVE_MODEL", "").strip()
     if wanted:
         for entry in matrix:
             if entry.model == wanted:
@@ -430,7 +430,7 @@ def assistant_message_count(home: Path) -> int:
 def session_stats(session_file_list: list[Path]) -> dict:
     """从会话 JSONL 汇总 token / 工具调用 / 实际服务模型。
 
-    记录形状(见 `reflect_protocol::RolloutRecord`):
+    记录形状(见 `zhuye_protocol::RolloutRecord`):
     - `{"type":"token_count","usage":{...},"model":"openai/<id>"}`;
     - `{"type":"message","role":"assistant","content":...}`。
 

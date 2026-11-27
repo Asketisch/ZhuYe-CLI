@@ -23,7 +23,7 @@ F 组把**同一份断言口径**放到真实模型上跑 —— 矩阵数据**�
 ## 跑法
 
 ```bash
-REFLECT_LIVE=1 ./tests/live/run.sh -k "full_feature"   # 或直接 pytest
+ZHUYE_LIVE=1 ./tests/live/run.sh -k "full_feature"   # 或直接 pytest
 ```
 
 ⚠️ **耗时**:slash 矩阵逐条独立会话(与能力覆盖层同口径),约 10 分钟量级 ——
@@ -530,7 +530,7 @@ def test_live_boot_anchors(live_tui, live_model) -> None:
         s.wait_boot(timeout=30)
         txt = safe_text(s)
         raw = s.raw_output()
-        assert "Reflect" in txt, f"首屏应含 Reflect:{txt[:300]}"
+        assert "ZhuYe" in txt, f"首屏应含 ZhuYe:{txt[:300]}"
         assert "/help for commands" in txt, f"首屏应含 /help 提示:{txt[:300]}"
         assert "█" in raw and ("╗" in raw or "╔" in raw), "banner 应含块字形"
         assert "Ctrl+C to quit" in txt, "HUD 应有退出提示"
@@ -538,7 +538,7 @@ def test_live_boot_anchors(live_tui, live_model) -> None:
         assert "Send a message" in txt and "shift+enter" in txt, "composer 占位符"
         assert live_model.model in txt, f"HUD 应显示真实模型 {live_model.model}"
         # 终端标题(OSC 0)也带真实模型 spec。
-        assert f"Reflect · openai/{live_model.model}" in raw, (
+        assert f"ZhuYe · openai/{live_model.model}" in raw, (
             f"终端标题应含真模型:{raw[:300]}"
         )
 
@@ -837,12 +837,12 @@ def test_live_cli_fork_rename_rm(live_tui, live_sandbox: Sandbox) -> None:
     assert "removed" in out, f"rm 应打印 removed:\n{out}"
 
 
-# ── F10:G 组 —— 插件面(需要 submodule 构建出的 reflect CLI)────────────────
+# ── F10:G 组 —— 插件面(需要 submodule 构建出的 zhuye CLI)────────────────
 
-# submodule 构建出的 reflect-cli(bin 名是 `reflect`)。
+# submodule 构建出的 zhuye-cli(bin 名是 `zhuye`)。
 _CLI_CANDIDATES = [
-    ROOT / "zhuye-agent" / "target" / "release" / "reflect",
-    ROOT / "zhuye-agent" / "target" / "debug" / "reflect",
+    ROOT / "zhuye-agent" / "target" / "release" / "zhuye",
+    ROOT / "zhuye-agent" / "target" / "debug" / "zhuye",
 ]
 _EXAMPLE_PLUGIN = ROOT / "zhuye-agent" / "examples" / "plugin-demo"
 
@@ -858,13 +858,13 @@ def _find_submodule_cli() -> Path | None:
 def plugin_home(tmp_path_factory) -> str:
     """临时 HOME + 用真实 CLI 安装 / 启用示例插件(写真实表与 config)。
 
-    与离线 G 组同款前置:submodule 的 reflect CLI 没构建就跳过(增强项,
+    与离线 G 组同款前置:submodule 的 zhuye CLI 没构建就跳过(增强项,
     不阻塞基础回归)。
     """
     cli = _find_submodule_cli()
     if cli is None:
         pytest.skip(
-            "submodule 的 reflect CLI 未构建(需在 zhuye-agent 下 cargo build -p reflect-cli);插件面跳过"
+            "submodule 的 zhuye CLI 未构建(需在 zhuye-agent 下 cargo build -p zhuye-cli);插件面跳过"
         )
     if not _EXAMPLE_PLUGIN.is_dir():
         pytest.skip(f"示例插件不存在:{_EXAMPLE_PLUGIN}")
@@ -903,7 +903,7 @@ def _extract_plugins_section(toml_text: str) -> str:
 def _write_lane_config_keeping_plugins(home: Path, model: str) -> None:
     """写车道配置,但**保留**已有的 `[plugins]` 段。
 
-    `reflect plugin enable` 是把 `enabled_plugins` 写进 `~/.zhuye/config.toml`
+    `zhuye plugin enable` 是把 `enabled_plugins` 写进 `~/.zhuye/config.toml`
     的 —— 直接覆盖配置会把插件启用记录抹掉。
     """
     cfg = home / ".zhuye" / "config.toml"
@@ -918,7 +918,7 @@ def _write_lane_config_keeping_plugins(home: Path, model: str) -> None:
 def test_live_plugin_surface(live_tui, plugin_home: str, live_model) -> None:
     """F29 插件面在真实会话里:启动通知 + 命令注入 + `/plugin` overlay。
 
-    插件由 submodule 的 `reflect-plugin` 提供,TUI 侧只消费三处 ——
+    插件由 submodule 的 `zhuye-plugin` 提供,TUI 侧只消费三处 ——
     与离线 G 组同一口径,区别是这次 provider 是真的。
     """
     lane = current_lane()
@@ -931,7 +931,7 @@ def test_live_plugin_surface(live_tui, plugin_home: str, live_model) -> None:
         "ANTHROPIC_API_KEY": "",
         "ZHUYE_MODEL": "",
         "ZHUYE_PROVIDER": "",
-        "REFLECT_TUI_UPDATE_CHECK": "0",
+        "ZHUYE_TUI_UPDATE_CHECK": "0",
     }
     with live_tui(env=env) as s:
         s.wait_boot(timeout=40)
@@ -965,7 +965,7 @@ def test_live_plugin_overlay(live_tui, plugin_home: str, live_model) -> None:
         "ANTHROPIC_API_KEY": "",
         "ZHUYE_MODEL": "",
         "ZHUYE_PROVIDER": "",
-        "REFLECT_TUI_UPDATE_CHECK": "0",
+        "ZHUYE_TUI_UPDATE_CHECK": "0",
     }
     with live_tui(env=env) as s:
         s.wait_boot(timeout=40)
@@ -1124,8 +1124,8 @@ def test_live_nocolor_env_boots(live_tui) -> None:
 
 
 def test_live_light_theme_env_boots(live_tui) -> None:
-    """F41 REFLECT_TUI_THEME=light 主题分支:首屏锚点齐全。"""
-    with live_tui(env={"REFLECT_TUI_THEME": "light"}) as s:
+    """F41 ZHUYE_TUI_THEME=light 主题分支:首屏锚点齐全。"""
+    with live_tui(env={"ZHUYE_TUI_THEME": "light"}) as s:
         s.wait_boot(timeout=30)
         txt = safe_text(s)
         assert "Send a message" in txt, f"composer 占位符应存在:\n{txt[-400:]}"
@@ -1223,7 +1223,7 @@ def test_live_plugin_slash_command_submits(live_tui, plugin_home: str, live_mode
         "ANTHROPIC_API_KEY": "",
         "ZHUYE_MODEL": "",
         "ZHUYE_PROVIDER": "",
-        "REFLECT_TUI_UPDATE_CHECK": "0",
+        "ZHUYE_TUI_UPDATE_CHECK": "0",
     }
     with live_tui(env=env) as s:
         s.wait_boot(timeout=40)

@@ -54,7 +54,7 @@ pub(crate) fn merge_remote_marketplaces(
     response.marketplaces.retain(|marketplace| {
         if remote_curated_present
             && marketplace.path.is_some()
-            && is_reflect_curated_marketplace_name(&marketplace.name)
+            && is_zhuye_curated_marketplace_name(&marketplace.name)
         {
             return false;
         }

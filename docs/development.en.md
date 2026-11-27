@@ -11,7 +11,7 @@
 ## 1. Development Environment
 
 ```bash
-git clone --recursive https://github.com/Asketisch/Reflect-TUI.git
+git clone --recursive https://github.com/Asketisch/ZhuYe-CLI.git
 cd ZhuYe-CLI
 make build                      # cargo build --release -p zhuye-cli
 ```

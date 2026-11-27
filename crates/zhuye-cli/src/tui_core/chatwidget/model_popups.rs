@@ -173,14 +173,14 @@ impl ChatWidget {
     }
 
     fn is_auto_model(model: &str) -> bool {
-        model.starts_with("reflect-auto-")
+        model.starts_with("zhuye-auto-")
     }
 
     fn auto_model_order(model: &str) -> usize {
         match model {
-            "reflect-auto-fast" => 0,
-            "reflect-auto-balanced" => 1,
-            "reflect-auto-thorough" => 2,
+            "zhuye-auto-fast" => 0,
+            "zhuye-auto-balanced" => 1,
+            "zhuye-auto-thorough" => 2,
             _ => 3,
         }
     }
@@ -221,7 +221,7 @@ impl ChatWidget {
 
         let header = self.model_menu_header(
             "Select Model and Effort",
-            "Access legacy models by running reflect -m <model_name> or in your config.toml",
+            "Access legacy models by running zhuye -m <model_name> or in your config.toml",
         );
         self.bottom_pane.show_selection_view(SelectionViewParams {
             footer_hint: Some(self.bottom_pane.standard_popup_hint_line()),

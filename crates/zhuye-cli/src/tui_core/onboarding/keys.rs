@@ -1,4 +1,4 @@
-//! 在用户有机会配置 Reflect 之前使用的固定快捷键。
+//! 在用户有机会配置 ZhuYe 之前使用的固定快捷键。
 
 use crossterm::event::KeyCode;
 use crossterm::event::KeyModifiers;

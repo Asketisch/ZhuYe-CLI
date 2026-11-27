@@ -6,7 +6,7 @@
 //! (`CrosstermBackend::new(std::io::stdout())`,见 `app.rs`)。而 tracing 若
 //! 写 **stderr**,stderr 不在 alt-screen 缓冲区里 → 日志直接落到真实终端
 //! 滚动区,TUI 无法覆盖/清除,表现为切换 permission mode(Shift+Tab)时
-//! `permission mode changed` 之类的 INFO 行"漏"到界面上。所有 `reflect*`
+//! `permission mode changed` 之类的 INFO 行"漏"到界面上。所有 `zhuye*`
 //! crate 的 INFO/WARN/ERROR 都有此问题,Shift+Tab 只是最显眼的触发点。
 //!
 //! # 策略(对标业界最佳实践)
@@ -14,7 +14,7 @@
 //! - stderr **是 tty**(用户没重定向)→ 日志写文件
 //!   `~/.zhuye/logs/tui-<YYYY-MM-DD>.log`,终端保持干净。
 //! - stderr **不是 tty**(用户 `2>debug.log`)→ 仍写 stderr,保留
-//!   `RUST_LOG=debug reflect tui 2>debug.log` 调试工作流(见 USER_GUIDE)。
+//!   `RUST_LOG=debug zhuye tui 2>debug.log` 调试工作流(见 USER_GUIDE)。
 //!
 //! 判定用 `std::io::IsTerminal`(Rust 1.70+ stable,与 `terminal_title.rs`
 //! 一致)。best-effort:文件打开失败则回退 stderr(宁可泄露也不丢日志)。
@@ -90,7 +90,7 @@ static OTEL_GUARD: std::sync::OnceLock<zhuye_config::ExporterGuard> = std::sync:
 
 /// 安装 tracing subscriber。仅生效一次(`Once` 守护)。
 ///
-/// 默认 EnvFilter 仍为 `"warn,reflect=info"`(与 `zhuye-exec` 一致),
+/// 默认 EnvFilter 仍为 `"warn,zhuye=info"`(与 `zhuye-exec` 一致),
 /// 仅替换 writer:stderr 是 tty → 文件;否则 → stderr。`try_init` 结果
 /// 忽略(测试可能已装 subscriber,best-effort)。
 ///
@@ -154,13 +154,13 @@ where
     use tracing_subscriber::prelude::*;
 
     let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("warn,reflect=info"));
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("warn,zhuye=info"));
     // layer 形态的 fmt 没有 `with_env_filter`(那是 `fmt::Subscriber` 的 API);
     // `EnvFilter` 本身实现 `Layer`,作为独立一层挂进 registry —— 与
     // headless `zhuye-exec::runtime_config::init_tracing` 同款装配。
     let fmt_layer = tracing_subscriber::fmt::layer().with_writer(writer);
     let otel_layer =
-        otel_guard.map(|g| tracing_opentelemetry::layer().with_tracer(g.tracer("reflect")));
+        otel_guard.map(|g| tracing_opentelemetry::layer().with_tracer(g.tracer("zhuye")));
     let _ = tracing_subscriber::registry()
         .with(env_filter)
         .with(fmt_layer)

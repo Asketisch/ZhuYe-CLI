@@ -1,6 +1,6 @@
 //! 内部 ChatComposer 的公开封装，提供简单、可复用的文本输入能力。
 //!
-//! 这里暴露一个最小化接口，供其他 crate（例如 Reflect 任务）复用成熟的
+//! 这里暴露一个最小化接口，供其他 crate（例如 ZhuYe 任务）复用成熟的
 //! composer 行为：多行输入、粘贴启发式检测、Enter 提交以及 Shift+Enter 换行。
 
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
@@ -415,7 +415,7 @@ impl ComposerInput {
     }
 
     /// 切换底层文本区的 Vim 编辑模式（NORMAL/INSERT），并返回新的启用状态。
-    /// Reflect 侧钩子：`/vim` 斜杠命令调用此方法来开关 Vim；返回的状态
+    /// ZhuYe 侧钩子：`/vim` 斜杠命令调用此方法来开关 Vim；返回的状态
     /// 驱动状态栏中的 `[NORMAL]` 指示器。
     ///
     /// 封装 `ChatComposer::toggle_vim_enabled`（Phase 9.2 薄封装）。
@@ -603,7 +603,7 @@ mod tests {
     fn up_down_recalls_submitted_prompts_and_restores_draft() {
         // 回归:Up / Ctrl+P / Ctrl+R 此前全是死键 —— vendored 历史机制跑在
         // 未接线的 AppEvent 往返上,外层主循环把那些事件当空操作丢掉。
-        let dir = std::env::temp_dir().join("reflect-composer-history-test");
+        let dir = std::env::temp_dir().join("zhuye-composer-history-test");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("prompt_history.jsonl");
@@ -642,7 +642,7 @@ mod tests {
 
     #[test]
     fn ctrl_p_and_ctrl_n_alias_up_down() {
-        let dir = std::env::temp_dir().join("reflect-composer-history-ctrlnp");
+        let dir = std::env::temp_dir().join("zhuye-composer-history-ctrlnp");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("prompt_history.jsonl");
@@ -661,7 +661,7 @@ mod tests {
     fn multiline_input_keeps_arrow_keys_for_cursor() {
         // 多行草稿里 Up/Down 必须归 composer 移动光标,不能被历史抢走 ——
         // 否则用户没法用方向键编辑多行提示词。
-        let dir = std::env::temp_dir().join("reflect-composer-history-multiline");
+        let dir = std::env::temp_dir().join("zhuye-composer-history-multiline");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("prompt_history.jsonl");
@@ -690,7 +690,7 @@ mod tests {
 
     #[test]
     fn empty_history_leaves_arrows_to_composer() {
-        let dir = std::env::temp_dir().join("reflect-composer-history-empty");
+        let dir = std::env::temp_dir().join("zhuye-composer-history-empty");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("prompt_history.jsonl");
@@ -706,7 +706,7 @@ mod tests {
         // 回归:Ctrl+R 此前开的是 vendored 搜索会话,遍历委托给
         // ChatComposerHistory,而后者要 ThreadHistoryEntryResponse 往返 ——
         // 本路径把那些 AppEvent 当空操作丢掉,于是会话开着但永远出不来匹配。
-        let dir = std::env::temp_dir().join("reflect-composer-history-ctrlr");
+        let dir = std::env::temp_dir().join("zhuye-composer-history-ctrlr");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("prompt_history.jsonl");
@@ -742,7 +742,7 @@ mod tests {
         // 而 Submission::user_input_items 从未被 TUI 调用 —— 图片附件等于
         // 被静默丢掉,模型看到的只是字面量路径。
         // 用一张真实存在的 PNG(1x1)让 composer 的尺寸探测能通过。
-        let dir = std::env::temp_dir().join("reflect-composer-image-attach");
+        let dir = std::env::temp_dir().join("zhuye-composer-image-attach");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let png = dir.join("dot.png");
@@ -774,7 +774,7 @@ mod tests {
 
     #[test]
     fn ctrl_r_esc_restores_original_draft() {
-        let dir = std::env::temp_dir().join("reflect-composer-history-ctrlesc");
+        let dir = std::env::temp_dir().join("zhuye-composer-history-ctrlesc");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("prompt_history.jsonl");

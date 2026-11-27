@@ -60,7 +60,6 @@ use crate::app_server_protocol::McpServerStatusDetail;
 use crate::app_server_protocol::ModelVerification as AppServerModelVerification;
 use crate::app_server_protocol::RateLimitReachedType;
 use crate::app_server_protocol::RateLimitSnapshot;
-use crate::app_server_protocol::ReflectErrorInfo as AppServerReflectErrorInfo;
 use crate::app_server_protocol::RequestId as AppServerRequestId;
 use crate::app_server_protocol::ReviewTarget;
 use crate::app_server_protocol::ServerNotification;
@@ -79,6 +78,7 @@ use crate::app_server_protocol::TurnCompletedNotification;
 use crate::app_server_protocol::TurnPlanStepStatus;
 use crate::app_server_protocol::TurnStatus;
 use crate::app_server_protocol::UserInput;
+use crate::app_server_protocol::ZhuyeErrorInfo as AppServerZhuyeErrorInfo;
 use crate::config_compat::ConfigLayerStackOrdering;
 use crate::config_compat::ConstraintResult;
 use crate::config_compat::types::ApprovalsReviewer;
@@ -431,9 +431,9 @@ pub(crate) struct ChatWidgetInit {
     pub(crate) initial_user_message: Option<UserMessage>,
     pub(crate) enhanced_keys_supported: bool,
     pub(crate) has_chatgpt_account: bool,
-    pub(crate) has_reflect_backend_auth: bool,
+    pub(crate) has_zhuye_backend_auth: bool,
     pub(crate) model_catalog: Arc<ModelCatalog>,
-    pub(crate) feedback: crate::feedback::ReflectFeedback,
+    pub(crate) feedback: crate::feedback::ZhuyeFeedback,
     pub(crate) is_first_run: bool,
     pub(crate) status_account_display: Option<StatusAccountDisplay>,
     pub(crate) runtime_model_provider_base_url: Option<String>,
@@ -467,7 +467,7 @@ pub(crate) enum ExternalEditorState {
 /// 先关停再退出的退出流程。
 pub(crate) struct ChatWidget {
     app_event_tx: AppEventSender,
-    zhuye_op_target: ReflectOpTarget,
+    zhuye_op_target: ZhuyeOpTarget,
     bottom_pane: BottomPane,
     transcript: TranscriptState,
     config: Config,
@@ -481,7 +481,7 @@ pub(crate) struct ChatWidget {
     /// 当前生效的协作模式掩码（如果有）。
     active_collaboration_mask: Option<CollaborationModeMask>,
     has_chatgpt_account: bool,
-    has_reflect_backend_auth: bool,
+    has_zhuye_backend_auth: bool,
     model_catalog: Arc<ModelCatalog>,
     session_telemetry: SessionTelemetry,
     session_header: SessionHeader,
@@ -626,7 +626,7 @@ pub(crate) struct ChatWidget {
     turn_runtime_metrics: RuntimeMetricsSummary,
     last_rendered_width: std::cell::Cell<Option<usize>>,
     // Feedback 接收器，供 /feedback 使用
-    feedback: crate::feedback::ReflectFeedback,
+    feedback: crate::feedback::ZhuyeFeedback,
     // 当前会话的 rollout 路径（如果已知）
     current_rollout_path: Option<PathBuf>,
     // 当前工作目录（如果已知）
@@ -691,7 +691,7 @@ pub(crate) struct ChatWidget {
 }
 
 #[cfg_attr(not(test), allow(dead_code))]
-enum ReflectOpTarget {
+enum ZhuyeOpTarget {
     Direct(UnboundedSender<AppCommand>),
     AppEvent,
 }
@@ -1598,15 +1598,15 @@ impl ChatWidget {
             self.bottom_pane.set_task_running(/*running*/ true);
         }
         match &self.zhuye_op_target {
-            ReflectOpTarget::Direct(zhuye_op_tx) => {
+            ZhuyeOpTarget::Direct(zhuye_op_tx) => {
                 crate::tui_core::session_log::log_outbound_op(&op);
                 if let Err(e) = zhuye_op_tx.send(op) {
                     tracing::error!("failed to submit op: {e}");
                     return false;
                 }
             }
-            ReflectOpTarget::AppEvent => {
-                self.app_event_tx.send(AppEvent::ReflectOp(op));
+            ZhuyeOpTarget::AppEvent => {
+                self.app_event_tx.send(AppEvent::ZhuyeOp(op));
             }
         }
         true

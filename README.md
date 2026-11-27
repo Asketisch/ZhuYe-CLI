@@ -6,7 +6,7 @@
   <b>中文</b> · <a href="README.en.md">English</a>
 </p>
 
-[![CI](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml/badge.svg)](https://github.com/Asketisch/Reflect-TUI/actions/workflows/ci.yml)
+[![CI](https://github.com/Asketisch/ZhuYe-CLI/actions/workflows/ci.yml/badge.svg)](https://github.com/Asketisch/ZhuYe-CLI/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.85%20%7C%20edition%202024-orange.svg)](rust-toolchain.toml)
 
@@ -16,16 +16,16 @@
 
 ZhuYe 的终端交互式客户端,面向终端 AI Agent 工作流,基于 [ratatui](https://github.com/ratatui-org/ratatui)。
 
-本仓库**只包含 TUI 表现层**(`zhuye-cli` crate),agent 核心引擎(AgentThread / StateGraph / 工具 / 协议等)由 [Reflect-Agent](https://github.com/Asketisch/Reflect-Agent) 提供,通过 **git submodule** 复用。
+本仓库**只包含 TUI 表现层**(`zhuye-cli` crate),agent 核心引擎(AgentThread / StateGraph / 工具 / 协议等)由 [ZhuYe](https://github.com/Asketisch/ZhuYe) 提供,通过 **git submodule** 复用。
 
 ## 仓库关系
 
 ```
-Reflect-Agent (核心引擎,submodule 提供方)
+ZhuYe (核心引擎,submodule 提供方)
   └─ crates/{protocol,abilities,resources,orchestration,integrations,runtime}
   └─ zhuye-core (AgentThread + StateGraph)
 
-ZhuYe-CLI (本仓库)  ──submodule──► Reflect-Agent
+ZhuYe-CLI (本仓库)  ──submodule──► ZhuYe
   └─ crates/zhuye-cli (ratatui 交互界面 + 事件循环)
   └─ zhuye-cli 二进制 (终端入口)
 ```
@@ -34,7 +34,7 @@ ZhuYe-CLI (本仓库)  ──submodule──► Reflect-Agent
 
 ```bash
 # 1. 克隆(带 submodule)
-git clone --recursive https://github.com/Asketisch/Reflect-TUI.git
+git clone --recursive https://github.com/Asketisch/ZhuYe-CLI.git
 cd ZhuYe-CLI
 
 # 2. 构建
@@ -159,7 +159,7 @@ make help           # 全部 target
 
 ## 升级核心
 
-Reflect-Agent 是 submodule。升级核心到最新:
+ZhuYe 是 submodule。升级核心到最新:
 
 ```bash
 git submodule update --remote zhuye-agent
@@ -167,7 +167,7 @@ git add zhuye-agent
 git commit -m "chore: bump zhuye-agent submodule"
 ```
 
-本地联调核心改动:在 Reflect-Agent 仓库改代码 → `git push` → 本仓库 `git submodule update --remote`。完整流程(含分支切换、指针记录)见 [CONTRIBUTING.md](CONTRIBUTING.md) 的「submodule 工作流」小节。
+本地联调核心改动:在 ZhuYe 仓库改代码 → `git push` → 本仓库 `git submodule update --remote`。完整流程(含分支切换、指针记录)见 [CONTRIBUTING.md](CONTRIBUTING.md) 的「submodule 工作流」小节。
 
 ## 文档
 
@@ -187,14 +187,12 @@ git commit -m "chore: bump zhuye-agent submodule"
 - [CONTRIBUTING.md](CONTRIBUTING.md) — 如何贡献代码
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — 行为准则
 - [SECURITY.md](SECURITY.md) — 漏洞披露策略
-- [GitHub Discussions](https://github.com/Asketisch/Reflect-TUI/discussions) — 提问与讨论
-- [GitHub Issues](https://github.com/Asketisch/Reflect-TUI/issues) — Bug 报告与功能请求
+- [GitHub Discussions](https://github.com/Asketisch/ZhuYe-CLI/discussions) — 提问与讨论
+- [GitHub Issues](https://github.com/Asketisch/ZhuYe-CLI/issues) — Bug 报告与功能请求
 
 ## 致谢 / 第三方归属
 
 本项目基于以下开源工作构建(完整归因见 [NOTICE](NOTICE)):
 
-
-
-- [ZhuYe](https://github.com/Asketisch/ZhuYe)  — 核心引擎(Apache-2.0),通过 git submodule 引入
+- [ZhuYe](https://github.com/Asketisch/ZhuYe) — 核心引擎(Apache-2.0),通过 git submodule 引入
 - [nornagon/ratatui](https://github.com/nornagon/ratatui) 与 [nornagon/crossterm](https://github.com/nornagon/crossterm) — 暴露 unstable features 的 fork(MIT)

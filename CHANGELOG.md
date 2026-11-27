@@ -105,7 +105,7 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
 **编译面修复**
 
 - `[sandbox].os_level` 由 `bool` 改为 `Option<bool>`(区分「用户未表态」与
-  「显式关闭」)—— TUI 按 `reflect-exec` 的同款语义桥接环境变量。
+  「显式关闭」)—— TUI 按 `zhuye-exec` 的同款语义桥接环境变量。
 - `EventMsg` 新增 `ToolCallArgsDelta` 变体,TUI 的事件转换 match 补齐分支。
 
 **新接线的引擎能力**
@@ -120,41 +120,41 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
   (`↻ 路由切换 · main: …` / `↘ 模型降级 · …`)。协议侧文档本就要求
   「TUI 收到后画一行 status」,此前整条被丢弃 —— 配了 `[routing] fallbacks`
   却零提示。
-- **跨会话全文搜索**:新增 `reflect-tui session search <query>`
-  (`reflect_rollout::search_sessions`)。
+- **跨会话全文搜索**:新增 `zhuye-tui session search <query>`
+  (`zhuye_rollout::search_sessions`)。
 - **模型清单发现**:`model = "free"` 这类运行时才知道的 model 值现在在启动期
-  解析成真实 id(`reflect_config::resolve_model_spec`),并用
+  解析成真实 id(`zhuye_config::resolve_model_spec`),并用
   `routing_policy_with` 把真实 spec 喂给 routing —— 此前会把字面量
   `"free"` 当模型名发给 provider。`/model` 无参列出 provider 的真实模型
-  清单(`reflect_config::fetch_catalog` + `reflect_llm::model_catalog` 的
+  清单(`zhuye_config::fetch_catalog` + `zhuye_llm::model_catalog` 的
   免费判定三通道),带参则是**真切换**(枚举通道此前只回显「display only」)。
 - **目标模式状态读口**:`/goal` 无参显示 `AgentThread::goal_snapshot()` 的
   权威状态(跑到第几轮 / LM 判定 / 累计 token / 3-strike 阻塞计数);
   `/goal <目标> --verify <cmd> --budget <n>` 打通命令式校验与 token 预算
   (此前硬编码 `None`)。
-- **配置热重载**:监听 `~/.reflect/config.toml` 变更,重建 provider client、
+- **配置热重载**:监听 `~/.zhuye/config.toml` 变更,重建 provider client、
   必要时切 model,并在对话流提示变更了哪些段(此前改配置必须重启 TUI)。
 - **分析遥测**:`[analytics]` 段启动 OTLP/HTTP exporter(此前是死配置)。
-- **语言服务诊断**:`/lsp` 显示 `reflect_lsp::DiagnosticRegistry` 的诊断统计
+- **语言服务诊断**:`/lsp` 显示 `zhuye_lsp::DiagnosticRegistry` 的诊断统计
   (此前 LSP manager 被直接丢弃,诊断数据永远读不到)。
 - **Agent 待办清单**:`/todo` 显示 `TodoWrite` 写入的清单(引擎侧早已回灌
   模型上下文,界面却一个字都没有)。
-- **MCP 精选目录**:`/mcp` overlay 展示 `reflect_mcp::curated_catalog` 与安装
+- **MCP 精选目录**:`/mcp` overlay 展示 `zhuye_mcp::curated_catalog` 与安装
   片段(此前只有「已连接」的服务器,没有「有哪些可选 / 怎么装」)。
-- **OS 级沙箱状态**:`/status` 增加 `sandbox:` 段(`reflect_sandbox::OsSandbox`)。
+- **OS 级沙箱状态**:`/status` 增加 `sandbox:` 段(`zhuye_sandbox::OsSandbox`)。
 - **终端通知开关**:`[notifications.tui]` 的 `enabled` / `on_turn_complete` /
   `on_approval` / `on_error` / `channels` 真正生效(此前全是死配置)。
-- **工作区克隆**:新增 `reflect-tui workspace clone <url>`
-  (`reflect_stream::workspace_sync`,与 `reflect workspace clone` 对称)。
-- **多 agent 讨论**:新增 `reflect-tui discussion run --config <toml>`
-  (`reflect_discussion::cli::run` —— 讨论编排的 CLI 逻辑在库 crate 里,
+- **工作区克隆**:新增 `zhuye-tui workspace clone <url>`
+  (`zhuye_stream::workspace_sync`,与 `zhuye workspace clone` 对称)。
+- **多 agent 讨论**:新增 `zhuye-tui discussion run --config <toml>`
+  (`zhuye_discussion::cli::run` —— 讨论编排的 CLI 逻辑在库 crate 里,
   是可复用入口)。
-- **安全扫描**:新增 `reflect-tui security audit`
-  (`reflect_integration::security_scan`;cargo-audit 不可用时如实降级)。
+- **安全扫描**:新增 `zhuye-tui security audit`
+  (`zhuye_integration::security_scan`;cargo-audit 不可用时如实降级)。
 
 **其它**
 
-- `reflect-tui session search` / `workspace clone` / `discussion run` / `security audit`
+- `zhuye-tui session search` / `workspace clone` / `discussion run` / `security audit`
   补进 CLI 参数矩阵;`/lsp` / `/todo` / `/goal`(无参)/ `/model`(无参)补进 slash
   全量矩阵(86 条命令,覆盖自审 0 缺口)。
 - 修 `test_resume_with_invalid_id_fails_fast` 的断言口径(实现侧早已改成
@@ -162,9 +162,9 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
 
 ### 全功能测试套件(`tests/`)
 
-对标 submodule `reflect-agent/tests/` 的严格测试标准,新建统一测试入口
+对标 submodule `zhuye-agent/tests/` 的严格测试标准,新建统一测试入口
 `tests/`,用于**发布阶段审查与测试全部功能**。全程离线
-(`REFLECT_MODEL=mock/mock-1`,零网络、零 API key)+ 隔离 HOME。
+(`ZHUYE_MODEL=mock/mock-1`,零网络、零 API key)+ 隔离 HOME。
 
 - **能力覆盖层**(`tests/functional/`):真二进制 + pty(pyte 屏幕快照)驱动的
   行为级断言 —— 断言「用户真的看到了什么、真的落了什么盘」,不是「退出码 0」。
@@ -203,18 +203,18 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
   只认 `content` 为字符串 / `{text}` 对象,认不出 v1.2 起的 **ContentBlock
   数组**形态 —— 而那正是引擎的实际落盘形态,导致所有真实会话的预览都是
   空行。改为按数组顺序拼接文本块,并补 4 条单测覆盖三种历史形态。
-  (同款缺陷在 submodule `reflect-cli` 亦存在,未同步修复。)
+  (同款缺陷在 submodule `zhuye-cli` 亦存在,未同步修复。)
 
-### submodule 接线（reflect-agent 3cb791f → 46dc156）
+### submodule 接线（zhuye-agent 3cb791f → 46dc156）
 
 - **提示词分层库进 TUI（v1.6）**：`build_m4` 对齐 headless `bootstrap_m4` ——
   启动期 `init_library`（home 在前、workspace 在后，另兼容旧版
-  `~/.reflect/prompts.md` 降级为 default 层并打 deprecation 日志），默认 agent
+  `~/.zhuye/prompts.md` 降级为 default 层并打 deprecation 日志），默认 agent
   不再携带本地硬编码 `DEFAULT_SYSTEM_PROMPT` 副本（exec 侧已删除），改标
   `SystemPromptSource::BuiltinDefault`，由 pre_loop 按当前模型 spec 从提示词库
   解析 `system.main`（default → 厂商 → 精确模型名三级回退）。TUI 会话由此获得
   9 厂商层（claude / gpt / gemini / kimi / qwen / grok / glm / minimax）与用户
-  目录层（`.reflect/prompts/*.md`）的按模型命中。
+  目录层（`.zhuye/prompts/*.md`）的按模型命中。
 - **`/prompt` 运行时管理（v1.6.1）**：`/prompt [list|reload|<layer>]` 解析语义
   与 headless `expand_prompt_slash` 一致（关键字大小写不敏感，层名透传保留
   原样），发 `Op::PromptCommand`（不开 turn）；应答 `PromptList` /
@@ -244,7 +244,7 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
 - **`/checkpoint` 接 git**：此前每个按钮都是占位通知（"git auto-commit not yet
   wired" / "git reset --hard not yet wired" / "(placeholder)"）。新增
   `git_checkpoint.rs`：create = `git add -A` + 带前缀提交 + tag；list 走
-  `for-each-ref refs/tags/reflect-cp/*`（**必须打 tag**：rewind 会先做安全快照
+  `for-each-ref refs/tags/zhuye-cp/*`（**必须打 tag**：rewind 会先做安全快照
   再 `reset --hard`，那之后安全快照已不在分支历史上，只有 tag 还指着它）；
   rewind 只接受本模块创建的 checkpoint 且**回退前先做安全快照提交**，脏树时
   未提交的工作不会被一次性烧掉。
@@ -256,8 +256,8 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
   wired"。新增语义调色板 `theme::Palette`（brand / dim / warn / danger / ok /
   info / plan），statusline 与 metrics 行改引角色而非硬编码颜色；`no-color`
   主题真正剥掉全部颜色，`light` 避开在白底上不可见的 `DarkGray`；选择持久化到
-  `<reflect home>/theme`（原子写），启动优先级
-  `NO_COLOR` > `REFLECT_TUI_THEME` > 持久化 > 深色默认。
+  `<zhuye home>/theme`（原子写），启动优先级
+  `NO_COLOR` > `ZHUYE_TUI_THEME` > 持久化 > 深色默认。
 
 ### 修复（对标 codex / claude code 审计后的 TUI 层缺陷）
 
@@ -312,16 +312,16 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
 - **终端标题跟随状态**：此前只在启动时设一次，之后 model 切换 / 权限模式变化
   都不更新。改为每帧比对，变了才重发 OSC 序列（无脑重发是浪费）；非 git 仓库
   时用目录名，多个标签页仍可区分。
-- **通知不再每轮都响**：此前每个 `TurnCompleted` 都发 "Reflect finished." ——
+- **通知不再每轮都响**：此前每个 `TurnCompleted` 都发 "ZhuYe finished." ——
   用户刚敲完回车盯着屏幕时这是纯噪音。改为只在干了实事（工具调用 / 子代理）
   或回合跑超过 30 秒时才通知，对齐 claude code。
 - **`/retry` 重试入口**：引擎对流式错误自带重试，但硬失败（配额耗尽 / 认证失效 /
   5xx 终结）之后用户此前没有任何重试手段，只能把提示词重新敲一遍。新增
   `/retry` 重发上一条用户提示词（走同一条插件命令展开路径）。
 
-### 能力接线（对齐 headless reflect-exec，引擎能力在 TUI 内真正可用）
+### 能力接线（对齐 headless zhuye-exec，引擎能力在 TUI 内真正可用）
 
-- M4 完整装配：agent 定义（`.reflect/agents/`）、技能系统（扫描 + 内置技能包 +
+- M4 完整装配：agent 定义（`.zhuye/agents/`）、技能系统（扫描 + 内置技能包 +
   `load_skill` / `read_skill_resource` 工具）、分层记忆（会话内存 + 项目/用户文件）、
   session notes（JSONL 落盘 + `add_session_note` 工具）、post-compact 文件恢复、
   子代理调用登记表、LLM 摘要压缩（`LlmSummarizer`，Role::Compact 路由，可选
@@ -335,7 +335,7 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
   （started/failed）以 Notice 行进对话流；注册 MCP 资源读取工具。
 - LSP：`[lsp_servers]` 连接管理器 + `lsp` 工具接线。
 - telemetry：`[telemetry]` 本地 trace sink + `[langfuse]` 云端并行投递。
-- 真实分词器：启用 reflect-compact `tokenizer` feature（tiktoken），压缩触发
+- 真实分词器：启用 zhuye-compact `tokenizer` feature（tiktoken），压缩触发
   阈值与上下文估算不再走 len/3.5 启发式。
 
 ### 会话恢复闭环
@@ -350,14 +350,14 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
 ### 交互补全
 
 - `/model` 真正切换模型（`AgentConfig::set_model`，registry 校验，下一回合生效）。
-- 审批弹窗选 always-allow（a）时，Allow 规则持久化到 `~/.reflect/permissions.toml`，
+- 审批弹窗选 always-allow（a）时，Allow 规则持久化到 `~/.zhuye/permissions.toml`，
   重启后同类工具调用继续免审批。
 - v1.4 子代理状态快照（`SubagentStatus`）接入 `/tasks` 面板实时刷新。
 
 ### 体验
 
 - v1.4 `ToolCallOutputDelta`：长时工具（bash / web_fetch）输出逐段实时上屏
-  （live 区 tail，最多 10 行）；`REFLECT_TUI_TOOL_STREAM=0` 可关闭。
+  （live 区 tail，最多 10 行）；`ZHUYE_TUI_TOOL_STREAM=0` 可关闭。
 
 ### 测试
 
@@ -373,7 +373,7 @@ submodule 指针更新到 `7912323`(归并远端 7 周演进)后,本仓库把此
 - TUI 表现层（ratatui / crossterm fork）：流式 markdown 渲染、60+ slash 命令、
   审批弹窗、Plan mode 闭环、fork/rewind/checkpoint、会话/任务/技能/主题面板、
   通知、IDE 上下文 IPC、双模式（inline / alt-screen）。
-- 核心引擎由 [reflect-agent](https://github.com/Asketisch/Reflect-Agent) 子模块
+- 核心引擎由 [zhuye-agent](https://github.com/Asketisch/ZhuYe) 子模块
   提供（协议 v1.5：子代理可观测双通道、request_human_input 持久化、可插拔
   tokenizer 等）。
 - 开源基建：LICENSE / NOTICE / CI / release / audit workflows。

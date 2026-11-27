@@ -5,7 +5,7 @@
 
 锚点字面量来源(2026-10 实证,证据见 `tests/COVERAGE.md` §V 组):
   - 首屏锚点 `/help for commands` / `Send a message` / 块字 banner `███`
-  - 主题分支:`term/theme.rs resolve_startup` 读 NO_COLOR > REFLECT_TUI_THEME > 持久化
+  - 主题分支:`term/theme.rs resolve_startup` 读 NO_COLOR > ZHUYE_TUI_THEME > 持久化
   - resize:`TuiSession.resize` 发 TIOCSWINSZ + `ESC[8;R;Ct` 触发重排
 """
 
@@ -101,8 +101,8 @@ def test_nocolor_env_boots_with_anchors(tui) -> None:
 
 
 def test_light_theme_env_boots_with_anchors(tui) -> None:
-    """V7 REFLECT_TUI_THEME=light 主题分支:首屏锚点齐全。"""
-    with tui(env={"REFLECT_TUI_THEME": "light"}) as s:
+    """V7 ZHUYE_TUI_THEME=light 主题分支:首屏锚点齐全。"""
+    with tui(env={"ZHUYE_TUI_THEME": "light"}) as s:
         s.wait_boot(timeout=30)
         txt = s.wait_text("/help for commands", timeout=15)
         assert "Send a message" in txt

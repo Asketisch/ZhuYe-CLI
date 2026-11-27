@@ -3,7 +3,7 @@
 //! 真正的上游协议 crate 会拉入 `schemars`、`ts-rs`、`strum`、
 //! `rmcp`、绝对路径辅助函数以及大量相互依赖的类型。
 //! ZhuYe-CLI 只需要本模块很小的一部分表面来编译
-//! 其内置的 Reflect 视图，因此我们用朴素的
+//! 其内置的 ZhuYe 视图，因此我们用朴素的
 //! `String` / `Option` / `Vec` 字段和最小方法桩镜像类型形态。
 //!
 //! 覆盖范围由 `src/tui_core/` 内的 `crate::protocol_compat::...` 引用驱动。
@@ -17,10 +17,10 @@ use serde::{Deserialize, Serialize};
 
 // ── 线程标识类型（上游 UUIDv7 新类型） ──
 
-/// Reflect 线程的标识符。
+/// ZhuYe 线程的标识符。
 ///
 /// 上游这是由 `uuid::Uuid` 支撑的 UUIDv7 新类型；我们保持
-/// 相同的形态，使 `ThreadId` 保持 `Copy`（内置 Reflect 视图依赖
+/// 相同的形态，使 `ThreadId` 保持 `Copy`（内置 ZhuYe 视图依赖
 /// 这一点——例如 `#[derive(Copy)]` 结构体内的 `Option<ThreadId>` 字段类型）。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ThreadId(uuid::Uuid);

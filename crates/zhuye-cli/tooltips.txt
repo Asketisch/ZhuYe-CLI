@@ -2,16 +2,16 @@ Use /compact when the conversation gets long to summarize history and free up co
 Start a fresh idea with /new; the previous session stays in history.
 Use /feedback to send logs to the maintainers when something looks off.
 Switch models or reasoning effort quickly with /model.
-Use /permissions to control when Reflect asks for confirmation.
+Use /permissions to control when ZhuYe asks for confirmation.
 Run /review to get a code review of your current changes.
-Use /skills to list available skills or ask Reflect to use one.
+Use /skills to list available skills or ask ZhuYe to use one.
 Use /status to see the current model, approvals, and token usage.
 Use /statusline to configure which items appear in the status line.
 Use /fork to branch the current chat into a new thread.
 Use /side to start a side conversation in a temporary fork without polluting the main thread.
 Use /init to create an AGENTS.md with project-specific guidance.
 Use /mcp to list configured MCP tools.
-Use /personality to customize how Reflect communicates.
+Use /personality to customize how ZhuYe communicates.
 Use /rename to rename your threads for easier thread resuming.
 Use /copy or press Ctrl+O to copy the latest agent response as Markdown.
 Type / to open the command popup; Tab autocompletes slash commands.

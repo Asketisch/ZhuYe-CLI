@@ -1,6 +1,6 @@
 """G 组 —— 插件面:启动通知、slash 命令注入、`/plugin` overlay、门控插件。
 
-插件能力由 submodule 的 `reflect-plugin` 提供,本仓 TUI 侧只消费四处:
+插件能力由 submodule 的 `zhuye-plugin` 提供,本仓 TUI 侧只消费四处:
 1. **启动通知**:bootstrap 挂载成功后 `PluginLoaded` 事件经 lifecycle 通道
    进通知流(scrollback 出现 `Plugin 'demo@inline' loaded …`);
 2. **slash 命令注入**:插件命令快照注入 composer,输入 `/demo` 弹窗列出
@@ -11,7 +11,7 @@
    工具不进注册表(区别于 `[active].disallowed_tools` 的可见性过滤)。
    判定单一事实源是引擎 `zhuye_plugin::bundled_plugin_enabled`。
 
-**前置**:submodule 构建出的 `reflect` CLI(用于安装示例插件)。
+**前置**:submodule 构建出的 `zhuye` CLI(用于安装示例插件)。
 缺失则整组 SKIP(不算失败)—— 插件 e2e 是增强项,不阻塞基础回归。
 门控用例(G5/G6)只依赖本仓二进制 + mock provider,不依赖示例插件。
 
@@ -29,7 +29,7 @@ import pytest
 
 from tui_pty import ROOT
 
-# submodule 构建出的 reflect-cli(bin 名是 `zhuye`(烛夜更名后))。
+# submodule 构建出的 zhuye-cli(bin 名是 `zhuye`(烛夜更名后))。
 _CLI_CANDIDATES = [
     ROOT / "zhuye-agent" / "target" / "release" / "zhuye",
     ROOT / "zhuye-agent" / "target" / "debug" / "zhuye",
@@ -50,7 +50,7 @@ def plugin_home(tmp_path_factory) -> str:
     cli = _find_cli()
     if cli is None:
         pytest.skip(
-            "submodule 的 reflect CLI 未构建(需 cargo build -p reflect-cli);插件组跳过"
+            "submodule 的 zhuye CLI 未构建(需 cargo build -p zhuye-cli);插件组跳过"
         )
     if not _EXAMPLE_PLUGIN.is_dir():
         pytest.skip(f"示例插件不存在:{_EXAMPLE_PLUGIN}")
@@ -77,7 +77,7 @@ def _plugin_env(home: str) -> dict[str, str]:
     return {
         "HOME": home,
         "ZHUYE_MODEL": "mock/mock-1",
-        "REFLECT_TUI_UPDATE_CHECK": "0",
+        "ZHUYE_TUI_UPDATE_CHECK": "0",
     }
 
 

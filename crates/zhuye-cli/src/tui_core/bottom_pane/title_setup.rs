@@ -37,7 +37,7 @@ use crate::tui_core::render::renderable::Renderable;
 #[derive(EnumIter, EnumString, Display, Debug, Clone, Copy, Eq, PartialEq, Hash)]
 #[strum(serialize_all = "kebab-case")]
 pub(crate) enum TerminalTitleItem {
-    /// Reflect 应用名称。
+    /// ZhuYe 应用名称。
     AppName,
     /// 项目根目录名称，或回退为紧凑的 cwd。
     #[strum(to_string = "project-name", serialize = "project")]
@@ -64,8 +64,8 @@ pub(crate) enum TerminalTitleItem {
     FiveHourLimit,
     /// 次速率限制的剩余用量。
     WeeklyLimit,
-    /// Reflect 应用版本。
-    ReflectVersion,
+    /// ZhuYe 应用版本。
+    ZhuyeVersion,
     /// 当前会话使用的总 token 数。
     UsedTokens,
     /// 已消耗的总输入 token 数。
@@ -91,7 +91,7 @@ pub(crate) enum TerminalTitleItem {
 impl TerminalTitleItem {
     pub(crate) fn description(self) -> &'static str {
         match self {
-            TerminalTitleItem::AppName => "Reflect app name",
+            TerminalTitleItem::AppName => "ZhuYe app name",
             TerminalTitleItem::Project => "Project name (falls back to current directory name)",
             TerminalTitleItem::CurrentDir => "Current working directory",
             TerminalTitleItem::Spinner => {
@@ -114,7 +114,7 @@ impl TerminalTitleItem {
             TerminalTitleItem::WeeklyLimit => {
                 "Remaining usage on the secondary usage limit (omitted when unavailable)"
             }
-            TerminalTitleItem::ReflectVersion => "Reflect application version",
+            TerminalTitleItem::ZhuyeVersion => "ZhuYe application version",
             TerminalTitleItem::UsedTokens => "Total tokens used in session (omitted when zero)",
             TerminalTitleItem::TotalInputTokens => "Total input tokens used in session",
             TerminalTitleItem::TotalOutputTokens => "Total output tokens used in session",
@@ -144,7 +144,7 @@ impl TerminalTitleItem {
             TerminalTitleItem::ContextUsed => Some(StatusSurfacePreviewItem::ContextUsed),
             TerminalTitleItem::FiveHourLimit => Some(StatusSurfacePreviewItem::FiveHourLimit),
             TerminalTitleItem::WeeklyLimit => Some(StatusSurfacePreviewItem::WeeklyLimit),
-            TerminalTitleItem::ReflectVersion => Some(StatusSurfacePreviewItem::ReflectVersion),
+            TerminalTitleItem::ZhuyeVersion => Some(StatusSurfacePreviewItem::ZhuyeVersion),
             TerminalTitleItem::UsedTokens => Some(StatusSurfacePreviewItem::UsedTokens),
             TerminalTitleItem::TotalInputTokens => Some(StatusSurfacePreviewItem::TotalInputTokens),
             TerminalTitleItem::TotalOutputTokens => {
@@ -545,7 +545,7 @@ mod tests {
                 "model-with-reasoning",
                 "reasoning",
                 "weekly-limit",
-                "reflect-version",
+                "zhuye-version",
                 "used-tokens",
                 "total-input-tokens",
                 "total-output-tokens",
@@ -569,7 +569,7 @@ mod tests {
                 TerminalTitleItem::ModelWithReasoning,
                 TerminalTitleItem::Reasoning,
                 TerminalTitleItem::WeeklyLimit,
-                TerminalTitleItem::ReflectVersion,
+                TerminalTitleItem::ZhuyeVersion,
                 TerminalTitleItem::UsedTokens,
                 TerminalTitleItem::TotalInputTokens,
                 TerminalTitleItem::TotalOutputTokens,

@@ -129,7 +129,7 @@ impl ChatWidget {
             } else {
                 "is"
             };
-            let model_path = if current_model.starts_with("reflect-auto-") {
+            let model_path = if current_model.starts_with("zhuye-auto-") {
                 current_model
             } else {
                 format!("All models → {current_model}")

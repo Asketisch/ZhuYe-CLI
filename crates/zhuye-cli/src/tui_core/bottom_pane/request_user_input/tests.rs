@@ -26,8 +26,8 @@ fn test_sender() -> (
 
 fn expect_interrupt_only(rx: &mut tokio::sync::mpsc::UnboundedReceiver<AppEvent>) {
     let event = rx.try_recv().expect("expected interrupt AppEvent");
-    let AppEvent::ReflectOp(op) = event else {
-        panic!("expected ReflectOp");
+    let AppEvent::ZhuyeOp(op) = event else {
+        panic!("expected ZhuyeOp");
     };
     assert_eq!(op, Op::interrupt());
     assert!(
@@ -403,7 +403,7 @@ fn auto_resolution_expiry_emits_empty_answer() {
     assert!(overlay.done);
 
     let event = rx.try_recv().expect("expected UserInputAnswer event");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { id, response }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { id, response }) = event else {
         panic!("expected UserInputAnswer event");
     };
     assert_eq!(id, "turn-1");
@@ -634,7 +634,7 @@ fn options_can_submit_empty_when_unanswered() {
     overlay.submit_answers();
 
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { id, response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { id, response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     assert_eq!(id, "turn-1");
@@ -656,7 +656,7 @@ fn enter_commits_default_selection_on_last_option_question() {
     overlay.handle_key_event(KeyEvent::from(KeyCode::Enter));
 
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     let answer = response.answers.get("q1").expect("answer missing");
@@ -692,7 +692,7 @@ fn enter_commits_default_selection_on_non_last_option_question() {
 
     overlay.handle_key_event(KeyEvent::from(KeyCode::Enter));
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     let mut expected = HashMap::new();
@@ -725,7 +725,7 @@ fn number_keys_select_and_submit_options() {
     overlay.handle_key_event(KeyEvent::from(KeyCode::Char('2')));
 
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     let answer = response.answers.get("q1").expect("answer missing");
@@ -1055,7 +1055,7 @@ fn switching_from_freeform_with_text_resets_focus_and_keeps_last_option_empty() 
     overlay.handle_key_event(KeyEvent::from(KeyCode::Enter));
 
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     let answer = response.answers.get("q1").expect("answer missing");
@@ -1446,7 +1446,7 @@ fn freeform_questions_submit_empty_when_empty() {
     overlay.submit_answers();
 
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     let answer = response.answers.get("q1").expect("answer missing");
@@ -1471,7 +1471,7 @@ fn freeform_draft_is_not_submitted_without_enter() {
     overlay.submit_answers();
 
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     let answer = response.answers.get("q1").expect("answer missing");
@@ -1514,7 +1514,7 @@ fn freeform_commit_resets_when_draft_changes() {
     overlay.submit_answers();
 
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     let answer = response.answers.get("q1").expect("answer missing");
@@ -1550,7 +1550,7 @@ fn notes_are_captured_for_selected_option() {
     overlay.submit_answers();
 
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     let answer = response.answers.get("q1").expect("answer missing");
@@ -1635,7 +1635,7 @@ fn is_other_adds_none_of_the_above_and_submits_it() {
     overlay.submit_answers();
 
     let event = rx.try_recv().expect("expected AppEvent");
-    let AppEvent::ReflectOp(Op::UserInputAnswer { response, .. }) = event else {
+    let AppEvent::ZhuyeOp(Op::UserInputAnswer { response, .. }) = event else {
         panic!("expected UserInputAnswer");
     };
     let answer = response.answers.get("q1").expect("answer missing");

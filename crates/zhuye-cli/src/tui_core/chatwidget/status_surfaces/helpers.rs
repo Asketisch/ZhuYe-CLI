@@ -5,7 +5,7 @@ use super::*;
 pub(super) fn five_hour_status_window(
     snapshot: &RateLimitSnapshotDisplay,
 ) -> Option<(&RateLimitWindowDisplay, bool)> {
-    find_primary_reflect_window(snapshot, "5h")
+    find_primary_zhuye_window(snapshot, "5h")
         .or_else(|| secondary_window_with_label_when_weekly_is_available(snapshot, "5h"))
         .or_else(|| non_weekly_primary_window(snapshot))
         .or_else(|| non_weekly_secondary_window_when_primary_is_weekly(snapshot))
@@ -14,11 +14,11 @@ pub(super) fn five_hour_status_window(
 pub(super) fn weekly_status_window(
     snapshot: &RateLimitSnapshotDisplay,
 ) -> Option<(&RateLimitWindowDisplay, bool)> {
-    find_reflect_window(snapshot, "weekly")
+    find_zhuye_window(snapshot, "weekly")
         .or_else(|| snapshot.secondary.as_ref().map(|window| (window, true)))
 }
 
-pub(super) fn find_reflect_window<'a>(
+pub(super) fn find_zhuye_window<'a>(
     snapshot: &'a RateLimitSnapshotDisplay,
     label: &str,
 ) -> Option<(&'a RateLimitWindowDisplay, bool)> {
@@ -37,7 +37,7 @@ pub(super) fn find_reflect_window<'a>(
     None
 }
 
-pub(super) fn find_primary_reflect_window<'a>(
+pub(super) fn find_primary_zhuye_window<'a>(
     snapshot: &'a RateLimitSnapshotDisplay,
     label: &str,
 ) -> Option<(&'a RateLimitWindowDisplay, bool)> {
@@ -53,7 +53,7 @@ pub(super) fn secondary_window_with_label_when_weekly_is_available<'a>(
     snapshot: &'a RateLimitSnapshotDisplay,
     label: &str,
 ) -> Option<(&'a RateLimitWindowDisplay, bool)> {
-    find_reflect_window(snapshot, "weekly")?;
+    find_zhuye_window(snapshot, "weekly")?;
 
     let secondary = snapshot.secondary.as_ref()?;
     if matches_window_label(secondary, label) {

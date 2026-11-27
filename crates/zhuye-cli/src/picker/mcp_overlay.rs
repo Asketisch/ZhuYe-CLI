@@ -30,7 +30,7 @@ pub fn load_mcp_status(servers: &[McpServerView]) -> Vec<Line<'static>> {
             Style::default().fg(Color::DarkGray),
         )));
         lines.push(Line::from(Span::styled(
-            "  Configure servers in .mcp.json / reflect config, then /mcp again.",
+            "  Configure servers in .mcp.json / zhuye config, then /mcp again.",
             Style::default().fg(Color::DarkGray),
         )));
         lines.push(Line::from(""));

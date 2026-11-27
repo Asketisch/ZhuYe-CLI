@@ -1,11 +1,11 @@
 //! `zhuye-cli session ...` —— fork / rename / export / ls / show / rm 本地 session。
 //!
-//! 与 `reflect-cli session ...` 对称:所有底层操作都走 `zhuye-rollout`
+//! 与 `zhuye-cli session ...` 对称:所有底层操作都走 `zhuye-rollout`
 //! 的公开 API。`id` 可以是完整 UUID 或前 8+ 字符前缀。
 //!
 //! fork 子命令创建子会话后打印 child id,提示用
 //! `zhuye-cli --resume <child_id>` 续作(与 zhuye-cli 的
-//! `reflect exec --resume` 语义一致,但二进制名不同)。
+//! `zhuye exec --resume` 语义一致,但二进制名不同)。
 
 use anyhow::{Context, anyhow};
 use zhuye_protocol::{ModelUsage, RolloutRecord, SessionInfo, SessionStats, ThreadId};
@@ -19,7 +19,7 @@ use zhuye_rollout::index::{fork_with_history, read_session_name, rename_session}
 use zhuye_rollout::index::{
     find_file_by_session_id, find_files_by_name_prefix, first_line_session_id,
 };
-// v1.x:统一统计聚合(与 reflect-cli 同款)—— 不在 TUI 侧复刻 token 聚合
+// v1.x:统一统计聚合(与 zhuye-cli 同款)—— 不在 TUI 侧复刻 token 聚合
 // 逻辑,改为直接消费 `zhuye-rollout` 的读取侧 API。
 use uuid::Uuid;
 use zhuye_rollout::{all_model_usage, session_stats, to_markdown};
@@ -495,11 +495,11 @@ pub fn search(query: &str, limit: usize, json: bool) -> anyhow::Result<()> {
     Ok(())
 }
 
-// ────────────────────────── 内部 helper(移植自 reflect-cli session.rs) ──────────────────────────
+// ────────────────────────── 内部 helper(移植自 zhuye-cli session.rs) ──────────────────────────
 
 /// 解析 `id`(完整 UUID 或前缀)为 session 文件路径。
 ///
-/// 路径解析策略(与 `reflect-cli` 同款,统一走 `zhuye-rollout` 共享 API):
+/// 路径解析策略(与 `zhuye-cli` 同款,统一走 `zhuye-rollout` 共享 API):
 /// 1. 前缀匹配:从 `list_sessions` 拿精确 `started_at`,用 `session_path_at`
 ///    拼 `<base>/YYYY/MM/DD/<id>.jsonl`(日期 = session 创建日,非今天)。
 /// 2. 完整 UUID 且在 session 列表中:同上,用真实 `started_at`。

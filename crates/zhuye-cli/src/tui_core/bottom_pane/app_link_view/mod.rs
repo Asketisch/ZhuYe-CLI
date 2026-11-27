@@ -38,7 +38,7 @@ use crate::tui_core::wrapping::RtOptions;
 use crate::tui_core::wrapping::adaptive_wrap_lines;
 
 const MCP_ZHUYE_CLI_APPS_SERVER_NAME: &str = "zhuye_apps";
-const MCP_TOOL_ZHUYE_CLI_APPS_META_KEY: &str = "_reflect_apps";
+const MCP_TOOL_ZHUYE_CLI_APPS_META_KEY: &str = "_zhuye_apps";
 const CONNECTOR_AUTH_FAILURE_META_KEY: &str = "connector_auth_failure";
 const CONNECTOR_AUTH_FAILURE_IS_AUTH_FAILURE_KEY: &str = "is_auth_failure";
 const CONNECTOR_AUTH_FAILURE_CONNECTOR_ID_KEY: &str = "connector_id";
@@ -155,7 +155,7 @@ impl AppLinkView {
             AppLinkScreen::Link => {
                 if self.is_installed {
                     vec![
-                        "Manage on Reflect",
+                        "Manage on ZhuYe",
                         if self.is_enabled {
                             "Disable app"
                         } else {
@@ -164,7 +164,7 @@ impl AppLinkView {
                         "Back",
                     ]
                 } else {
-                    vec!["Install on Reflect", "Back"]
+                    vec!["Install on ZhuYe", "Back"]
                 }
             }
             AppLinkScreen::InstallConfirmation => vec!["I already Installed it", "Back"],
@@ -403,14 +403,14 @@ impl AppLinkView {
 
         let is_auth_suggestion = self.is_auth_suggestion();
         let is_external_action_suggestion = self.is_external_action_suggestion();
-        let is_reflect_apps_auth = is_auth_suggestion
+        let is_zhuye_apps_auth = is_auth_suggestion
             && self
                 .elicitation_target
                 .as_ref()
                 .is_some_and(|target| target.server_name == MCP_ZHUYE_CLI_APPS_SERVER_NAME);
         lines.push(Line::from(
             if is_auth_suggestion {
-                if is_reflect_apps_auth {
+                if is_zhuye_apps_auth {
                     "Finish App Sign In"
                 } else {
                     "Finish Authentication"
@@ -426,8 +426,8 @@ impl AppLinkView {
 
         if is_auth_suggestion {
             for line in wrap(
-                if is_reflect_apps_auth {
-                    "Sign in to the app on Reflect in the browser window that just opened."
+                if is_zhuye_apps_auth {
+                    "Sign in to the app on ZhuYe in the browser window that just opened."
                 } else {
                     "Complete authentication in the browser window that just opened."
                 },
@@ -453,7 +453,7 @@ impl AppLinkView {
             }
         } else {
             for line in wrap(
-                "Complete app setup on Reflect in the browser window that just opened.",
+                "Complete app setup on ZhuYe in the browser window that just opened.",
                 usable_width,
             ) {
                 lines.push(Line::from(line.into_owned()));

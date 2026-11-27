@@ -1,11 +1,11 @@
 ---
-source: crates/reflect-tui/src/tui_core/bottom_pane/app_link_view/tests.rs
+source: crates/zhuye-tui/src/tui_core/bottom_pane/app_link_view/tests.rs
 expression: "render_snapshot(&view, Rect::new(0, 0, 72, view.desired_height(72)))"
 ---
 
   Google Calendar
 
-  Reconnect Google Calendar on Reflect.
+  Reconnect Google Calendar on ZhuYe.
 
   URL
   https://chatgpt.com/apps/google-calendar/connector_google_calendar

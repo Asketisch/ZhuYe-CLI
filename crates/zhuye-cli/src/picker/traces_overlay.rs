@@ -102,7 +102,7 @@ pub fn load_recent_traces() -> Vec<Line<'static>> {
 
 fn traces_dir() -> PathBuf {
     dirs::home_dir()
-        .map(|h| h.join(".reflect").join("traces").join("log"))
+        .map(|h| h.join(".zhuye").join("traces").join("log"))
         .unwrap_or_else(|| PathBuf::from("/tmp/zhuye_traces"))
 }
 

@@ -38,7 +38,7 @@ printf '# 测试用最小配置:空配置。\n' > "$HOME_DIR/.zhuye/config.toml"
 
 # seed_session:写一条含 user + assistant 的会话 JSONL。
 #
-# 形态与引擎实际落盘一致(见 reflect-protocol `RolloutRecord`):
+# 形态与引擎实际落盘一致(见 zhuye-protocol `RolloutRecord`):
 #   - `content` 是 **ContentBlock 数组**(v1.2 起);
 #   - `token_count` 的 token 字段嵌在 `usage` 对象里。
 # 用真实形态而非简化形态,才能测出「读取侧只认旧形态」这类缺陷。

@@ -66,7 +66,7 @@
 8. `history_cell/markdown_render_cache.rs:37` 对中毒锁 `unwrap_or_else(PoisonError::into_inner)`
    恢复 —— 改缓存结构时保持该恢复语义。
 9. **平铺根文件 = 移植形态,不按功能重组**:本目录根的约 70 个平铺 `.rs` 与
-   21 个子目录是一次性移植的既有形态(上游即本仓库前代 Reflect-TUI,已更名
+   21 个子目录是一次性移植的既有形态(上游即本仓库前代 ZhuYe-CLI,已更名
    ZhuYe,无外部上游需 diff;`tui-upstream-tests` 门控点约 40 处、insta 快照按
    模块路径命名、`slash_command.rs` 是 `coverage_audit.py` 的路径钉死输入)。
    文件扇出 / 目录扇出信号经评估**接受为移植形态产物**:唯一可成簇的前缀族

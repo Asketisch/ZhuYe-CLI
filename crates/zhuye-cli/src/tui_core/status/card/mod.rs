@@ -586,7 +586,7 @@ impl HistoryCell for StatusHistoryCell {
         let mut lines: Vec<Line<'static>> = Vec::new();
         lines.push(Line::from(vec![
             Span::from(format!("{}>_ ", FieldFormatter::INDENT)).dim(),
-            Span::from("Reflect").bold(),
+            Span::from("ZhuYe").bold(),
             Span::from(" ").dim(),
             Span::from(format!("(v{ZHUYE_CLI_VERSION})")).dim(),
         ]));
@@ -601,10 +601,10 @@ impl HistoryCell for StatusHistoryCell {
                 (Some(email), Some(plan)) => format!("{email} ({plan})"),
                 (Some(email), None) => email.clone(),
                 (None, Some(plan)) => plan.clone(),
-                (None, None) => "Reflect".to_string(),
+                (None, None) => "ZhuYe".to_string(),
             },
             StatusAccountDisplay::ApiKey => {
-                "API key configured (run reflect login to use Reflect)".to_string()
+                "API key configured (run zhuye login to use ZhuYe)".to_string()
             }
         });
 
@@ -709,7 +709,7 @@ impl HistoryCell for StatusHistoryCell {
         }
 
         lines.push(Line::from(Vec::<Span<'static>>::new()));
-        // 仅对 Reflect 订阅者隐藏 token 用量
+        // 仅对 ZhuYe 订阅者隐藏 token 用量
         if !matches!(self.account, Some(StatusAccountDisplay::ChatGpt { .. })) {
             lines.push(formatter.line("Token usage", self.token_usage_spans()));
         }

@@ -75,7 +75,7 @@ impl Pet {
     /// 头像 id 或显式路径。本方法假定任何内置资产
     /// 已物化到 ZHUYE_HOME；若调用方跳过了
     /// 资产获取步骤，则首次使用时会在缺失 sprite 表处报错。
-    pub(super) fn load_with_reflect_home(value: &str, zhuye_home: Option<&Path>) -> Result<Self> {
+    pub(super) fn load_with_zhuye_home(value: &str, zhuye_home: Option<&Path>) -> Result<Self> {
         if path_like(value) {
             return load_pet_path(value);
         }

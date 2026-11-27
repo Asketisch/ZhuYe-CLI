@@ -63,7 +63,7 @@ use unicode_width::UnicodeWidthStr;
 fn stale_monthly_limit_marks_fresh_rolling_snapshot_stale() {
     let now = Local::now();
     let snapshot = RateLimitSnapshotDisplay {
-        limit_name: "reflect".to_string(),
+        limit_name: "zhuye".to_string(),
         captured_at: now,
         primary: Some(RateLimitWindowDisplay {
             used_percent: 20.0,
@@ -775,7 +775,7 @@ async fn status_model_provider_uses_bedrock_runtime_base_url_and_gates_usage_lin
         "expected /status to ignore configured Bedrock base URL, got: {rendered}"
     );
     assert!(
-        !rendered.contains("https://chatgpt.com/reflect/settings/usage"),
+        !rendered.contains("https://chatgpt.com/zhuye/settings/usage"),
         "expected /status to hide ChatGPT usage link for Bedrock, got: {rendered}"
     );
 
@@ -808,7 +808,7 @@ async fn status_model_provider_uses_bedrock_runtime_base_url_and_gates_usage_lin
     let rendered = render_lines(&composite.display_lines(/*width*/ 120)).join("\n");
 
     assert!(
-        rendered.contains("https://chatgpt.com/reflect/settings/usage"),
+        rendered.contains("https://chatgpt.com/zhuye/settings/usage"),
         "expected /status to show ChatGPT usage link for OpenAI-auth proxy, got: {rendered}"
     );
 
@@ -820,7 +820,7 @@ async fn status_model_provider_uses_bedrock_runtime_base_url_and_gates_usage_lin
         .collect();
     assert_eq!(
         wide_destinations,
-        vec!["https://chatgpt.com/reflect/settings/usage"]
+        vec!["https://chatgpt.com/zhuye/settings/usage"]
     );
 
     let narrow_destinations: Vec<String> = composite
@@ -1590,7 +1590,7 @@ async fn status_snapshot_uses_default_reasoning_when_config_empty() {
         .single()
         .expect("timestamp");
     let remote_connection = RemoteConnectionStatus {
-        address: "unix:///tmp/reflect-home/app-server-control/app-server-control.sock".to_string(),
+        address: "unix:///tmp/zhuye-home/app-server-control/app-server-control.sock".to_string(),
         version: "v0.133.0".to_string(),
     };
 
@@ -2165,7 +2165,7 @@ async fn status_context_window_uses_last_usage() {
 
     assert!(
         context_line.contains("13.7K used / 272K"),
-        "expected context line to reflect last usage tokens, got: {context_line}"
+        "expected context line to zhuye last usage tokens, got: {context_line}"
     );
     assert!(
         !context_line.contains("102K"),

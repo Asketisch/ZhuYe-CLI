@@ -1,4 +1,4 @@
-//! Reflect 侧历史渲染：走 Reflect `HistoryCell` 路径。
+//! ZhuYe 侧历史渲染：走 ZhuYe `HistoryCell` 路径。
 //!
 //! 用 `UserHistoryCell` / `AgentMarkdownCell` / `PlainHistoryCell` 等生成
 //! `display_lines`，再经 `insert_history_lines` 写入原生 scrollback，避免自制
@@ -19,7 +19,7 @@ use ratatui::text::{Line, Span};
 use std::path::Path;
 use std::sync::Arc;
 
-/// Reflect/GAIA 协议收口标记；仅用于 TUI 展示剥离，不改持久化原文。
+/// ZhuYe/GAIA 协议收口标记；仅用于 TUI 展示剥离，不改持久化原文。
 const FINAL_ANSWER_MARKER: &str = "FINAL ANSWER:";
 
 /// 剥离 `FINAL ANSWER:` 协议标记，并在解说与答案相同时去重。
@@ -116,7 +116,7 @@ pub fn history_item_to_lines(item: &UiHistoryItem, width: u16, cwd: &Path) -> Ve
             return marker::apply_legacy_markers(item, cell.display_lines(width));
         }
     };
-    // 老 TUI 标记字形:把 Reflect 的 `› `/`• ` 改写成 `▶ `/`● `(彩色)。
+    // 老 TUI 标记字形:把 ZhuYe 的 `› `/`• ` 改写成 `▶ `/`● `(彩色)。
     marker::apply_legacy_markers(item, cell.display_lines(width))
 }
 
@@ -497,7 +497,7 @@ pub fn legacy_popup_commands() -> &'static [(&'static str, &'static str)] {
     ]
 }
 
-/// 解析 Reflect 兼容 slash（/help /clear /exit /compact 等）。
+/// 解析 ZhuYe 兼容 slash（/help /clear /exit /compact 等）。
 pub fn dispatch_slash(text: &str) -> SlashOutcome {
     let trimmed = text.trim();
     if !trimmed.starts_with('/') {
@@ -956,7 +956,7 @@ pub fn parse_permission_mode(name: &str) -> Option<zhuye_protocol::PermissionMod
 pub fn help_lines() -> Vec<Line<'static>> {
     vec![
         Line::from(Span::styled(
-            "Reflect slash commands",
+            "ZhuYe slash commands",
             Style::default()
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD),

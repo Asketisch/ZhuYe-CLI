@@ -15,7 +15,7 @@ use anyhow::bail;
 use uuid::Uuid;
 
 const GOAL_ATTACHMENT_DIR: &str = "attachments";
-const GOAL_FILE_PREFIX: &str = "Read the Reflect goal objective file at ";
+const GOAL_FILE_PREFIX: &str = "Read the ZhuYe goal objective file at ";
 const GOAL_FILE_SUFFIX: &str = " before continuing.";
 const GOAL_FILE_NAME: &str = "goal-objective.md";
 

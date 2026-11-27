@@ -42,7 +42,7 @@ pub fn run_editor_with(seed: &str, cmd: &[String]) -> Result<String, String> {
     }
     // 1. 写临时文件。
     let mut tmp = tempfile::Builder::new()
-        .prefix("reflect-edit-")
+        .prefix("zhuye-edit-")
         .suffix(".md")
         .tempfile()
         .map_err(|e| format!("create temp file: {e}"))?;

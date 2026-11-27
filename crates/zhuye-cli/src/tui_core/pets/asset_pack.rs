@@ -1,7 +1,7 @@
 //! 内置宠物资产获取与缓存所有权。
 //!
 //! 与自定义宠物不同，内置宠物不会作为本地 sprite 表
-//! 检入 TUI 包。Reflect 不再从远程 CDN 获取内置宠物 sprite 表，
+//! 检入 TUI 包。ZhuYe 不再从远程 CDN 获取内置宠物 sprite 表，
 //! 因此只有当之前安装的 sprite 表已存在并通过结构校验时，
 //! 解析才会成功——它位于 ZHUYE_HOME 下的版本化缓存中。
 //! 当没有缓存资产时，解析会优雅失败，使宠物降级为不可用状态，
@@ -29,7 +29,7 @@ pub(crate) fn builtin_spritesheet_path(zhuye_home: &Path, file: &str) -> PathBuf
 
 /// 确保内置宠物的 sprite 表存在且结构有效。
 ///
-/// Reflect 不从远程 CDN 下载内置宠物资产。仅当缓存中已存在
+/// ZhuYe 不从远程 CDN 下载内置宠物资产。仅当缓存中已存在
 /// 先前安装的 sprite 表并通过预期几何校验时，解析
 /// 才会成功。否则返回错误，使调用方可以优雅降级。
 pub(crate) fn ensure_builtin_pet(zhuye_home: &Path, pet: catalog::BuiltinPet) -> Result<()> {
@@ -38,17 +38,17 @@ pub(crate) fn ensure_builtin_pet(zhuye_home: &Path, pet: catalog::BuiltinPet) ->
         return Ok(());
     }
     bail!(
-        "built-in pet spritesheet '{}' is not available locally and Reflect does not fetch pet assets from a remote CDN",
+        "built-in pet spritesheet '{}' is not available locally and ZhuYe does not fetch pet assets from a remote CDN",
         pet.spritesheet_file
     );
 }
 
 #[cfg(test)]
 fn builtin_pet_url(pet: catalog::BuiltinPet) -> Result<String> {
-    // Reflect 不发布宠物资产 CDN。因测试需要而保留结构兼容；
+    // ZhuYe 不发布宠物资产 CDN。因测试需要而保留结构兼容；
     // 解析始终失败。
     let _ = pet;
-    bail!("Reflect does not expose a built-in pet asset CDN URL");
+    bail!("ZhuYe does not expose a built-in pet asset CDN URL");
 }
 
 fn pack_dir(zhuye_home: &Path) -> PathBuf {
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn builtin_pet_url_has_no_remote_cdn() {
-        // Reflect 不暴露内置宠物资产 CDN，因此解析必须
+        // ZhuYe 不暴露内置宠物资产 CDN，因此解析必须
         // 失败而不是产生远程 URL。
         let pet = catalog::builtin_pet("dewey").unwrap();
 

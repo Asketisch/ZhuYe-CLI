@@ -801,19 +801,19 @@ fn load_location_suffix_regexes() {
 #[test]
 fn file_link_hides_destination() {
     let text = render_markdown_text_for_cwd(
-        "[reflect-agent/tui/src/markdown_render.rs](/Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs)",
-        Path::new("/Users/example/code/reflect"),
+        "[zhuye-agent/tui/src/markdown_render.rs](/Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected =
-        Text::from(Line::from_iter(["reflect-agent/tui/src/markdown_render.rs".cyan()]));
+        Text::from(Line::from_iter(["zhuye-agent/tui/src/markdown_render.rs".cyan()]));
     assert_eq!(text, expected);
 }
 
 #[test]
 fn file_link_decodes_percent_encoded_bare_path_destination() {
     let text = render_markdown_text_for_cwd(
-        "[report](/Users/example/code/reflect/Example%20Folder/R%C3%A9sum%C3%A9/report.md)",
-        Path::new("/Users/example/code/reflect"),
+        "[report](/Users/example/code/zhuye/Example%20Folder/R%C3%A9sum%C3%A9/report.md)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected = Text::from(Line::from_iter([
         "Example Folder/Résumé/report.md".cyan(),
@@ -824,11 +824,11 @@ fn file_link_decodes_percent_encoded_bare_path_destination() {
 #[test]
 fn file_link_appends_line_number_when_label_lacks_it() {
     let text = render_markdown_text_for_cwd(
-        "[markdown_render.rs](/Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs:74)",
-        Path::new("/Users/example/code/reflect"),
+        "[markdown_render.rs](/Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs:74)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected = Text::from(Line::from_iter([
-        "reflect-agent/tui/src/markdown_render.rs:74".cyan(),
+        "zhuye-agent/tui/src/markdown_render.rs:74".cyan(),
     ]));
     assert_eq!(text, expected);
 }
@@ -836,22 +836,22 @@ fn file_link_appends_line_number_when_label_lacks_it() {
 #[test]
 fn file_link_keeps_absolute_paths_outside_cwd() {
     let text = render_markdown_text_for_cwd(
-        "[README.md:74](/Users/example/code/reflect/README.md:74)",
-        Path::new("/Users/example/code/reflect/reflect-agent/tui"),
+        "[README.md:74](/Users/example/code/zhuye/README.md:74)",
+        Path::new("/Users/example/code/zhuye/zhuye-agent/tui"),
     );
-    let expected = Text::from(Line::from_iter(["/Users/example/code/reflect/README.md:74".cyan()]));
+    let expected = Text::from(Line::from_iter(["/Users/example/code/zhuye/README.md:74".cyan()]));
     assert_eq!(text, expected);
 }
 
 #[test]
 fn file_link_appends_hash_anchor_when_label_lacks_it() {
     let text = render_markdown_text_for_cwd(
-        "[markdown_render.rs](file:///Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs#L74C3)",
-        Path::new("/Users/example/code/reflect"),
+        "[markdown_render.rs](file:///Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs#L74C3)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected =
         Text::from(Line::from_iter([
-            "reflect-agent/tui/src/markdown_render.rs:74:3".cyan(),
+            "zhuye-agent/tui/src/markdown_render.rs:74:3".cyan(),
         ]));
     assert_eq!(text, expected);
 }
@@ -859,12 +859,12 @@ fn file_link_appends_hash_anchor_when_label_lacks_it() {
 #[test]
 fn file_link_uses_target_path_for_hash_anchor() {
     let text = render_markdown_text_for_cwd(
-        "[markdown_render.rs#L74C3](file:///Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs#L74C3)",
-        Path::new("/Users/example/code/reflect"),
+        "[markdown_render.rs#L74C3](file:///Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs#L74C3)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected =
         Text::from(Line::from_iter([
-            "reflect-agent/tui/src/markdown_render.rs:74:3".cyan(),
+            "zhuye-agent/tui/src/markdown_render.rs:74:3".cyan(),
         ]));
     assert_eq!(text, expected);
 }
@@ -872,12 +872,12 @@ fn file_link_uses_target_path_for_hash_anchor() {
 #[test]
 fn file_link_appends_range_when_label_lacks_it() {
     let text = render_markdown_text_for_cwd(
-        "[markdown_render.rs](/Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs:74:3-76:9)",
-        Path::new("/Users/example/code/reflect"),
+        "[markdown_render.rs](/Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs:74:3-76:9)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected =
         Text::from(Line::from_iter([
-            "reflect-agent/tui/src/markdown_render.rs:74:3-76:9".cyan(),
+            "zhuye-agent/tui/src/markdown_render.rs:74:3-76:9".cyan(),
         ]));
     assert_eq!(text, expected);
 }
@@ -885,12 +885,12 @@ fn file_link_appends_range_when_label_lacks_it() {
 #[test]
 fn file_link_uses_target_path_for_range() {
     let text = render_markdown_text_for_cwd(
-        "[markdown_render.rs:74:3-76:9](/Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs:74:3-76:9)",
-        Path::new("/Users/example/code/reflect"),
+        "[markdown_render.rs:74:3-76:9](/Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs:74:3-76:9)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected =
         Text::from(Line::from_iter([
-            "reflect-agent/tui/src/markdown_render.rs:74:3-76:9".cyan(),
+            "zhuye-agent/tui/src/markdown_render.rs:74:3-76:9".cyan(),
         ]));
     assert_eq!(text, expected);
 }
@@ -898,12 +898,12 @@ fn file_link_uses_target_path_for_range() {
 #[test]
 fn file_link_appends_hash_range_when_label_lacks_it() {
     let text = render_markdown_text_for_cwd(
-        "[markdown_render.rs](file:///Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs#L74C3-L76C9)",
-        Path::new("/Users/example/code/reflect"),
+        "[markdown_render.rs](file:///Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs#L74C3-L76C9)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected =
         Text::from(Line::from_iter([
-            "reflect-agent/tui/src/markdown_render.rs:74:3-76:9".cyan(),
+            "zhuye-agent/tui/src/markdown_render.rs:74:3-76:9".cyan(),
         ]));
     assert_eq!(text, expected);
 }
@@ -911,13 +911,13 @@ fn file_link_appends_hash_range_when_label_lacks_it() {
 #[test]
 fn multiline_file_link_label_after_styled_prefix_does_not_panic() {
     let text = render_markdown_text_for_cwd(
-        "**bold** plain [foo\nbar](file:///Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs#L74C3)",
-        Path::new("/Users/example/code/reflect"),
+        "**bold** plain [foo\nbar](file:///Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs#L74C3)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected = Text::from(Line::from_iter([
         "bold".bold(),
         " plain ".into(),
-        "reflect-agent/tui/src/markdown_render.rs:74:3".cyan(),
+        "zhuye-agent/tui/src/markdown_render.rs:74:3".cyan(),
     ]));
     assert_eq!(text, expected);
 }
@@ -925,12 +925,12 @@ fn multiline_file_link_label_after_styled_prefix_does_not_panic() {
 #[test]
 fn file_link_uses_target_path_for_hash_range() {
     let text = render_markdown_text_for_cwd(
-        "[markdown_render.rs#L74C3-L76C9](file:///Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs#L74C3-L76C9)",
-        Path::new("/Users/example/code/reflect"),
+        "[markdown_render.rs#L74C3-L76C9](file:///Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs#L74C3-L76C9)",
+        Path::new("/Users/example/code/zhuye"),
     );
     let expected =
         Text::from(Line::from_iter([
-            "reflect-agent/tui/src/markdown_render.rs:74:3-76:9".cyan(),
+            "zhuye-agent/tui/src/markdown_render.rs:74:3-76:9".cyan(),
         ]));
     assert_eq!(text, expected);
 }
@@ -950,8 +950,8 @@ fn url_link_shows_destination() {
 #[test]
 fn markdown_render_file_link_snapshot() {
     let text = render_markdown_text_for_cwd(
-        "See [markdown_render.rs:74](/Users/example/code/reflect/reflect-agent/tui/src/markdown_render.rs:74).",
-        Path::new("/Users/example/code/reflect"),
+        "See [markdown_render.rs:74](/Users/example/code/zhuye/zhuye-agent/tui/src/markdown_render.rs:74).",
+        Path::new("/Users/example/code/zhuye"),
     );
     let rendered = text
         .lines
@@ -971,9 +971,9 @@ fn markdown_render_file_link_snapshot() {
 #[test]
 fn unordered_list_local_file_link_stays_inline_with_following_text() {
     let text = render_markdown_text_with_width_and_cwd(
-        "- [binary](/Users/example/code/reflect/reflect-agent/README.md:93): core is the agent/business logic, tui is the terminal UI, exec is the headless automation surface, and cli is the top-level multitool binary.",
+        "- [binary](/Users/example/code/zhuye/zhuye-agent/README.md:93): core is the agent/business logic, tui is the terminal UI, exec is the headless automation surface, and cli is the top-level multitool binary.",
         Some(72),
-        Some(Path::new("/Users/example/code/reflect")),
+        Some(Path::new("/Users/example/code/zhuye")),
     );
     let rendered = text
         .lines
@@ -988,9 +988,9 @@ fn unordered_list_local_file_link_stays_inline_with_following_text() {
     assert_eq!(
         rendered,
         vec![
-            "- reflect-agent/README.md:93: core is the agent/business logic, tui is",
-            "  the terminal UI, exec is the headless automation surface, and cli is",
-            "  the top-level multitool binary.",
+            "- zhuye-agent/README.md:93: core is the agent/business logic, tui is the",
+            "  terminal UI, exec is the headless automation surface, and cli is the",
+            "  top-level multitool binary.",
         ]
     );
 }
@@ -998,9 +998,9 @@ fn unordered_list_local_file_link_stays_inline_with_following_text() {
 #[test]
 fn unordered_list_local_file_link_soft_break_before_colon_stays_inline() {
     let text = render_markdown_text_with_width_and_cwd(
-        "- [binary](/Users/example/code/reflect/reflect-agent/README.md:93)\n  : core is the agent/business logic.",
+        "- [binary](/Users/example/code/zhuye/zhuye-agent/README.md:93)\n  : core is the agent/business logic.",
         Some(72),
-        Some(Path::new("/Users/example/code/reflect")),
+        Some(Path::new("/Users/example/code/zhuye")),
     );
     let rendered = text
         .lines
@@ -1014,16 +1014,16 @@ fn unordered_list_local_file_link_soft_break_before_colon_stays_inline() {
         .collect::<Vec<_>>();
     assert_eq!(
         rendered,
-        vec!["- reflect-agent/README.md:93: core is the agent/business logic.",]
+        vec!["- zhuye-agent/README.md:93: core is the agent/business logic.",]
     );
 }
 
 #[test]
 fn consecutive_unordered_list_local_file_links_do_not_detach_paths() {
     let text = render_markdown_text_with_width_and_cwd(
-        "- [binary](/Users/example/code/reflect/reflect-agent/README.md:93)\n  : cli is the top-level multitool binary.\n- [expectations](/Users/example/code/reflect/reflect-agent/core/README.md:1)\n  : zhuye-core owns the real runtime behavior.",
+        "- [binary](/Users/example/code/zhuye/zhuye-agent/README.md:93)\n  : cli is the top-level multitool binary.\n- [expectations](/Users/example/code/zhuye/zhuye-agent/core/README.md:1)\n  : zhuye-core owns the real runtime behavior.",
         Some(72),
-        Some(Path::new("/Users/example/code/reflect")),
+        Some(Path::new("/Users/example/code/zhuye")),
     );
     let rendered = text
         .lines
@@ -1038,8 +1038,8 @@ fn consecutive_unordered_list_local_file_links_do_not_detach_paths() {
     assert_eq!(
         rendered,
         vec![
-            "- reflect-agent/README.md:93: cli is the top-level multitool binary.",
-            "- reflect-agent/core/README.md:1: zhuye-core owns the real runtime",
+            "- zhuye-agent/README.md:93: cli is the top-level multitool binary.",
+            "- zhuye-agent/core/README.md:1: zhuye-core owns the real runtime",
             "  behavior.",
         ]
     );
@@ -1686,13 +1686,13 @@ fn table_separates_logical_rows_after_wrapped_content() {
 fn table_wraps_file_paths_before_collapsing_narrative_columns_snapshot() {
     let md = r#"| Unit | Files | Adds | Removes | What It Adds |
 |---|---:|---:|---:|---|
-| Suggestion engine and unit coverage | [next_prompt_suggestion.rs](/Users/example/code/reflect/reflect-agent/core/src/next_prompt_suggestion.rs:1), [next_prompt_suggestion_tests.rs](/Users/example/code/reflect/reflect-agent/core/src/next_prompt_suggestion_tests.rs:1) | 704 | 0 | Sampling workflow, stable-history checks, tool-flow suppression, fast reasoning profile, filtering rules, cancellation and timeout. |
-| Model instruction fragment and contextual isolation | [next_prompt_suggestion.rs](/Users/example/code/reflect/reflect-agent/core/src/context/next_prompt_suggestion.rs:1), [contextual_user_message_tests.rs](/Users/example/code/reflect/reflect-agent/core/src/context/contextual_user_message_tests.rs:1) | 54 | 0 | Synthetic suggestion prompt and an isolation test for ordinary user text. |
+| Suggestion engine and unit coverage | [next_prompt_suggestion.rs](/Users/example/code/zhuye/zhuye-agent/core/src/next_prompt_suggestion.rs:1), [next_prompt_suggestion_tests.rs](/Users/example/code/zhuye/zhuye-agent/core/src/next_prompt_suggestion_tests.rs:1) | 704 | 0 | Sampling workflow, stable-history checks, tool-flow suppression, fast reasoning profile, filtering rules, cancellation and timeout. |
+| Model instruction fragment and contextual isolation | [next_prompt_suggestion.rs](/Users/example/code/zhuye/zhuye-agent/core/src/context/next_prompt_suggestion.rs:1), [contextual_user_message_tests.rs](/Users/example/code/zhuye/zhuye-agent/core/src/context/contextual_user_message_tests.rs:1) | 54 | 0 | Synthetic suggestion prompt and an isolation test for ordinary user text. |
 "#;
     let text = render_markdown_text_with_width_and_cwd(
         md,
         Some(/*width*/ 120),
-        Some(Path::new("/Users/example/code/reflect")),
+        Some(Path::new("/Users/example/code/zhuye")),
     );
 
     assert_snapshot!(plain_lines(&text).join("\n"));
@@ -1715,11 +1715,11 @@ fn table_renders_stacked_key_value_records_when_path_column_becomes_too_narrow_s
 fn table_renders_records_when_multiple_prose_columns_are_starved_snapshot() {
     let md = r#"| Issue | Activity | Complexity | Why start |
 | --- | ---: | ---: | --- |
-| [#24485: newline shortcut fails in PyCharm terminal on Windows](https://github.com/asketisch/reflect/issues/24485) | `+1` 0, substantive comments 0 | Low | New, deterministic regression range; localized composer/keymap path. |
-| [#23926: Vim composer `e` stalls at word end](https://github.com/asketisch/reflect/issues/23926) | `+1` 0, comments 0 | Low | Standing best quick win; deterministic motion bug. |
-| [#23651: Zellij scrollback misses Reflect transcript over SSH](https://github.com/asketisch/reflect/issues/23651) | `+1` 3, human comments 2 | Medium | Clear regression and strong scrollback evidence. |
-| [#23740: raw ANSI/control sequences in Windows Terminal](https://github.com/asketisch/reflect/issues/23740) | `+1` 7, human comments 7 | Medium | Highest activity; established Windows rendering regression family. |
-| [#24527: typing lag increases with session length](https://github.com/asketisch/reflect/issues/24527) | `+1` 0, substantive comments 0 | Medium | New TUI-visible performance report; needs profiling before implementation. |
+| [#24485: newline shortcut fails in PyCharm terminal on Windows](https://github.com/asketisch/zhuye/issues/24485) | `+1` 0, substantive comments 0 | Low | New, deterministic regression range; localized composer/keymap path. |
+| [#23926: Vim composer `e` stalls at word end](https://github.com/asketisch/zhuye/issues/23926) | `+1` 0, comments 0 | Low | Standing best quick win; deterministic motion bug. |
+| [#23651: Zellij scrollback misses ZhuYe transcript over SSH](https://github.com/asketisch/zhuye/issues/23651) | `+1` 3, human comments 2 | Medium | Clear regression and strong scrollback evidence. |
+| [#23740: raw ANSI/control sequences in Windows Terminal](https://github.com/asketisch/zhuye/issues/23740) | `+1` 7, human comments 7 | Medium | Highest activity; established Windows rendering regression family. |
+| [#24527: typing lag increases with session length](https://github.com/asketisch/zhuye/issues/24527) | `+1` 0, substantive comments 0 | Medium | New TUI-visible performance report; needs profiling before implementation. |
 "#;
     let text = render_markdown_text_with_width(md, Some(/*width*/ 76));
 

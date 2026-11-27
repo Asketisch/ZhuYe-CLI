@@ -1,4 +1,4 @@
-//! `app-server-protocol` 的本地协议存根（Reflect 本地重声明）。
+//! `app-server-protocol` 的本地协议存根（ZhuYe 本地重声明）。
 //!
 //! 镜像上游 `app_server_protocol` crate 的公开表面：ZhuYe-CLI 表现层
 //! 引用了约 146 个来自该协议的类型。为避免引入整个上游 crate 及其

@@ -112,14 +112,14 @@ fn render_stack_to_text_with_sandbox_mode_filter(
 #[test]
 fn debug_config_output_lists_all_layers_including_disabled() {
     let system_file = if cfg!(windows) {
-        absolute_path("C:\\etc\\reflect\\config.toml")
+        absolute_path("C:\\etc\\zhuye\\config.toml")
     } else {
-        absolute_path("/etc/reflect/config.toml")
+        absolute_path("/etc/zhuye/config.toml")
     };
     let project_folder = if cfg!(windows) {
-        absolute_path("C:\\repo\\.reflect")
+        absolute_path("C:\\repo\\.zhuye")
     } else {
-        absolute_path("/repo/.reflect")
+        absolute_path("/repo/.zhuye")
     };
 
     let layers = vec![
@@ -129,7 +129,7 @@ fn debug_config_output_lists_all_layers_including_disabled() {
         ),
         ConfigLayerEntry::new_disabled(
             ConfigLayerSource::Project {
-                dot_reflect_folder: project_folder,
+                dot_zhuye_folder: project_folder,
             },
             empty_toml_table(),
             "project is untrusted",
@@ -153,9 +153,9 @@ fn debug_config_output_lists_all_layers_including_disabled() {
 #[test]
 fn debug_config_output_lists_requirement_sources() {
     let requirements_file = if cfg!(windows) {
-        absolute_path("C:\\ProgramData\\OpenAI\\Reflect\\requirements.toml")
+        absolute_path("C:\\ProgramData\\OpenAI\\ZhuYe\\requirements.toml")
     } else {
-        absolute_path("/etc/reflect/requirements.toml")
+        absolute_path("/etc/zhuye/requirements.toml")
     };
     let denied_path = if cfg!(windows) {
         absolute_path("C:\\Users\\alice\\.gitconfig")
@@ -183,7 +183,7 @@ fn debug_config_output_lists_requirement_sources() {
                 "docs".to_string(),
                 McpServerRequirement::Identity {
                     identity: McpServerIdentity::Command {
-                        command: "reflect-mcp".to_string(),
+                        command: "zhuye-mcp".to_string(),
                     },
                 },
             )]),
@@ -262,7 +262,7 @@ fn debug_config_output_lists_requirement_sources() {
             "docs".to_string(),
             McpServerRequirement::Identity {
                 identity: McpServerIdentity::Command {
-                    command: "reflect-mcp".to_string(),
+                    command: "zhuye-mcp".to_string(),
                 },
             },
         )])),
@@ -277,7 +277,7 @@ fn debug_config_output_lists_requirement_sources() {
     };
 
     let user_file = if cfg!(windows) {
-        absolute_path("C:\\users\\alice\\.reflect\\config.toml")
+        absolute_path("C:\\users\\alice\\.zhuye\\config.toml")
     } else {
         absolute_path("/home/alice/.zhuye/config.toml")
     };
@@ -354,9 +354,9 @@ fn debug_config_output_lists_requirement_sources() {
 #[test]
 fn debug_config_output_filters_sandbox_modes_blocked_by_deny_read_requirements() {
     let requirements_file = if cfg!(windows) {
-        absolute_path("C:\\ProgramData\\OpenAI\\Reflect\\requirements.toml")
+        absolute_path("C:\\ProgramData\\OpenAI\\ZhuYe\\requirements.toml")
     } else {
-        absolute_path("/etc/reflect/requirements.toml")
+        absolute_path("/etc/zhuye/requirements.toml")
     };
     let denied_path = if cfg!(windows) {
         absolute_path("C:\\Users\\alice\\.gitconfig")
@@ -465,7 +465,7 @@ fn debug_config_output_formats_unix_socket_permissions() {
                 unix_sockets: Some(NetworkUnixSocketPermissionsToml {
                     entries: BTreeMap::from([
                         (
-                            "/tmp/reflect.sock".to_string(),
+                            "/tmp/zhuye.sock".to_string(),
                             NetworkUnixSocketPermissionToml::Allow,
                         ),
                         (
@@ -487,7 +487,7 @@ fn debug_config_output_formats_unix_socket_permissions() {
     let rendered = render_stack_to_text(&stack);
     let requirements_source = (RequirementSource::LegacyManagedConfigTomlFromMdm).to_string();
     assert!(rendered.contains(&format!(
-            "experimental_network: unix_sockets={{/tmp/blocked.sock=deny, /tmp/reflect.sock=allow}} (source: {requirements_source})"
+            "experimental_network: unix_sockets={{/tmp/blocked.sock=deny, /tmp/zhuye.sock=allow}} (source: {requirements_source})"
         )));
 }
 
@@ -530,9 +530,9 @@ approval_policy = "never"
 "#;
     let mdm_value = toml::from_str::<TomlValue>(raw_mdm_toml).expect("MDM value");
     let mdm_base_dir = if cfg!(windows) {
-        absolute_path("C:\\reflect")
+        absolute_path("C:\\zhuye")
     } else {
-        absolute_path("/var/lib/reflect")
+        absolute_path("/var/lib/zhuye")
     };
 
     let stack = ConfigLayerStack::new(
@@ -564,9 +564,9 @@ approval_policy = "never"
 "#;
     let cloud_value = toml::from_str::<TomlValue>(raw_cloud_toml).expect("cloud value");
     let cloud_base_dir = if cfg!(windows) {
-        absolute_path("C:\\reflect")
+        absolute_path("C:\\zhuye")
     } else {
-        absolute_path("/var/lib/reflect")
+        absolute_path("/var/lib/zhuye")
     };
 
     let stack = ConfigLayerStack::new(

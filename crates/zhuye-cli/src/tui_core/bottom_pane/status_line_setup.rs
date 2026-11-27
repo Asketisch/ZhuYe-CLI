@@ -109,8 +109,8 @@ pub(crate) enum StatusLineItem {
     /// 次速率限额的剩余用量。
     WeeklyLimit,
 
-    /// Reflect 应用版本。
-    ReflectVersion,
+    /// ZhuYe 应用版本。
+    ZhuyeVersion,
 
     /// 总上下文窗口大小（token 数）。
     ContextWindowSize,
@@ -175,7 +175,7 @@ impl StatusLineItem {
             StatusLineItem::WeeklyLimit => {
                 "Remaining usage on the secondary usage limit (omitted when unavailable)"
             }
-            StatusLineItem::ReflectVersion => "Reflect application version",
+            StatusLineItem::ZhuyeVersion => "ZhuYe application version",
             StatusLineItem::ContextWindowSize => {
                 "Total context window size in tokens (omitted when unknown)"
             }
@@ -214,7 +214,7 @@ impl StatusLineItem {
             StatusLineItem::ContextUsed => StatusSurfacePreviewItem::ContextUsed,
             StatusLineItem::FiveHourLimit => StatusSurfacePreviewItem::FiveHourLimit,
             StatusLineItem::WeeklyLimit => StatusSurfacePreviewItem::WeeklyLimit,
-            StatusLineItem::ReflectVersion => StatusSurfacePreviewItem::ReflectVersion,
+            StatusLineItem::ZhuyeVersion => StatusSurfacePreviewItem::ZhuyeVersion,
             StatusLineItem::ContextWindowSize => StatusSurfacePreviewItem::ContextWindowSize,
             StatusLineItem::UsedTokens => StatusSurfacePreviewItem::UsedTokens,
             StatusLineItem::TotalInputTokens => StatusSurfacePreviewItem::TotalInputTokens,
@@ -651,7 +651,7 @@ mod tests {
                 ),
                 (
                     StatusLineItem::CurrentDir.preview_item(),
-                    "~/reflect-agent".to_string(),
+                    "~/zhuye-agent".to_string(),
                 ),
                 (
                     StatusLineItem::GitBranch.preview_item(),

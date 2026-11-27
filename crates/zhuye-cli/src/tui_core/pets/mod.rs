@@ -43,7 +43,7 @@ pub(crate) use picker::PET_PICKER_VIEW_ID;
 pub(crate) use picker::build_pet_picker_params;
 pub(crate) use preview::PetPickerPreviewState;
 
-pub(crate) const DEFAULT_PET_ID: &str = "reflect";
+pub(crate) const DEFAULT_PET_ID: &str = "zhuye";
 pub(crate) const DISABLED_PET_ID: &str = "disabled";
 
 /// 确保选中的内置宠物拥有本地缓存的 sprite 表。

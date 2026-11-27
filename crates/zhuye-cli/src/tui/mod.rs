@@ -129,7 +129,7 @@ pub async fn run_async(
         env::var("ZHUYE_MODEL_DISPLAY")
             .or_else(|_| env::var("OPENAI_MODEL"))
             .or_else(|_| env::var("ANTHROPIC_MODEL"))
-            .unwrap_or_else(|_| "reflect".to_string())
+            .unwrap_or_else(|_| "zhuye".to_string())
     } else {
         status_model
     };
@@ -249,7 +249,7 @@ pub async fn run_async(
 
     let mut history_tail: usize = 0;
     let mut is_first = true;
-    // pending history 队列：对齐 Reflect flush_pending_history_lines 顺序。
+    // pending history 队列：对齐 ZhuYe flush_pending_history_lines 顺序。
     let mut pending_history_lines: Vec<Line<'static>> = Vec::new();
     // spinner 动画帧计数(每轮循环自增,驱动状态行 braille spinner)。
     let mut tick_frame: u32 = 0;
@@ -367,7 +367,7 @@ pub async fn run_async(
             state.notify_section.as_ref(),
             crate::history_render::notify::NotifyTrigger::TurnComplete,
         ) {
-            history_render::notify::notify(&mut notifier, "Reflect finished.");
+            history_render::notify::notify(&mut notifier, "ZhuYe finished.");
         }
 
         if state.composer.is_in_paste_burst() {
@@ -483,7 +483,7 @@ pub async fn run_async(
         } else {
             let _ = guard.leave_alt_screen();
 
-            // ── 5. Reflect 顺序：先 shrink/贴底，再 flush history，再 draw ──
+            // ── 5. ZhuYe 顺序：先 shrink/贴底，再 flush history，再 draw ──
             // 长 live 时若先 insert，上方可写区极窄，正文会被拆进 scrollback；
             // shrink 的 clear/滚行再搅一次，出现「上半句 / 空行 / 下半句」观感。
             //
@@ -1241,7 +1241,7 @@ async fn expand_plugin_submission(
 
 /// 构造终端标签页标题。
 ///
-/// 格式:`Reflect · <model> · [<mode>] · git:(<branch>)`,mode 为 `Auto` 时省略。
+/// 格式:`ZhuYe · <model> · [<mode>] · git:(<branch>)`,mode 为 `Auto` 时省略。
 /// 主循环每帧比对,只在真的变了才重发 OSC 序列。
 fn terminal_title_for(
     model: &str,
@@ -1249,7 +1249,7 @@ fn terminal_title_for(
     git_branch: Option<&str>,
     permission_mode: zhuye_protocol::PermissionMode,
 ) -> String {
-    let mut title = format!("Reflect · {model}");
+    let mut title = format!("ZhuYe · {model}");
     if permission_mode != zhuye_protocol::PermissionMode::Auto {
         title.push_str(&format!(" · [{permission_mode:?}]"));
     }
@@ -1708,7 +1708,7 @@ fn show_branch(state: &mut UiState, arg: Option<&str>) {
 /// 配置态并给出 `/debug-config` 指引。
 fn format_configured_mcp_servers() -> String {
     let Some(home) = zhuye_config::data_dir() else {
-        return "/mcp: 无法定位 Reflect 配置目录（ZHUYE_HOME / HOME 均未设置）".into();
+        return "/mcp: 无法定位 ZhuYe 配置目录（ZHUYE_HOME / HOME 均未设置）".into();
     };
     let path = home.join("config.toml");
     let Ok(content) = std::fs::read_to_string(&path) else {
@@ -1814,7 +1814,7 @@ fn dispatch_slash_command(
                 std::env::var("ZHUYE_MODEL_DISPLAY")
                     .or_else(|_| std::env::var("OPENAI_MODEL"))
                     .or_else(|_| std::env::var("ANTHROPIC_MODEL"))
-                    .unwrap_or_else(|_| "reflect".to_string())
+                    .unwrap_or_else(|_| "zhuye".to_string())
             });
             let cwd = std::env::current_dir()
                 .ok()
@@ -2163,7 +2163,7 @@ fn dispatch_slash_command_with_args(
 }
 
 /// 打开 diff 全屏 overlay:扫 history 收集所有 ToolCall 的 unified_diff,
-/// 经 Reflect `create_diff_summary`(语法高亮 + +/- 着色)渲染成行,喂给 pager。
+/// 经 ZhuYe `create_diff_summary`(语法高亮 + +/- 着色)渲染成行,喂给 pager。
 fn submit_prompt_action(thread: &Arc<AgentThread>, action: zhuye_protocol::PromptAction) {
     let thread = Arc::clone(thread);
     tokio::spawn(async move {
@@ -3134,7 +3134,7 @@ fn handle_key(
                     crate::picker::fork_rewind::ForkRewindMode::Fork => {
                         // v1.x fork 接线:调 zhuye_rollout::index::fork_with_history
                         // 创建子会话(原样复制父 records 截至选中 turn),然后提示用
-                        // --resume 切换。与 reflect-cli session fork 语义一致,
+                        // --resume 切换。与 zhuye-cli session fork 语义一致,
                         // 不做进程内 thread 切换(避免重构 run_async)。
                         let parent_id = match state.session_id {
                             Some(id) => id,
@@ -3670,7 +3670,7 @@ fn handle_key(
                         env::var("ZHUYE_MODEL_DISPLAY")
                             .or_else(|_| env::var("OPENAI_MODEL"))
                             .or_else(|_| env::var("ANTHROPIC_MODEL"))
-                            .unwrap_or_else(|_| "reflect".to_string())
+                            .unwrap_or_else(|_| "zhuye".to_string())
                     });
                     let cwd = env::current_dir()
                         .ok()
@@ -3868,7 +3868,7 @@ fn handle_key(
                     return Ok(false);
                 }
                 SlashOutcome::Init => {
-                    let prompt = "Create an AGENTS.md file with project instructions for Reflect.";
+                    let prompt = "Create an AGENTS.md file with project instructions for ZhuYe.";
                     state
                         .history
                         .push(adapter::UiHistoryItem::User(prompt.to_string()));
@@ -4807,7 +4807,7 @@ mod conversion;
 #[cfg(test)]
 mod draw_tests {
     use super::*;
-    use crate::tui_core::custom_terminal::Terminal as ReflectTerminal;
+    use crate::tui_core::custom_terminal::Terminal as ZhuyeTerminal;
     use crate::tui_core::test_backend::VT100Backend;
     use crate::viewport::prepare_bottom_viewport;
     use zhuye_protocol::EventMsg;
@@ -4815,7 +4815,7 @@ mod draw_tests {
     #[test]
     fn draw_does_not_panic() {
         let backend = VT100Backend::new(40, 6);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 40, 6));
         let mut state = UiState::default();
         terminal
@@ -4827,7 +4827,7 @@ mod draw_tests {
     fn draw_renders_status_line() {
         // 用 ≥8 行的屏:hud_height(10)=1,identity 行正常渲染。
         let backend = VT100Backend::new(40, 10);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 40, 10));
         let mut state = UiState::default();
         state.status_line = Some(Line::from("model/cwd"));
@@ -4845,7 +4845,7 @@ mod draw_tests {
     fn draw_hud_hidden_on_narrow_screen() {
         // 窄屏(<8 行)防御:HUD 不渲染,避免挤压 composer。
         let backend = VT100Backend::new(40, 6);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 40, 6));
         let mut state = UiState::default();
         state.status_line = Some(Line::from("model/cwd"));
@@ -4868,7 +4868,7 @@ mod draw_tests {
     fn draw_renders_both_hud_lines_on_tall_screen() {
         // ≥12 行:双行 HUD(identity + metrics)。
         let backend = VT100Backend::new(50, 14);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 50, 14));
         let mut state = UiState::default();
         state.status_line = Some(Line::from("identity"));
@@ -4887,7 +4887,7 @@ mod draw_tests {
         // hud_height 必须按「屏幕高度」判定,否则视口小 → hud_height=0 → HUD 永不显示。
         // 这里模拟:屏幕 80x24(够高),但视口只有 5 行(composer+status)。
         let backend = VT100Backend::new(80, 24);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         // 视口锚在屏底,只占 5 行 —— frame.area().height 会是 5(<8)。
         terminal.set_viewport_area(Rect::new(0, 24 - 5, 80, 5));
         let mut state = UiState::default();
@@ -4906,7 +4906,7 @@ mod draw_tests {
     #[test]
     fn draw_renders_live_region_multiline() {
         let backend = VT100Backend::new(60, 12);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 60, 12));
         let mut state = UiState::default();
         state.live = "line1\nline2\nline3".to_string();
@@ -4944,7 +4944,7 @@ mod draw_tests {
     fn draw_marks_live_region_with_streaming_glyph() {
         // 老 TUI 样式:live 区前置 `○ `(流式),与 history 的 `● `(完整)区分。
         let backend = VT100Backend::new(60, 12);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 60, 12));
         let mut state = UiState::default();
         state.live = "streaming reply".to_string();
@@ -4965,7 +4965,7 @@ mod draw_tests {
         // 全屏模式:历史 + composer 一次性渲染进全屏 buffer,不依赖原生 scrollback,且
         // 内容少于屏幕时不产生 scrollback 空行(它们分散在屏幕剩余区域,而非插入终端历史)。
         let backend = VT100Backend::new(60, 20);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 60, 20));
         let mut state = UiState::default();
         state
@@ -4988,7 +4988,7 @@ mod draw_tests {
         // 于是 --fullscreen 下引擎阻塞在 AskUserQuestion 时用户看到的是空白,
         // 而键位仍被面板接管 —— 表现为「界面卡死但按键有反应」。
         let backend = VT100Backend::new(80, 30);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 80, 30));
         let mut state = UiState::default();
         state.pending_question = Some(crate::events::QuestionPromptState::new(
@@ -5219,7 +5219,7 @@ mod draw_tests {
         let width: u16 = 40;
         let height: u16 = 10;
         let backend = VT100Backend::new(width, height);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
 
         // 大视口（含 live）
         let big = Rect::new(0, height - 5, width, 5);
@@ -5232,7 +5232,7 @@ mod draw_tests {
             .draw(|frame| draw(frame, &mut state, frame.area().height, &live_lines, live_h))
             .unwrap();
 
-        // 先 shrink（贴底），再插 history（对齐生产帧顺序 / Reflect）。
+        // 先 shrink（贴底），再插 history（对齐生产帧顺序 / ZhuYe）。
         state.live.clear();
         state
             .history
@@ -5269,7 +5269,7 @@ mod draw_tests {
         let width: u16 = 48;
         let height: u16 = 20;
         let backend = VT100Backend::new(width, height);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
 
         // 底部小视口起步，插入 user。
         prepare_bottom_viewport(&mut terminal, width, height, 4).unwrap();
@@ -5347,7 +5347,7 @@ mod draw_tests {
         let width: u16 = 48;
         let height: u16 = 24;
         let backend = VT100Backend::new(width, height);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
 
         prepare_bottom_viewport(&mut terminal, width, height, 4).unwrap();
         let mut state = UiState::default();
@@ -5428,7 +5428,7 @@ mod draw_tests {
     fn composer_typed_text_has_visible_fg() {
         use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
         let backend = VT100Backend::new(48, 8);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 48, 8));
         let mut state = UiState::default();
         // 禁用 paste-burst，逐字插入。
@@ -5463,7 +5463,7 @@ mod draw_tests {
         let width: u16 = 48;
         let height: u16 = 12;
         let backend = VT100Backend::new(width, height);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         let composer_h = 3u16;
         let viewport_h = composer_h + 1;
         let viewport_y = height - viewport_h;
@@ -5484,7 +5484,7 @@ mod draw_tests {
         }
         insert_history_lines(&mut terminal, pending).expect("insert history");
 
-        state.status_line = Some(Line::from("reflect test"));
+        state.status_line = Some(Line::from("zhuye test"));
         terminal
             .draw(|frame| draw(frame, &mut state, frame.area().height, &[], 0))
             .unwrap();
@@ -5535,7 +5535,7 @@ mod draw_tests {
         let ev = zhuye_protocol::Event::new(
             "id-sc",
             EventMsg::SessionConfigured(zhuye_protocol::SessionConfiguredEvent::new(
-                "reflect".to_string(),
+                "zhuye".to_string(),
                 "openai".to_string(),
             )),
         );
@@ -6058,7 +6058,7 @@ mod draw_tests {
     fn draw_renders_plan_approval_prompt() {
         // plan_approval 打开时,composer 上方应出现审批提示条(task 摘要 + 按键)。
         let backend = VT100Backend::new(80, 30);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 80, 30));
         let mut state = UiState::default();
         state.plan_approval = Some(crate::events::PlanApprovalState::new(
@@ -6083,7 +6083,7 @@ mod draw_tests {
     fn draw_hides_plan_approval_when_none() {
         // 无 plan_approval 时不画审批提示条(屏上无 PLAN APPROVAL)。
         let backend = VT100Backend::new(60, 16);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 60, 16));
         let mut state = UiState::default();
         terminal
@@ -6101,7 +6101,7 @@ mod draw_tests {
         // plan_enter_request 打开时(无 plan_approval),应渲染 Enter Plan Mode 弹窗。
         // 屏高 40 让 70%×55% 弹窗(约 56×22)能完整容下 16 行内容 + 2 行边框。
         let backend = VT100Backend::new(100, 40);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 100, 40));
         let mut state = UiState::default();
         state.plan_enter_request = Some(crate::events::PlanEnterRequestState {
@@ -6127,7 +6127,7 @@ mod draw_tests {
             .collect::<Vec<_>>()
             .join("\n");
         let backend = VT100Backend::new(80, 30);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 80, 30));
         let mut state = UiState::default();
         state.plan_approval = Some(crate::events::PlanApprovalState::new(
@@ -6170,7 +6170,7 @@ mod draw_tests {
         // 占位符无法直接读取(ComposerInput 无 getter),但 draw 不应 panic,
         // 且状态切换后 composer 仍能正常渲染。这里用 draw 不 panic 间接验证。
         let backend = VT100Backend::new(40, 8);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(Rect::new(0, 0, 40, 8));
         terminal
             .draw(|frame| draw(frame, &mut state, frame.area().height, &[], 0))

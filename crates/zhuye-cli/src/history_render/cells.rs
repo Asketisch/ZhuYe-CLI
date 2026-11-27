@@ -149,16 +149,24 @@ pub fn prebuilt_cell(lines: Vec<Line<'static>>) -> PlainHistoryCell {
     PlainHistoryCell::new(lines)
 }
 
-/// 启动 banner:ZHUYE 块字形 + braille 装饰,左上蓝 → 右下红双轴渐变 24-bit。
+/// 启动 banner:雄鸡点阵画 + ZHUYE 块字形,logo 配色多段渐变 24-bit。
 ///
-/// 与老 TUI `startup_banner_pill` 对齐:逐字符双轴插值生成 `Color::Rgb`,
-/// 普通空格 / braille 空白不染色,空行保留(保持节奏)。banner 在
-/// `tui/mod.rs::run_async` 启动时 push 一条到 history,跟随原生 scrollback
-/// 自然滚出,并被 `Ctrl-T` transcript 收录。
+/// 点阵画为 logo(`zhuye-agent/res/clear-logo.png`)的盲文点阵重绘(双带
+/// 半调,14 行 × 26 列),替代旧莫比乌斯环装饰;配色沿同一 logo 的主色取样
+/// (奶油金 → 金 → 橙 → 红 → 深红)。逐字符双轴插值在多段调色板上生成
+/// `Color::Rgb`,普通空格 / braille 空白不染色,空行保留(保持节奏)。
+/// banner 在 `tui/mod.rs::run_async` 启动时 push 一条到 history,跟随原生
+/// scrollback 自然滚出,并被 `Ctrl-T` transcript 收录。
 pub fn banner_cell(version: &str) -> PlainHistoryCell {
-    // 调色板:对齐老 TUI 双轴渐变(左上 #3b82f6 蓝 → 右下 #ef4444 红)。
-    const FROM: (u8, u8, u8) = (59, 130, 246);
-    const TO: (u8, u8, u8) = (239, 68, 68);
+    // 调色板:取样自 clear-logo.png 主色(圆环金辉 → 羽尾深红)。
+    const PALETTE: [(u8, u8, u8); 6] = [
+        (240, 216, 144), // #f0d890 奶油金
+        (240, 192, 96),  // #f0c060 金
+        (240, 144, 24),  // #f09018 橙
+        (240, 120, 0),   // #f07800 深橙
+        (192, 0, 0),     // #c00000 红
+        (120, 0, 0),     // #780000 深红
+    ];
 
     fn lerp(from: u8, to: u8, t: f32) -> u8 {
         let f = from as f32;
@@ -167,16 +175,33 @@ pub fn banner_cell(version: &str) -> PlainHistoryCell {
         v.round() as u8
     }
 
-    // 与老 TUI 同源:braille 装饰区 + ZHUYE 块字形区。逐字符双轴 t ∈ [0,1]。
+    // 多段渐变:t ∈ [0,1] 均分到相邻两档色标之间线性插值。
+    fn palette_color(t: f32) -> (u8, u8, u8) {
+        let scaled = t.clamp(0.0, 1.0) * (PALETTE.len() - 1) as f32;
+        let i = (scaled as usize).min(PALETTE.len() - 2);
+        let f = scaled - i as f32;
+        let (a, b) = (PALETTE[i], PALETTE[i + 1]);
+        (lerp(a.0, b.0, f), lerp(a.1, b.1, f), lerp(a.2, b.2, f))
+    }
+
+    // 雄鸡点阵画:由 clear-logo.png 按双带半调生成(金环/金羽高光 ≥ 阈值
+    // 取实点,红羽身按亮度密度做 Bayer 抖动),14 行 × 26 列,120×30 窗口
+    // 内 banner 可完整显示;+ ZHUYE 块字形区。逐字符双轴 t ∈ [0,1]。
     let lines: &[&str] = &[
-        "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-        "⠀⠀⠀⠀⣠⣴⣾⣿⣿⣿⣶⣤⡀⠀⠀⠀⠀⢀⣤⣶⣿⣿⣿⣷⣦⣄⠀⠀⠀⠀",
-        "⠀⠀⠀⣸⣽⣶⠖⠚⠉⠛⢿⣿⣿⣷⣄⢠⣶⣿⣿⡿⠛⠛⠛⠻⣿⣿⣧⠀⠀⠀",
-        "⠀⠀⢰⣿⣿⠃⠀⠀⠀⠀⠀⠉⠻⣿⣿⣿⣻⠟⠋⠀⠀⠀⠀⠀⠘⣿⣿⡇⠀⠀",
-        "⠀⠀⢸⣿⣿⡄⠀⠀⠀⠀⠀⣀⣴⣯⣿⣿⣿⣦⣀⠀⠀⠀⠀⠀⢠⣿⣿⠇⠀⠀",
-        "⠀⠀⠀⢻⣿⣿⣦⣤⣤⣤⣾⣿⣿⡿⠃⠙⢿⣿⣿⣷⣤⣀⡠⠴⠿⣿⡏⠀⠀⠀",
-        "⠀⠀⠀⠀⠙⠻⢿⣿⣿⣿⠿⠛⠁⠀⠀⠀⠀⠈⠛⠿⣿⣿⣿⡿⠟⠋⠀⠀⠀⠀",
-        "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+        "⠀⠀⠀⠀⠀⠀⠀⢈⣌⣮⣾⣿⡷⡷⡷⡧⣦⣌⠈⠀⠀⠀⠀⠀⠀⠀",
+        "⠀⠀⠀⠀⢀⣬⣿⡷⠳⠑⢁⠄⠀⠀⢀⠀⠀⠀⠑⡣⢄⠀⠀⠀⠀⠀",
+        "⠀⠀⢀⣬⣿⠷⠁⠀⠀⠀⠡⢅⠥⢄⢄⣵⣿⣮⣎⢌⠐⡃⠀⠀⠀⠀",
+        "⠀⣀⣿⠷⠁⠀⠀⢀⠀⠀⠀⠑⠣⠥⠳⢑⣝⣽⣿⣿⡆⠄⠁⠀⠀⠀",
+        "⢀⣿⠷⢀⡬⡶⡷⡷⡷⣷⣧⢄⠀⠀⡬⢷⣿⣿⠿⣅⠀⠀⠀⠀⠀⠀",
+        "⣰⠱⠀⢉⣬⣮⣿⣿⣿⣯⣿⢍⠅⠄⠁⣼⣿⣿⣏⠥⣵⠌⠀⠀⠀⠀",
+        "⢵⢀⣾⣿⠷⢳⠕⠕⢅⣝⣽⣽⣿⣯⣷⣷⣿⣿⣿⣯⠈⠁⠀⠀⠀⠀",
+        "⠰⣾⠓⢁⢤⣥⡭⠷⠑⢅⣭⣭⣿⣭⣿⣿⣿⣿⠷⣵⠇⠀⠀⠀⠀⠀",
+        "⠰⠇⠀⣽⣿⠿⢅⠄⣥⣿⣿⣿⣿⣿⣿⢷⢷⣍⣭⣿⣷⣷⢷⠧⠢⠀",
+        "⢀⣍⢌⣱⣿⠅⠱⢵⠷⣷⣷⣿⣿⣿⣿⣿⡷⣷⠷⢵⠥⠥⢁⢈⢈⠀",
+        "⠀⠐⠱⣥⢵⡧⠅⠡⠅⠅⠁⠵⣷⣿⠷⠅⠁⢅⢁⢅⢵⣽⡿⠓⠑⠁",
+        "⠀⠀⠀⠐⡳⣯⣯⣮⣯⣍⢭⢄⠵⢅⣥⢿⣿⣿⣽⣭⡿⠓⠀⠀⠀⠀",
+        "⠀⠀⠀⠀⠀⠀⠑⠑⠑⠑⠱⣧⣯⡵⠳⠳⠳⠳⠑⠁⠀⠀⠀⠀⠀⠀",
+        "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠴⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
         "",
         "███████╗ ██╗  ██╗ ██╗   ██╗ ██╗   ██╗  ███████╗",
         "╚══███╔╝ ██║  ██║ ██║   ██║  ╚██╗ ██╔╝ ██╔════╝",
@@ -204,9 +229,7 @@ pub fn banner_cell(version: &str) -> PlainHistoryCell {
             // 双轴 t ∈ [0, 1]:col/max_w 与 row/total_rows 各贡献一半。
             let t = ((col as f32 / max_w.max(1) as f32) + (row as f32 / total_rows.max(1) as f32))
                 / 2.0;
-            let r = lerp(FROM.0, TO.0, t);
-            let g = lerp(FROM.1, TO.1, t);
-            let b = lerp(FROM.2, TO.2, t);
+            let (r, g, b) = palette_color(t);
             spans.push(Span::styled(
                 ch.to_string(),
                 Style::default().fg(Color::Rgb(r, g, b)),
@@ -350,13 +373,20 @@ mod tests {
     }
 
     #[test]
-    fn banner_emits_zhuye_wordmark_and_version_line() {
+    fn banner_emits_dot_matrix_and_zhuye_wordmark() {
         let cell = banner_cell("0.4.0-test");
         let lines = cell.display_lines(80);
-        // 期望布局:8 行 braille + 1 行空白 + 6 行 ZHUYE + 1 行欢迎语 = 16 行。
-        assert_eq!(lines.len(), 16, "banner 行数应为 16, 实为 {}", lines.len());
-        // 第 10 行是 "██████╗ ███████╗███████╗..." ZHUYE 字形首行。
-        let wordmark = line_to_plain(&lines[9]);
+        // 期望布局:14 行雄鸡点阵 + 1 行空白 + 6 行 ZHUYE + 1 行欢迎语 = 22 行。
+        assert_eq!(lines.len(), 22, "banner 行数应为 22, 实为 {}", lines.len());
+        // 点阵区应含雄鸡特征密集字形(尾羽 ⣾ / 颈胸 ⣽)。
+        let art: String = lines[..14]
+            .iter()
+            .map(|l| line_to_plain(l).to_string())
+            .collect();
+        assert!(art.contains('⣾'), "点阵应含雄鸡特征字形 ⣾: {art}");
+        assert!(art.contains('⣽'), "点阵应含雄鸡特征字形 ⣽");
+        // 第 16 行是 "██████╗ ███████╗███████╗..." ZHUYE 字形首行。
+        let wordmark = line_to_plain(&lines[15]);
         assert!(wordmark.starts_with("██████"), "ZHUYE 字形首行: {wordmark}");
         assert!(
             wordmark.contains("███████╗"),
@@ -375,26 +405,45 @@ mod tests {
     }
 
     #[test]
-    fn banner_first_zhuye_char_is_blue_gradient() {
-        // 第 10 行(ZHUYE 字形首行)首字符 '█' 应带渐变色(Color::Rgb),
-        // 偏蓝端(左上);最右字符偏红端。粗略断言:首行最左字符 R 应小于
-        // 红端 239(蓝端起点 59,允许插值后中等蓝),最右字符 R 应大于蓝端。
+    fn banner_uses_logo_gold_to_crimson_gradient() {
+        // 点阵 + 字形的渐变取样自 logo 配色:左上奶油金(#f0d890)→ 右下
+        // 深红(#780000);旧蓝端(#3b82f6 族)不允许再出现在任何有色字符上。
         let cell = banner_cell("0.4.0-test");
         let lines = cell.display_lines(80);
-        let wordmark = &lines[9];
-        let first_span = &wordmark.spans[0];
-        let last_span = wordmark.spans.last().expect("ZHUYE 字形非空");
-        let first_fg = first_span.style.fg.expect("首字符有 fg");
-        let last_fg = last_span.style.fg.expect("末字符有 fg");
-        match (first_fg, last_fg) {
-            (Color::Rgb(r0, _, _), Color::Rgb(r1, _, _)) => {
-                assert!(r0 < 239, "首字符 R 应小于红端(偏蓝), 实为 {r0}");
-                assert!(
-                    r1 > r0,
-                    "末字符 R 应大于首字符(双轴渐变从蓝到红), r0={r0} r1={r1}"
-                );
+        let mut styled: Vec<Color> = Vec::new();
+        for line in &lines {
+            for span in &line.spans {
+                if matches!(span.style.fg, Some(Color::Rgb(..))) {
+                    styled.push(span.style.fg.unwrap());
+                }
             }
-            other => panic!("渐变字符应为 Color::Rgb, 实为 {other:?}"),
+        }
+        assert!(styled.len() > 100, "渐变字符数量异常: {}", styled.len());
+
+        // 首个有色字符(点阵左上)应为金族:R 高、G 中高、B 保留金色蓝分量。
+        let Color::Rgb(r0, g0, b0) = styled[0] else {
+            panic!("首字符应为 Color::Rgb, 实为 {:?}", styled[0]);
+        };
+        assert!(r0 >= 200, "首字符 R 应为金族高值, 实为 {r0}");
+        assert!(g0 >= 160, "首字符 G 应为金族中高值, 实为 {g0}");
+        assert!(b0 >= 40, "首字符 B 应保留金色蓝分量, 实为 {b0}");
+
+        // 末个有色字符(ZHUYE 右下)应为深红族:G/B 双低、R 保留红分量。
+        let Color::Rgb(r1, g1, b1) = *styled.last().unwrap() else {
+            panic!("末字符应为 Color::Rgb");
+        };
+        assert!(
+            g1 <= 120 && b1 <= 60,
+            "末字符应为深红族, 实为 ({r1},{g1},{b1})"
+        );
+        assert!(r1 > 60, "末字符 R 应保留红分量, 实为 {r1}");
+
+        // 全图退蓝:logo 金红族恒有 B ≤ R,旧蓝端(#3b82f6)违反该不变量。
+        for (i, c) in styled.iter().enumerate() {
+            let Color::Rgb(r, _, b) = *c else {
+                continue;
+            };
+            assert!(b <= r, "第 {i} 个有色字符出现蓝族分量 B>R: ({r},_,{b})");
         }
     }
 

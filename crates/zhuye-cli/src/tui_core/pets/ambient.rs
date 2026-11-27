@@ -1,4 +1,4 @@
-//! Reflect 伴侣的环境终端渲染。
+//! ZhuYe 伴侣的环境终端渲染。
 //!
 //! 环境宠物复用了与全屏查看器相同的提取图像帧，
 //! 但采用了不同的所有权拆分方式进行渲染：ratatui 仍然拥有
@@ -149,7 +149,7 @@ impl AmbientPet {
         frame_requester: FrameRequester,
         animations_enabled: bool,
     ) -> Result<Self> {
-        let pet = Pet::load_with_reflect_home(
+        let pet = Pet::load_with_zhuye_home(
             selected_pet.unwrap_or(DEFAULT_PET_ID),
             /*zhuye_home*/ Some(zhuye_home),
         )
@@ -495,7 +495,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn notification_labels_match_reflect_app_vocabulary() {
+    fn notification_labels_match_zhuye_app_vocabulary() {
         assert_eq!(PetNotificationKind::Running.label(), "Running");
         assert_eq!(PetNotificationKind::Waiting.label(), "Needs input");
         assert_eq!(PetNotificationKind::Review.label(), "Ready");

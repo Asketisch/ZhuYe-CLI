@@ -127,7 +127,7 @@ class Sandbox:
     def create(cls, prefix: str = "zhuye-cli-test-") -> "Sandbox":
         """建隔离目录,并预写空的 `~/.zhuye/config.toml`。
 
-        `reflect_config::load_default()` 对缺文件是「回落默认配置」而非报错,
+        `zhuye_config::load_default()` 对缺文件是「回落默认配置」而非报错,
         但显式写入可让「配置文件存在」这一前提在用例里显式成立,避免依赖
         宿主机残留配置(宿主机若有 provider 配置,会改变启动行为)。
         """
@@ -153,7 +153,7 @@ class Sandbox:
         env = dict(os.environ)
         env["HOME"] = str(self.home)
         # 屏蔽启动期 GitHub releases 探测 —— 离线环境不卡启动。
-        env.setdefault("REFLECT_TUI_UPDATE_CHECK", "0")
+        env.setdefault("ZHUYE_TUI_UPDATE_CHECK", "0")
         # crossterm 在 TERM=dumb / 缺省下不渲染(non-ANSI terminal)。
         if not env.get("TERM") or env["TERM"] == "dumb":
             env["TERM"] = "xterm-256color"
@@ -479,7 +479,7 @@ class TuiSession:
 def write_mock_script(path: Path, lines: list[str]) -> Path:
     """写 mock provider 脚本:JSONL,每行一次模型回复。
 
-    行格式(见 reflect-llm/src/providers/mock.rs):
+    行格式(见 zhuye-llm/src/providers/mock.rs):
     `{"type":"text","text":"..."}` / `{"type":"tool_call","name":"t","args":{}}`
     """
     import json

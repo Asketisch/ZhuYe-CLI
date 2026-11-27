@@ -50,7 +50,7 @@ impl ChatWidget {
                 let name = Self::personality_label(personality).to_string();
                 let description = Some(Self::personality_description(personality).to_string());
                 let actions: Vec<SelectionAction> = vec![Box::new(move |tx| {
-                    tx.send(AppEvent::ReflectOp(AppCommand::override_turn_context(
+                    tx.send(AppEvent::ZhuyeOp(AppCommand::override_turn_context(
                         /*cwd*/ None,
                         /*approval_policy*/ None,
                         /*approvals_reviewer*/ None,
@@ -81,9 +81,7 @@ impl ChatWidget {
 
         let mut header = ColumnRenderable::new();
         header.push(Line::from("Select Personality".bold()));
-        header.push(Line::from(
-            "Choose a communication style for Reflect.".dim(),
-        ));
+        header.push(Line::from("Choose a communication style for ZhuYe.".dim()));
 
         self.bottom_pane.show_selection_view(SelectionViewParams {
             header: Box::new(header),

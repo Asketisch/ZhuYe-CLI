@@ -132,7 +132,7 @@ pub fn resolve(theme_id: &str) -> Palette {
     resolve_with_no_color(theme_id, no_color_env())
 }
 
-/// 主题持久化文件:`<reflect home>/theme`(内容是主题 id,如 `light`)。
+/// 主题持久化文件:`<zhuye home>/theme`(内容是主题 id,如 `light`)。
 pub fn persisted_path() -> Option<std::path::PathBuf> {
     // v0.1.8-develop:home 解析收编为 zhuye-config 的 data_dir 单一事实源
     zhuye_config::data_dir().map(|h| h.join("theme"))
@@ -248,7 +248,7 @@ mod tests {
 
     #[test]
     fn persist_to_and_load_from_round_trip() {
-        let dir = std::env::temp_dir().join("reflect-theme-persist-test");
+        let dir = std::env::temp_dir().join("zhuye-theme-persist-test");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("theme");
@@ -274,7 +274,7 @@ mod tests {
 
     #[test]
     fn load_from_tolerates_missing_and_empty() {
-        let dir = std::env::temp_dir().join("reflect-theme-load-test");
+        let dir = std::env::temp_dir().join("zhuye-theme-load-test");
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         assert_eq!(load_from(&dir.join("nope")), None, "缺文件 → None");

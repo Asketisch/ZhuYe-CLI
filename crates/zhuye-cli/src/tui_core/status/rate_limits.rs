@@ -93,7 +93,7 @@ impl RateLimitWindowDisplay {
 
 #[derive(Debug, Clone)]
 pub(crate) struct RateLimitSnapshotDisplay {
-    /// 规范的限额标识符（例如：`reflect` 或 `zhuye_other`）。
+    /// 规范的限额标识符（例如：`zhuye` 或 `zhuye_other`）。
     pub limit_name: String,
     /// 表示此展示快照捕获时刻的本地时间戳。
     pub captured_at: DateTime<Local>,
@@ -138,7 +138,7 @@ pub(crate) fn rate_limit_snapshot_display(
     snapshot: &RateLimitSnapshot,
     captured_at: DateTime<Local>,
 ) -> RateLimitSnapshotDisplay {
-    rate_limit_snapshot_display_for_limit(snapshot, "reflect".to_string(), captured_at)
+    rate_limit_snapshot_display_for_limit(snapshot, "zhuye".to_string(), captured_at)
 }
 
 pub(crate) fn rate_limit_snapshot_display_for_limit(
@@ -229,7 +229,7 @@ pub(crate) fn compose_rate_limit_data_many(
             .unwrap_or(false);
 
         let limit_bucket_label = snapshot.limit_name.clone();
-        let show_limit_prefix = !limit_bucket_label.eq_ignore_ascii_case("reflect");
+        let show_limit_prefix = !limit_bucket_label.eq_ignore_ascii_case("zhuye");
         let primary_label = snapshot
             .primary
             .as_ref()
@@ -244,9 +244,9 @@ pub(crate) fn compose_rate_limit_data_many(
             .map(|label| capitalize_first(&label));
         let window_count =
             usize::from(snapshot.primary.is_some()) + usize::from(snapshot.secondary.is_some());
-        let combine_non_reflect_single_limit = show_limit_prefix && window_count == 1;
+        let combine_non_zhuye_single_limit = show_limit_prefix && window_count == 1;
 
-        if show_limit_prefix && !combine_non_reflect_single_limit {
+        if show_limit_prefix && !combine_non_zhuye_single_limit {
             rows.push(StatusRateLimitRow {
                 label: format!("{limit_bucket_label} limit"),
                 value: StatusRateLimitValue::Text(String::new()),
@@ -254,7 +254,7 @@ pub(crate) fn compose_rate_limit_data_many(
         }
 
         if let Some(primary) = snapshot.primary.as_ref() {
-            let label = if combine_non_reflect_single_limit {
+            let label = if combine_non_zhuye_single_limit {
                 format!(
                     "{} {} limit",
                     limit_bucket_label,
@@ -281,7 +281,7 @@ pub(crate) fn compose_rate_limit_data_many(
         }
 
         if let Some(secondary) = snapshot.secondary.as_ref() {
-            let label = if combine_non_reflect_single_limit {
+            let label = if combine_non_zhuye_single_limit {
                 format!(
                     "{} {} limit",
                     limit_bucket_label,
@@ -434,10 +434,10 @@ mod tests {
     }
 
     #[test]
-    fn non_reflect_single_limit_renders_combined_row() {
+    fn non_zhuye_single_limit_renders_combined_row() {
         let now = Local::now();
-        let reflect = RateLimitSnapshotDisplay {
-            limit_name: "reflect".to_string(),
+        let zhuye = RateLimitSnapshotDisplay {
+            limit_name: "zhuye".to_string(),
             captured_at: now,
             primary: Some(window(/*used_percent*/ 10.0)),
             secondary: None,
@@ -449,7 +449,7 @@ mod tests {
             individual_limit: None,
         };
         let other = RateLimitSnapshotDisplay {
-            limit_name: "reflect-other".to_string(),
+            limit_name: "zhuye-other".to_string(),
             captured_at: now,
             primary: Some(window(/*used_percent*/ 20.0)),
             secondary: None,
@@ -461,7 +461,7 @@ mod tests {
             individual_limit: None,
         };
 
-        let rows = match compose_rate_limit_data_many(&[reflect, other], now) {
+        let rows = match compose_rate_limit_data_many(&[zhuye, other], now) {
             StatusRateLimitData::Available(rows) => rows,
             other => panic!("unexpected status: {other:?}"),
         };
@@ -472,7 +472,7 @@ mod tests {
             vec![
                 "5h limit".to_string(),
                 "Credits".to_string(),
-                "reflect-other 5h limit".to_string(),
+                "zhuye-other 5h limit".to_string(),
                 "Credits".to_string(),
             ]
         );
@@ -480,10 +480,10 @@ mod tests {
     }
 
     #[test]
-    fn non_reflect_multi_limit_keeps_group_row() {
+    fn non_zhuye_multi_limit_keeps_group_row() {
         let now = Local::now();
         let other = RateLimitSnapshotDisplay {
-            limit_name: "reflect-other".to_string(),
+            limit_name: "zhuye-other".to_string(),
             captured_at: now,
             primary: Some(RateLimitWindowDisplay {
                 used_percent: 20.0,
@@ -507,7 +507,7 @@ mod tests {
         assert_eq!(
             labels,
             vec![
-                "reflect-other limit".to_string(),
+                "zhuye-other limit".to_string(),
                 "Usage limit".to_string(),
                 "Secondary usage limit".to_string(),
             ]

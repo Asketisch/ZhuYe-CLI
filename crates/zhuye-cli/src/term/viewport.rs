@@ -1,16 +1,16 @@
-//! Reflect 对齐的视口扩缩与清屏语义。
+//! ZhuYe 对齐的视口扩缩与清屏语义。
 //!
 //! 视口变化时的处理语义：
 //! 1. 按 desired height 调整底部锚定区域；
 //! 2. 若底部超出屏幕则 `scroll_region_up` 腾出空间；
 //! 3. 区域变化时 `clear_for_viewport_change`，避免旧 live 像素残留成「双份」历史。
 //!
-//! Reflect 额外处理 live 消失时的 shrink：
+//! ZhuYe 额外处理 live 消失时的 shrink：
 //! 1. clear + 删掉 `[old_top, bottom_anchor)` 空洞（避免回合间空行）；
 //! 2. 再 `scroll_region_down(0..screen_h, gap)` 把历史 + composer 推回屏底
 //!    （保持输入框贴底，避免后续 `insert_history` 因未贴底而整块下推造成「整屏上滚」）。
 
-use crate::tui_core::custom_terminal::Terminal as ReflectTerminal;
+use crate::tui_core::custom_terminal::Terminal as ZhuyeTerminal;
 use ratatui::backend::Backend;
 use ratatui::layout::{Position, Rect};
 use std::io::{self, Write};
@@ -24,7 +24,7 @@ fn rect_origin(area: Rect) -> Position {
 
 /// 视口区域变化时，从旧/新区域顶部起清到屏幕末尾，防止残留 cell 进入 scrollback 可见区。
 pub fn clear_for_viewport_change<B>(
-    terminal: &mut ReflectTerminal<B>,
+    terminal: &mut ZhuyeTerminal<B>,
     new_area: Rect,
 ) -> io::Result<()>
 where
@@ -40,7 +40,7 @@ where
 
 /// 删除 `[old_top, …)` 空隙：从 `old_top` 起向上滚 `gap` 行，composer 上移到 `old_top`。
 fn delete_viewport_gap_rows<B>(
-    terminal: &mut ReflectTerminal<B>,
+    terminal: &mut ZhuyeTerminal<B>,
     old_top: u16,
     gap: u16,
     screen_height: u16,
@@ -62,7 +62,7 @@ where
 /// 必须滚 `0..screen_height`：若只滚到 `old_top+height`，下方空洞不在区内，
 /// 下推会把历史/composer 从区底挤丢，空洞仍留在屏底。
 fn reanchor_content_to_bottom<B>(
-    terminal: &mut ReflectTerminal<B>,
+    terminal: &mut ZhuyeTerminal<B>,
     gap: u16,
     screen_height: u16,
 ) -> io::Result<()>
@@ -79,12 +79,12 @@ where
     Ok(())
 }
 
-/// 按 Reflect `Tui::draw` 语义准备底部锚定 viewport，返回最终区域。
+/// 按 ZhuYe `Tui::draw` 语义准备底部锚定 viewport，返回最终区域。
 ///
 /// `desired_height` 为 live + composer + status 的合计行数（已 clamp 到屏幕高度）。
 /// shrink 时：clear → 删空洞 → 下推贴底。
 pub fn prepare_bottom_viewport<B>(
-    terminal: &mut ReflectTerminal<B>,
+    terminal: &mut ZhuyeTerminal<B>,
     screen_width: u16,
     screen_height: u16,
     desired_height: u16,
@@ -108,7 +108,7 @@ where
         area.width = screen_width;
         // 保持底部锚定：y = screen_height - height（若尚未越界）。
         if area.bottom() > screen_height || area.y + height != screen_height {
-            // 视口增高且超出屏幕底：只滚视口上方区域腾地方（与 Reflect 一致）。
+            // 视口增高且超出屏幕底：只滚视口上方区域腾地方（与 ZhuYe 一致）。
             if area.bottom() > screen_height {
                 let scroll_by = area.bottom() - screen_height;
                 let top = area.top();
@@ -162,7 +162,7 @@ pub fn live_region_height(live: &str, width: u16) -> u16 {
 #[cfg(test)]
 mod viewport_tests {
     use super::*;
-    use crate::tui_core::custom_terminal::Terminal as ReflectTerminal;
+    use crate::tui_core::custom_terminal::Terminal as ZhuyeTerminal;
     use crate::tui_core::test_backend::VT100Backend;
 
     #[test]
@@ -170,7 +170,7 @@ mod viewport_tests {
         let width: u16 = 40;
         let height: u16 = 16;
         let backend = VT100Backend::new(width, height);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
 
         // 高 live 视口：y=6, h=10。
         let tall = Rect::new(0, height - 10, width, 10);

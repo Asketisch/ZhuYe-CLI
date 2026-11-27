@@ -267,10 +267,10 @@ fn column_classification_token_heavy_for_local_path_lists() {
     let header = vec![make_cell("Files")];
     let rows = vec![
         vec![make_cell(
-            "reflect-agent/core/src/next_prompt_suggestion.rs:1, reflect-agent/core/src/next_prompt_suggestion_tests.rs:1",
+            "zhuye-agent/core/src/next_prompt_suggestion.rs:1, zhuye-agent/core/src/next_prompt_suggestion_tests.rs:1",
         )],
         vec![make_cell(
-            "reflect-agent/core/src/context/next_prompt_suggestion.rs:1, reflect-agent/core/src/context/contextual_user_message_tests.rs:1",
+            "zhuye-agent/core/src/context/next_prompt_suggestion.rs:1, zhuye-agent/core/src/context/contextual_user_message_tests.rs:1",
         )],
     ];
     let metrics = W::collect_table_column_metrics(&header, &rows, /*column_count*/ 1);

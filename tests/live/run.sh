@@ -11,11 +11,11 @@
 #
 # 用法:
 #   ./tests/live/run.sh                                  # 默认跳过(零网络请求)
-#   REFLECT_LIVE=1 ./tests/live/run.sh                   # 真跑(免费模型池)
-#   REFLECT_LIVE=1 REFLECT_LIVE_MODELS=a,b ./tests/live/run.sh
-#   REFLECT_LIVE=1 ./tests/live/run.sh -k full_feature   # 只跑全功能实战组(重)
-#   REFLECT_LIVE=1 REFLECT_LIVE_BASE_URL=http://127.0.0.1:18900 \
-#     REFLECT_LIVE_API_KEY=<forwardKey> ./tests/live/run.sh   # dsh 网关车道
+#   ZHUYE_LIVE=1 ./tests/live/run.sh                   # 真跑(免费模型池)
+#   ZHUYE_LIVE=1 ZHUYE_LIVE_MODELS=a,b ./tests/live/run.sh
+#   ZHUYE_LIVE=1 ./tests/live/run.sh -k full_feature   # 只跑全功能实战组(重)
+#   ZHUYE_LIVE=1 ZHUYE_LIVE_BASE_URL=http://127.0.0.1:18900 \
+#     ZHUYE_LIVE_API_KEY=<forwardKey> ./tests/live/run.sh   # dsh 网关车道
 #
 # 退出码:0 = 全部通过(或整层跳过);1 = 有用例失败。
 
@@ -46,13 +46,13 @@ if ! python3 -c "import pyte" 2>/dev/null; then
 fi
 
 # 未开启 → 整层跳过(不发起任何网络请求)。
-if [ -z "${REFLECT_LIVE:-}" ] || [ "${REFLECT_LIVE}" = "0" ]; then
-    echo "  [SKIP] 实模型层未启用(设 REFLECT_LIVE=1 开启;默认车道=免费模型池)"
+if [ -z "${ZHUYE_LIVE:-}" ] || [ "${ZHUYE_LIVE}" = "0" ]; then
+    echo "  [SKIP] 实模型层未启用(设 ZHUYE_LIVE=1 开启;默认车道=免费模型池)"
     exit 0
 fi
 
-echo "  车道:   ${REFLECT_LIVE_BASE_URL:-https://api.kilo.ai/api/gateway}"
-echo "  模型:   ${REFLECT_LIVE_MODELS:-(从 provider 清单接口实时拉取)}"
+echo "  车道:   ${ZHUYE_LIVE_BASE_URL:-https://api.kilo.ai/api/gateway}"
+echo "  模型:   ${ZHUYE_LIVE_MODELS:-(从 provider 清单接口实时拉取)}"
 
 # pytest 从本目录跑,保证 `from tui_pty import ...` / `from live_lane import ...` 可解析。
 # 额外参数透传:`./tests/live/run.sh -k full_feature` 只跑全功能实战组。

@@ -32,7 +32,7 @@ pub(super) fn new_test_composer() -> (ChatComposer, UnboundedReceiver<AppEvent>)
             /*has_input_focus*/ true,
             sender,
             /*enhanced_keys_supported*/ false,
-            "Ask Reflect to do anything".to_string(),
+            "Ask ZhuYe to do anything".to_string(),
             /*disable_paste_burst*/ false,
         ),
         rx,
@@ -88,7 +88,7 @@ fn footer_hint_row_is_separated_from_composer() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -142,7 +142,7 @@ fn footer_flash_overrides_footer_hint_override() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_footer_hint_override(Some(vec![("K".to_string(), "label".to_string())]));
@@ -180,7 +180,7 @@ fn footer_flash_expires_and_falls_back_to_hint_override() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_footer_hint_override(Some(vec![("K".to_string(), "label".to_string())]));
@@ -228,7 +228,7 @@ pub(super) fn snapshot_composer_state_with_width<F>(
         /*has_input_focus*/ true,
         sender,
         enhanced_keys_supported,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     setup(&mut composer);
@@ -383,7 +383,7 @@ fn footer_mode_snapshots() {
         |composer| {
             composer.set_status_line_enabled(/*enabled*/ true);
             composer.set_status_line(Some(Line::from(
-                "gpt-5.4 high fast · ~/code/reflect-1 · Context 0% used",
+                "gpt-5.4 high fast · ~/code/zhuye-1 · Context 0% used",
             )));
             composer.set_text_content("!git status".to_string(), Vec::new(), Vec::new());
         },
@@ -395,7 +395,7 @@ fn footer_mode_snapshots() {
         |composer| {
             composer.set_status_line_enabled(/*enabled*/ true);
             composer.set_status_line(Some(Line::from(
-                "gpt-5.4 high fast · ~/code/reflect-1 · Context 0% used",
+                "gpt-5.4 high fast · ~/code/zhuye-1 · Context 0% used",
             )));
             composer.set_text_content("!".to_string(), Vec::new(), Vec::new());
             let _ = composer.handle_key_event(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
@@ -411,7 +411,7 @@ fn shell_command_cursor_uses_absorbed_prefix() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let area = Rect::new(0, 0, 40, 5);
@@ -433,12 +433,12 @@ fn shell_command_uses_shell_accent_style() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_status_line_enabled(/*enabled*/ true);
     composer.set_status_line(Some(Line::from(
-        "gpt-5.4 high fast · ~/code/reflect-1 · Context 0% used",
+        "gpt-5.4 high fast · ~/code/zhuye-1 · Context 0% used",
     )));
     composer.set_text_content("!git status".to_string(), Vec::new(), Vec::new());
 
@@ -492,7 +492,7 @@ fn plugin_at_mentions_use_plugin_accent_style() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content_with_mention_bindings(
@@ -520,7 +520,7 @@ fn plugin_at_mentions_render_with_plugin_accent_snapshot() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content_with_mention_bindings(
@@ -571,7 +571,7 @@ fn recalled_plugin_at_mentions_keep_plugin_accent_style() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content_with_mention_bindings(
@@ -606,10 +606,10 @@ fn status_line_hyperlink_marks_pr_number_cells() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
-    let url = "https://github.com/asketisch/reflect/pull/20252";
+    let url = "https://github.com/asketisch/zhuye/pull/20252";
     composer.set_status_line_enabled(/*enabled*/ true);
     composer.set_status_line(Some(Line::from(Span::styled(
         "PR #20252",
@@ -643,7 +643,7 @@ fn esc_exits_empty_shell_mode() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -672,7 +672,7 @@ fn esc_keeps_shell_mode_when_paste_burst_flushes_pending_text() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -941,7 +941,7 @@ fn esc_hint_stays_hidden_with_draft_content() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -970,7 +970,7 @@ fn empty_vim_insert_escape_enters_normal_without_esc_hint() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_vim_enabled(/*enabled*/ true);
@@ -1008,7 +1008,7 @@ fn slash_opens_command_popup_in_vim_normal_mode() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ true,
     );
     composer.set_vim_enabled(/*enabled*/ true);
@@ -1039,7 +1039,7 @@ fn slash_command_can_be_typed_and_dispatched_after_vim_normal_slash() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ true,
     );
     composer.set_vim_enabled(/*enabled*/ true);
@@ -1074,7 +1074,7 @@ fn inline_slash_command_dispatch_resets_vim_mode_to_normal() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ true,
     );
     composer.set_collaboration_modes_enabled(/*enabled*/ true);
@@ -1113,7 +1113,7 @@ fn bang_enters_shell_mode_in_vim_normal_mode() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ true,
     );
     composer.set_vim_enabled(/*enabled*/ true);
@@ -1144,7 +1144,7 @@ fn shell_command_can_be_typed_after_vim_normal_bang() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ true,
     );
     composer.set_vim_enabled(/*enabled*/ true);
@@ -1169,7 +1169,7 @@ fn base_footer_mode_tracks_empty_state_after_quit_hint_expires() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -1192,7 +1192,7 @@ fn clear_for_ctrl_c_records_cleared_draft() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -1218,7 +1218,7 @@ fn clear_for_ctrl_c_preserves_pending_paste_history_entry() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -1286,7 +1286,7 @@ fn large_paste_numbering_reuses_after_ctrl_c_clear() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -1319,7 +1319,7 @@ fn vim_mode_resets_to_normal_after_submission() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_steer_enabled(/*enabled*/ true);
@@ -1359,7 +1359,7 @@ fn vim_mode_resets_to_normal_after_queued_submission() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_steer_enabled(/*enabled*/ true);
@@ -1393,7 +1393,7 @@ fn vim_mode_stays_insert_after_suppressed_submission() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_steer_enabled(/*enabled*/ true);
@@ -1423,7 +1423,7 @@ fn esc_switches_vim_insert_to_normal() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_vim_enabled(/*enabled*/ true);
@@ -1463,7 +1463,7 @@ fn vim_insert_uses_bar_cursor_style() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let area = Rect::new(0, 0, 80, 10);
@@ -1496,7 +1496,7 @@ fn clear_for_ctrl_c_preserves_image_draft_state() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -1542,7 +1542,7 @@ fn clear_for_ctrl_c_preserves_remote_offset_image_labels() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let remote_image_url = "https://example.com/one.png".to_string();
@@ -1584,7 +1584,7 @@ fn apply_history_entry_preserves_local_placeholders_after_remote_prefix() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -1627,7 +1627,7 @@ fn question_mark_only_toggles_on_first_char() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -1667,7 +1667,7 @@ fn shift_question_mark_toggles_shortcut_overlay_when_empty() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_steer_enabled(true);
@@ -1693,7 +1693,7 @@ fn question_mark_does_not_toggle_during_paste_burst() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -1723,7 +1723,7 @@ fn set_connector_mentions_refreshes_open_mention_popup() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_connectors_enabled(/*enabled*/ true);
@@ -1767,7 +1767,7 @@ fn set_connector_mentions_skips_disabled_connectors() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_connectors_enabled(/*enabled*/ true);
@@ -1807,7 +1807,7 @@ fn set_plugin_mentions_refreshes_open_mention_popup() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content("$".to_string(), Vec::new(), Vec::new());
@@ -2475,7 +2475,7 @@ fn set_skill_mentions_refreshes_open_mention_popup() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content("$".to_string(), Vec::new(), Vec::new());
@@ -2483,8 +2483,8 @@ fn set_skill_mentions_refreshes_open_mention_popup() {
 
     let skill_path = test_path_buf("/tmp/skill/SKILL.md").abs();
     composer.set_skill_mentions(Some(vec![SkillMetadata {
-        name: "reflect".to_string(),
-        description: "Primary personal Reflect repo skill.".to_string(),
+        name: "zhuye".to_string(),
+        description: "Primary personal ZhuYe repo skill.".to_string(),
         short_description: None,
         interface: None,
         dependencies: None,
@@ -2512,7 +2512,7 @@ fn mention_items_show_plugin_owned_skill_and_app_duplicates() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_connectors_enabled(/*enabled*/ true);
@@ -2691,7 +2691,7 @@ fn set_connector_mentions_excludes_disabled_apps_from_mention_popup() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_connectors_enabled(/*enabled*/ true);
@@ -2731,7 +2731,7 @@ fn shortcut_overlay_persists_while_task_running() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -2977,7 +2977,7 @@ fn set_text_content_rebinds_at_sigiled_mentions() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3004,7 +3004,7 @@ fn set_text_content_rebinds_matching_sigil_only() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3037,7 +3037,7 @@ fn set_text_content_rebinds_both_sigil_forms() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3080,7 +3080,7 @@ fn set_text_content_rebinds_at_mentions_after_email_substrings() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3121,7 +3121,7 @@ fn set_text_content_rebinds_at_mentions_after_punctuation() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3165,7 +3165,7 @@ fn bound_at_mentions_do_not_block_arrow_navigation() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3214,7 +3214,7 @@ fn restored_bound_at_mentions_do_not_open_mention_popup() {
             /*has_input_focus*/ true,
             sender,
             /*enhanced_keys_supported*/ false,
-            "Ask Reflect to do anything".to_string(),
+            "Ask ZhuYe to do anything".to_string(),
             /*disable_paste_burst*/ false,
         );
         composer.set_plugin_mentions(Some(vec![PluginCapabilitySummary {
@@ -3266,7 +3266,7 @@ fn enter_submits_when_file_popup_has_no_selection() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3298,7 +3298,7 @@ fn enter_submits_when_unified_mention_popup_has_no_selection() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_mentions_v2_enabled(/*enabled*/ true);
@@ -3334,7 +3334,7 @@ fn ascii_prefix_survives_non_ascii_followup() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3364,7 +3364,7 @@ fn non_ascii_char_inserts_immediately_without_burst_state() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3388,7 +3388,7 @@ fn non_ascii_burst_buffers_enter_and_flushes_multiline() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3422,7 +3422,7 @@ fn non_ascii_burst_preserves_ideographic_space_and_ascii() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3470,7 +3470,7 @@ fn non_ascii_burst_buffers_large_multiline_mixed_ascii_and_unicode() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3557,7 +3557,7 @@ fn queued_submission_flushes_ascii_burst_instead_of_inserting_newline() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3602,7 +3602,7 @@ fn slash_context_enter_ignores_paste_burst_enter_suppression() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3631,7 +3631,7 @@ fn non_char_key_flushes_active_burst_before_input() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3667,7 +3667,7 @@ fn disable_paste_burst_flushes_pending_first_char_and_inserts_immediately() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3700,7 +3700,7 @@ fn handle_paste_small_inserts_text() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3730,7 +3730,7 @@ fn empty_enter_returns_none() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3759,7 +3759,7 @@ fn handle_paste_large_uses_placeholder_and_replaces_on_submit() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3792,7 +3792,7 @@ fn submit_at_character_limit_succeeds() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_steer_enabled(true);
@@ -3820,7 +3820,7 @@ fn oversized_submit_reports_error_and_restores_draft() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_steer_enabled(true);
@@ -3862,7 +3862,7 @@ fn oversized_queued_submission_reports_error_and_restores_draft() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_steer_enabled(false);
@@ -3907,7 +3907,7 @@ fn edit_clears_pending_paste() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -3948,7 +3948,7 @@ fn ui_snapshots() {
             /*has_input_focus*/ true,
             sender.clone(),
             /*enhanced_keys_supported*/ false,
-            "Ask Reflect to do anything".to_string(),
+            "Ask ZhuYe to do anything".to_string(),
             /*disable_paste_burst*/ false,
         );
 
@@ -4063,7 +4063,7 @@ fn slash_popup_model_first_for_mo_ui() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4091,7 +4091,7 @@ fn slash_popup_model_first_for_mo_logic() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     type_chars_humanlike(&mut composer, &['/', 'm', 'o']);
@@ -4122,7 +4122,7 @@ fn slash_popup_resume_for_res_ui() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4150,7 +4150,7 @@ fn slash_popup_archive_for_ar_ui() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4173,7 +4173,7 @@ fn slash_popup_resume_for_res_logic() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     type_chars_humanlike(&mut composer, &['/', 'r', 'e', 's']);
@@ -4204,7 +4204,7 @@ fn slash_popup_pets_for_pet_ui() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4227,7 +4227,7 @@ fn slash_popup_pets_for_pet_logic() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     type_chars_humanlike(&mut composer, &['/', 'p', 'e', 't']);
@@ -4258,7 +4258,7 @@ fn slash_popup_btw_for_bt_ui() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4281,7 +4281,7 @@ fn slash_popup_btw_for_bt_logic() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     type_chars_humanlike(&mut composer, &['/', 'b', 't']);
@@ -4312,7 +4312,7 @@ fn slash_popup_side_for_si_ui() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4335,7 +4335,7 @@ fn slash_popup_side_for_si_logic() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     type_chars_humanlike(&mut composer, &['/', 's', 'i']);
@@ -4362,7 +4362,7 @@ fn service_tier_slash_command_dispatches_from_catalog_name() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_service_tier_commands_enabled(/*enabled*/ true);
@@ -4423,7 +4423,7 @@ fn slash_init_dispatches_command_and_does_not_submit_literal_text() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4475,7 +4475,7 @@ fn kill_buffer_persists_after_submit() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_steer_enabled(true);
@@ -4509,7 +4509,7 @@ fn kill_buffer_persists_after_slash_command_dispatch() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.draft.textarea.insert_str("restore me");
@@ -4547,7 +4547,7 @@ fn slash_command_disabled_while_task_running_keeps_text() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_task_running(/*running*/ true);
@@ -4591,7 +4591,7 @@ fn enter_queues_when_queue_submissions_is_enabled() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_queue_submissions(/*queue_submissions*/ true);
@@ -4627,7 +4627,7 @@ fn tab_queues_slash_led_prompts_while_task_running_without_validation() {
             /*has_input_focus*/ true,
             sender,
             /*enhanced_keys_supported*/ false,
-            "Ask Reflect to do anything".to_string(),
+            "Ask ZhuYe to do anything".to_string(),
             /*disable_paste_burst*/ false,
         );
         composer.set_task_running(/*running*/ true);
@@ -4676,7 +4676,7 @@ fn remapped_submit_does_not_fall_back_to_enter() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer
@@ -4712,7 +4712,7 @@ fn remapped_queue_does_not_fall_back_to_tab() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_task_running(/*running*/ true);
@@ -4745,7 +4745,7 @@ fn remapped_history_search_does_not_fall_back_to_ctrl_r() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let mut keymap = RuntimeKeymap::defaults();
@@ -4771,7 +4771,7 @@ fn tab_queues_leading_space_slash_as_plain_text_while_task_running() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_task_running(/*running*/ true);
@@ -4805,7 +4805,7 @@ fn tab_queues_bang_shell_prompts_while_task_running_without_execution() {
             /*has_input_focus*/ true,
             sender,
             /*enhanced_keys_supported*/ false,
-            "Ask Reflect to do anything".to_string(),
+            "Ask ZhuYe to do anything".to_string(),
             /*disable_paste_burst*/ false,
         );
         composer.set_task_running(/*running*/ true);
@@ -4851,7 +4851,7 @@ fn slash_tab_completion_moves_cursor_to_end() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4879,7 +4879,7 @@ fn slash_tab_completion_wins_over_queueing_while_task_running() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_task_running(/*running*/ true);
@@ -4909,7 +4909,7 @@ fn slash_key_completes_selected_slash_command_as_text() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4934,7 +4934,7 @@ fn slash_tab_then_enter_dispatches_builtin_command() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -4978,7 +4978,7 @@ fn slash_command_elementizes_on_space() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_collaboration_modes_enabled(/*enabled*/ true);
@@ -5000,7 +5000,7 @@ fn slash_command_elementizes_only_known_commands() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_collaboration_modes_enabled(/*enabled*/ true);
@@ -5021,7 +5021,7 @@ fn slash_command_element_removed_when_not_at_start() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5053,7 +5053,7 @@ fn tab_submits_when_no_task_running() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5081,7 +5081,7 @@ fn tab_does_not_submit_for_bang_shell_command() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_task_running(/*running*/ false);
@@ -5110,7 +5110,7 @@ fn bang_prefixed_slash_text_submits_literal_shell_command() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5137,7 +5137,7 @@ fn slash_mention_dispatches_command_and_inserts_at() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5187,7 +5187,7 @@ fn slash_plan_args_preserve_text_elements() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_collaboration_modes_enabled(/*enabled*/ true);
@@ -5225,7 +5225,7 @@ fn file_completion_preserves_large_paste_placeholder_elements() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5486,7 +5486,7 @@ fn test_multiple_pastes_submission() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5564,7 +5564,7 @@ fn test_placeholder_deletion() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5641,7 +5641,7 @@ fn deleting_duplicate_length_pastes_removes_only_target() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5683,7 +5683,7 @@ fn large_paste_numbering_continues_with_same_length_placeholder() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5728,7 +5728,7 @@ fn large_paste_numbering_reuses_after_all_deleted() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5765,7 +5765,7 @@ fn test_partial_placeholder_deletion() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5814,7 +5814,7 @@ fn attach_image_and_submit_includes_local_image_paths() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let path = PathBuf::from("/tmp/image1.png");
@@ -5851,7 +5851,7 @@ fn submit_captures_recent_mention_bindings_before_clearing_textarea() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -5884,7 +5884,7 @@ fn history_navigation_restores_remote_and_local_image_attachments() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let remote_image_url = "https://example.com/remote.png".to_string();
@@ -5918,7 +5918,7 @@ fn history_navigation_restores_remote_only_submissions() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let remote_image_urls = vec![
@@ -5950,7 +5950,7 @@ fn history_navigation_leaves_cursor_at_end_of_line() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6005,7 +6005,7 @@ fn vim_normal_j_k_navigate_history_at_history_boundaries() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6056,7 +6056,7 @@ fn remapped_vim_normal_history_navigation_does_not_fall_back_to_j_k() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6089,7 +6089,7 @@ fn vim_normal_j_k_fall_back_to_multiline_cursor_movement() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer
@@ -6114,7 +6114,7 @@ fn vim_normal_operator_motion_does_not_navigate_history() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6147,7 +6147,7 @@ fn vim_normal_operator_pending_consumes_submit_key() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content("hello".to_string(), Vec::new(), Vec::new());
@@ -6179,7 +6179,7 @@ fn remapped_editor_history_navigation_does_not_fall_back_to_up() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6211,7 +6211,7 @@ fn history_navigation_from_start_of_bang_command_recalls_older_entry() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6243,7 +6243,7 @@ fn vim_normal_history_navigation_from_start_of_bang_command_recalls_older_entry(
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6278,7 +6278,7 @@ fn set_text_content_reattaches_images_without_placeholder_metadata() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6303,7 +6303,7 @@ fn large_paste_preserves_image_text_elements_on_submit() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6345,7 +6345,7 @@ fn large_paste_with_leading_whitespace_trims_and_shifts_elements() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6387,7 +6387,7 @@ fn pasted_crlf_normalizes_newlines_for_elements() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6429,7 +6429,7 @@ fn suppressed_submission_restores_pending_paste_payload() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6480,7 +6480,7 @@ fn attach_image_without_text_submits_empty_text_and_images() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let path = PathBuf::from("/tmp/image2.png");
@@ -6518,7 +6518,7 @@ fn duplicate_image_placeholders_get_suffix() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let path = PathBuf::from("/tmp/image_dup.png");
@@ -6547,7 +6547,7 @@ fn image_placeholder_backspace_behaves_like_text_placeholder() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     let path = PathBuf::from("/tmp/image3.png");
@@ -6590,7 +6590,7 @@ fn backspace_with_multibyte_text_before_placeholder_does_not_panic() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6616,7 +6616,7 @@ fn deleting_one_of_duplicate_image_placeholders_removes_one_entry() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6676,7 +6676,7 @@ fn deleting_reordered_image_one_renumbers_text_in_place() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6739,7 +6739,7 @@ fn deleting_first_text_element_renumbers_following_text_element() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6780,7 +6780,7 @@ fn pasting_filepath_attaches_image() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6804,7 +6804,7 @@ fn slash_path_input_submits_without_command_error() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6841,7 +6841,7 @@ fn slash_with_leading_space_submits_as_text() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6880,7 +6880,7 @@ fn pending_first_ascii_char_flushes_as_typed() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6909,7 +6909,7 @@ fn burst_paste_fast_small_buffers_and_flushes_on_stop() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6956,7 +6956,7 @@ fn burst_paste_fast_large_inserts_placeholder_on_flush() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -6995,7 +6995,7 @@ fn humanlike_typing_1000_chars_appears_live_no_placeholder() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7020,7 +7020,7 @@ fn slash_popup_not_activated_for_slash_space_text_history_like_input() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7050,7 +7050,7 @@ fn slash_popup_activated_for_bare_slash_and_valid_prefixes() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7093,7 +7093,7 @@ fn bare_slash_command_can_be_recalled_after_recording_pending_history() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7118,7 +7118,7 @@ fn popup_selected_slash_command_records_canonical_command_history() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7143,7 +7143,7 @@ fn inline_slash_command_can_be_recalled_after_recording_pending_history() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_collaboration_modes_enabled(/*enabled*/ true);
@@ -7177,7 +7177,7 @@ fn apply_external_edit_rebuilds_text_and_attachments() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7218,7 +7218,7 @@ fn apply_external_edit_absorbs_bash_prefix_without_duplication() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content("!git status".to_string(), Vec::new(), Vec::new());
@@ -7238,7 +7238,7 @@ fn apply_external_edit_can_leave_bash_mode() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content("!git status".to_string(), Vec::new(), Vec::new());
@@ -7258,7 +7258,7 @@ fn apply_external_edit_can_enter_bash_mode() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content("git status".to_string(), Vec::new(), Vec::new());
@@ -7278,7 +7278,7 @@ fn apply_external_edit_drops_missing_attachments() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7303,7 +7303,7 @@ fn apply_external_edit_renumbers_image_placeholders() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7337,7 +7337,7 @@ fn current_text_with_pending_expands_placeholders() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7363,7 +7363,7 @@ fn current_text_with_pending_expands_overlapping_placeholders() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7390,7 +7390,7 @@ fn apply_external_edit_limits_duplicates_to_occurrences() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7418,7 +7418,7 @@ fn remote_images_do_not_modify_textarea_text_or_elements() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7439,7 +7439,7 @@ fn attach_image_after_remote_prefix_uses_offset_label() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7464,7 +7464,7 @@ fn prepare_submission_keeps_remote_offset_local_placeholder_numbering() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7501,7 +7501,7 @@ fn prepare_submission_with_only_remote_images_returns_empty_text() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7521,7 +7521,7 @@ fn delete_selected_remote_image_relabels_local_placeholders() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7566,7 +7566,7 @@ fn input_disabled_ignores_keypresses_and_hides_cursor() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -7603,7 +7603,7 @@ fn shutdown_in_progress_disables_input_and_uses_hint_without_footer() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 

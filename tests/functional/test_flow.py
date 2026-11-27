@@ -339,7 +339,7 @@ def test_large_transcript_resume_stays_interactive(tui, mock_script, sandbox) ->
 def test_malformed_config_warns_and_falls_back_to_defaults(tui, sandbox) -> None:
     """W9 坏 config.toml 不挡启动:给出显式告警,并回落默认配置,TUI 正常可用。
 
-    `reflect_config::load_default()` 对解析失败静默回退默认值(内部只记
+    `zhuye_config::load_default()` 对解析失败静默回退默认值(内部只记
     tracing::debug,被 warn 级过滤器吞掉)——用户的 providers / 权限规则 /
     hooks 会**无声失效**。bootstrap 启动前显式体检一次,解析失败即在终端
     打印可见告警;同时坏配置不能导致启动崩溃/挂死。

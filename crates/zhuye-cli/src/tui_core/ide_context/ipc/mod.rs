@@ -68,10 +68,10 @@ impl IdeContextError {
                 "The selected IDE context is too large. Clear any large selection in your IDE and try /ide again.".to_string()
             }
             IdeContextError::Send(_) => {
-                "Reflect could not request IDE context. Try /ide again.".to_string()
+                "ZhuYe could not request IDE context. Try /ide again.".to_string()
             }
             IdeContextError::Read(_) | IdeContextError::InvalidResponse(_) => {
-                "Reflect could not read IDE context. Try /ide again.".to_string()
+                "ZhuYe could not read IDE context. Try /ide again.".to_string()
             }
         }
     }
@@ -88,11 +88,11 @@ impl IdeContextError {
                 OPEN_IDE_HINT.to_string()
             }
             IdeContextError::Read(error) if error.kind() == std::io::ErrorKind::TimedOut => {
-                "Reflect timed out waiting for IDE context. It will keep trying on future messages."
+                "ZhuYe timed out waiting for IDE context. It will keep trying on future messages."
                     .to_string()
             }
             IdeContextError::RequestFailed(error) if error == "client-disconnected" => {
-                hint_with_retry("The IDE connection changed while Reflect was requesting context.")
+                hint_with_retry("The IDE connection changed while ZhuYe was requesting context.")
             }
             IdeContextError::RequestFailed(error) if error == "request-timeout" => {
                 hint_with_retry("The IDE extension did not answer in time.")
@@ -105,13 +105,13 @@ impl IdeContextError {
                 "The connected IDE client does not support IDE context requests.".to_string()
             }
             IdeContextError::Send(_) => {
-                hint_with_retry("Reflect lost the IDE connection while requesting context.")
+                hint_with_retry("ZhuYe lost the IDE connection while requesting context.")
             }
             IdeContextError::InvalidResponse(_) => {
-                hint_with_retry("Reflect received an unexpected IDE context response.")
+                hint_with_retry("ZhuYe received an unexpected IDE context response.")
             }
             IdeContextError::RequestFailed(_) => hint_with_retry(IDE_DID_NOT_PROVIDE_CONTEXT_HINT),
-            IdeContextError::Read(_) => hint_with_retry("Reflect could not read IDE context."),
+            IdeContextError::Read(_) => hint_with_retry("ZhuYe could not read IDE context."),
         }
     }
 
@@ -163,7 +163,7 @@ pub(crate) fn fetch_ide_context(
 #[cfg(windows)]
 pub(crate) fn fetch_ide_context(
     workspace_root: &Path,
-    _reflect_home: &Path,
+    _zhuye_home: &Path,
 ) -> Result<IdeContext, IdeContextError> {
     fetch_ide_context_from_socket(
         default_ipc_socket_path(),
@@ -175,7 +175,7 @@ pub(crate) fn fetch_ide_context(
 #[cfg(not(any(unix, windows)))]
 pub(crate) fn fetch_ide_context(
     _workspace_root: &Path,
-    _reflect_home: &Path,
+    _zhuye_home: &Path,
 ) -> Result<IdeContext, IdeContextError> {
     Err(IdeContextError::UnsupportedPlatform)
 }
@@ -187,7 +187,7 @@ fn primary_ipc_socket_path(zhuye_home: &Path) -> PathBuf {
 
 #[cfg(unix)]
 fn legacy_ipc_socket_paths(temp_dir: &Path, uid: libc::uid_t) -> Vec<PathBuf> {
-    let ipc_dir = temp_dir.join("reflect-ipc");
+    let ipc_dir = temp_dir.join("zhuye-ipc");
     if uid == 0 {
         vec![ipc_dir.join("ipc.sock"), ipc_dir.join("ipc-0.sock")]
     } else {
@@ -197,7 +197,7 @@ fn legacy_ipc_socket_paths(temp_dir: &Path, uid: libc::uid_t) -> Vec<PathBuf> {
 
 #[cfg(windows)]
 fn default_ipc_socket_path() -> PathBuf {
-    PathBuf::from(r"\\.\pipe\reflect-ipc")
+    PathBuf::from(r"\\.\pipe\zhuye-ipc")
 }
 
 #[cfg(not(any(unix, windows)))]

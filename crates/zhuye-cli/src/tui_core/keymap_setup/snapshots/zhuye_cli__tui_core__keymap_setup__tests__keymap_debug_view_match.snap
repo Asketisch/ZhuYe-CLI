@@ -1,10 +1,10 @@
 ---
-source: crates/reflect-tui/src/tui_core/keymap_setup/tests.rs
+source: crates/zhuye-tui/src/tui_core/keymap_setup/tests.rs
 expression: rendered
 ---
 Keypress Inspector
-Press any key to see what Reflect receives. Esc is inspected; Ctrl+C closes.
-Tip: Reflect can only inspect keys your terminal sends.
+Press any key to see what ZhuYe receives. Esc is inspected; Ctrl+C closes.
+Tip: ZhuYe can only inspect keys your terminal sends.
 
 Detected: ctrl + o
 Config key: ctrl-o

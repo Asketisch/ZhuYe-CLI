@@ -1,6 +1,6 @@
 //! legacy_core 模块的存根实现。
 //!
-//! 在 tui_compat 中，`legacy_core` 封装了配置与核心类型。Reflect 有自己的
+//! 在 tui_compat 中，`legacy_core` 封装了配置与核心类型。ZhuYe 有自己的
 //! 配置系统；此存根提供最小化的类型定义，使内联引入的 UI 代码能够编译通过。
 
 pub mod config {
@@ -151,7 +151,7 @@ pub mod config {
             self.config.cwd = cwd.into();
             self
         }
-        pub fn with_reflect_home(mut self, home: PathBuf) -> Self {
+        pub fn with_zhuye_home(mut self, home: PathBuf) -> Self {
             self.config.zhuye_home = home;
             self
         }

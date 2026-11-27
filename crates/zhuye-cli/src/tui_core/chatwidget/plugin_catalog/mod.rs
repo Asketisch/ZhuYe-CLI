@@ -24,7 +24,7 @@ use crate::app_server_protocol::PluginShareDiscoverability;
 use crate::app_server_protocol::PluginSharePrincipal;
 use crate::app_server_protocol::PluginSource;
 use crate::app_server_protocol::PluginSummary;
-use crate::core_plugins::is_reflect_curated_marketplace_name;
+use crate::core_plugins::is_zhuye_curated_marketplace_name;
 use crate::core_plugins::remote::REMOTE_GLOBAL_MARKETPLACE_NAME;
 use crate::core_plugins::remote::REMOTE_WORKSPACE_MARKETPLACE_NAME;
 use crate::core_plugins::remote::REMOTE_WORKSPACE_SHARED_WITH_ME_MARKETPLACE_NAME;
@@ -64,7 +64,7 @@ use unicode_width::UnicodeWidthStr;
 
 const INSTALLED_PLUGINS_TAB_ID: &str = "installed-plugins";
 const MARKETPLACE_TAB_ID_PREFIX: &str = "marketplace:";
-const ZHUYE_CLI_CURATED_TAB_ID: &str = "marketplace:reflect-curated";
+const ZHUYE_CLI_CURATED_TAB_ID: &str = "marketplace:zhuye-curated";
 const PLUGIN_ROW_PREFIX_WIDTH: usize = 6;
 const LOADING_ANIMATION_DELAY: Duration = Duration::from_secs(1);
 const LOADING_ANIMATION_INTERVAL: Duration = Duration::from_millis(100);
@@ -73,7 +73,7 @@ const REMOTE_LOADING_TAB_ID_PREFIX: &str = "remote-loading:";
 const REMOTE_EMPTY_TAB_ID_PREFIX: &str = "remote-empty:";
 const REMOTE_ERROR_TAB_ID_PREFIX: &str = "remote-error:";
 const ZHUYE_CLI_CURATED_LOADING_DESCRIPTION: &str =
-    "This updates when Reflect Curated plugins finish loading.";
+    "This updates when ZhuYe Curated plugins finish loading.";
 const WORKSPACE_SECTION_TAB_ORDER: u8 = 0;
 const SHARED_WITH_ME_SECTION_TAB_ORDER: u8 = 1;
 const SHARED_WITH_ME_LINK_SECTION_TAB_ORDER: u8 = 2;
@@ -90,7 +90,7 @@ struct PreferredLocalPluginSource {
 
 #[derive(Debug, Clone, Copy)]
 enum MarketplaceProduct {
-    ReflectCurated,
+    ZhuyeCurated,
     Workspace,
     SharedWithMe,
     SharedWithMeLink,
@@ -112,10 +112,10 @@ impl MarketplaceProduct {
     }
 
     fn from_marketplace_name(marketplace_name: &str) -> Self {
-        if is_reflect_curated_marketplace_name(marketplace_name)
+        if is_zhuye_curated_marketplace_name(marketplace_name)
             || marketplace_name == REMOTE_GLOBAL_MARKETPLACE_NAME
         {
-            return Self::ReflectCurated;
+            return Self::ZhuyeCurated;
         }
 
         match marketplace_name {
@@ -129,7 +129,7 @@ impl MarketplaceProduct {
 
     fn label(self) -> Option<&'static str> {
         match self {
-            Self::ReflectCurated => Some("Reflect Curated"),
+            Self::ZhuyeCurated => Some("ZhuYe Curated"),
             Self::Workspace => Some("Workspace"),
             Self::SharedWithMe => Some("Shared with me"),
             Self::SharedWithMeLink => Some("Shared with me (link)"),
@@ -144,12 +144,12 @@ impl MarketplaceProduct {
             Self::SharedWithMe => SHARED_WITH_ME_SECTION_TAB_ORDER,
             Self::SharedWithMeLink => SHARED_WITH_ME_LINK_SECTION_TAB_ORDER,
             Self::Local => LOCAL_MARKETPLACE_TAB_ORDER,
-            Self::ReflectCurated | Self::Other => OTHER_MARKETPLACE_TAB_ORDER,
+            Self::ZhuyeCurated | Self::Other => OTHER_MARKETPLACE_TAB_ORDER,
         }
     }
 
     fn is_curated(self) -> bool {
-        matches!(self, Self::ReflectCurated)
+        matches!(self, Self::ZhuyeCurated)
     }
 }
 
@@ -390,7 +390,7 @@ impl ChatWidget {
             format!("Remove {marketplace_display_name} marketplace?").dim(),
         ));
         header.push(Line::from(
-            "This removes the configured marketplace from Reflect.".dim(),
+            "This removes the configured marketplace from ZhuYe.".dim(),
         ));
 
         let cwd_for_remove = self.config.cwd.to_path_buf();
@@ -814,20 +814,17 @@ impl ChatWidget {
         let (curated_empty_name, curated_empty_description) =
             if curated_loading && !curated_has_entries {
                 (
-                    "Loading Reflect Curated plugins...",
+                    "Loading ZhuYe Curated plugins...",
                     ZHUYE_CLI_CURATED_LOADING_DESCRIPTION,
                 )
             } else if let Some(section_error) = by_openai_section_error
                 && !curated_has_entries
             {
-                (
-                    "Reflect Curated unavailable",
-                    section_error.message.as_str(),
-                )
+                ("ZhuYe Curated unavailable", section_error.message.as_str())
             } else {
                 (
-                    "No Reflect Curated plugins available",
-                    "No Reflect Curated plugins available.",
+                    "No ZhuYe Curated plugins available",
+                    "No ZhuYe Curated plugins available.",
                 )
             };
         let mut curated_items = self.plugin_selection_items(
@@ -839,7 +836,7 @@ impl ChatWidget {
         );
         if curated_loading && curated_has_entries {
             curated_items.push(remote_section_loading_item(
-                "Reflect Curated",
+                "ZhuYe Curated",
                 ZHUYE_CLI_CURATED_LOADING_DESCRIPTION,
             ));
         }
@@ -853,12 +850,10 @@ impl ChatWidget {
         }
         tabs.push(SelectionTab {
             id: ZHUYE_CLI_CURATED_TAB_ID.to_string(),
-            label: "Reflect Curated".to_string(),
+            label: "ZhuYe Curated".to_string(),
             header: plugins_header(
-                "Reflect Curated marketplace.".to_string(),
-                format!(
-                    "Installed {curated_installed} of {curated_total} Reflect Curated plugins."
-                ),
+                "ZhuYe Curated marketplace.".to_string(),
+                format!("Installed {curated_installed} of {curated_total} ZhuYe Curated plugins."),
             ),
             items: curated_items,
         });

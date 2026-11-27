@@ -7,13 +7,13 @@ use rand::Rng;
 const IS_MACOS: bool = cfg!(target_os = "macos");
 const IS_WINDOWS: bool = cfg!(target_os = "windows");
 
-const APP_TOOLTIP: &str = "Try the **Desktop app**. Run 'reflect app'.";
+const APP_TOOLTIP: &str = "Try the **Desktop app**. Run 'zhuye app'.";
 const FAST_TOOLTIP: &str =
     "*New* Use **/fast** to enable our fastest inference with increased plan usage.";
-const OTHER_TOOLTIP: &str = "*New* Build faster with the **Desktop app**. Run 'reflect app'.";
-const OTHER_TOOLTIP_NON_MAC: &str = "*New* Build faster with Reflect.";
+const OTHER_TOOLTIP: &str = "*New* Build faster with the **Desktop app**. Run 'zhuye app'.";
+const OTHER_TOOLTIP_NON_MAC: &str = "*New* Build faster with ZhuYe.";
 const FREE_GO_TOOLTIP: &str =
-    "*New* For a limited time, Reflect is included in your plan for free – let’s build together.";
+    "*New* For a limited time, ZhuYe is included in your plan for free – let’s build together.";
 
 const RAW_TOOLTIPS: &str = include_str!("tooltips.txt");
 
@@ -25,7 +25,7 @@ lazy_static! {
             if line.is_empty() || line.starts_with('#') {
                 return false;
             }
-            if !IS_MACOS && !IS_WINDOWS && line.contains("reflect app") {
+            if !IS_MACOS && !IS_WINDOWS && line.contains("zhuye app") {
                 return false;
             }
             true
@@ -46,7 +46,7 @@ fn experimental_tooltips() -> Vec<&'static str> {
         .collect()
 }
 
-/// 在启动 Reflect 时随机挑选一条提示展示给用户。
+/// 在启动 ZhuYe 时随机挑选一条提示展示给用户。
 pub(crate) fn get_tooltip(plan: Option<PlanType>, fast_mode_enabled: bool) -> Option<String> {
     let mut rng = rand::thread_rng();
 
@@ -129,13 +129,13 @@ pub(crate) mod announcement {
 
     /// 预热公告提示的缓存。
     ///
-    /// Reflect 不再从远端端点获取公告提示，因此这是一个
+    /// ZhuYe 不再从远端端点获取公告提示，因此这是一个
     /// 为保持调用点兼容而保留的空操作。
     pub(crate) fn prewarm() {}
 
     /// 获取公告提示；若预热尚未完成则返回 None。
     ///
-    /// Reflect 不再获取远端公告提示，因此这里总是返回 None。
+    /// ZhuYe 不再获取远端公告提示，因此这里总是返回 None。
     pub(crate) fn fetch_announcement_tip(_plan: Option<PlanType>) -> Option<String> {
         None
     }
@@ -184,7 +184,7 @@ pub(crate) mod announcement {
             } else if cfg!(target_os = "windows") {
                 Self::Windows
             } else {
-                // Reflect 目前发布 macOS、Windows 和 Linux 的 CLI 构建。
+                // ZhuYe 目前发布 macOS、Windows 和 Linux 的 CLI 构建。
                 Self::Linux
             }
         }
@@ -429,7 +429,7 @@ from_date = "2000-01-01"
 # target_oses optionally restricts the announcement to operating systems like ["macos", "windows"].
 
 [[announcements]]
-content = "Welcome to Reflect! Check out the new onboarding flow."
+content = "Welcome to ZhuYe! Check out the new onboarding flow."
 from_date = "2024-10-01"
 to_date = "2024-10-15"
 target_app = "cli"

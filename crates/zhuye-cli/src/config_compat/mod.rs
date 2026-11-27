@@ -9,7 +9,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::path::PathBuf;
 
-/// `$ZHUYE_HOME` 中每个用户 Reflect 配置文件的相对位置。
+/// `$ZHUYE_HOME` 中每个用户 ZhuYe 配置文件的相对位置。
 pub const CONFIG_TOML_FILE: &str = ".zhuye/config.toml";
 
 // ── 子模块声明 ──

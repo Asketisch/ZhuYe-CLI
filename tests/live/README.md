@@ -26,62 +26,62 @@
 ./tests/run_all.sh live
 
 # 真跑(默认车道:Kilo 免费池,免 Key)
-REFLECT_LIVE=1 ./tests/run_all.sh live
+ZHUYE_LIVE=1 ./tests/run_all.sh live
 
 # 指定模型(逗号分隔);不指定则从清单里取
-REFLECT_LIVE=1 REFLECT_LIVE_MODELS=cohere/north-mini-code:free ./tests/run_all.sh live
+ZHUYE_LIVE=1 ZHUYE_LIVE_MODELS=cohere/north-mini-code:free ./tests/run_all.sh live
 
 # 指定单个模型(跳过矩阵)
-REFLECT_LIVE=1 REFLECT_LIVE_MODEL=cohere/north-mini-code:free ./tests/run_all.sh live
+ZHUYE_LIVE=1 ZHUYE_LIVE_MODEL=cohere/north-mini-code:free ./tests/run_all.sh live
 ```
 
 ### 环境变量
 
 | 变量 | 默认 | 说明 |
 |---|---|---|
-| `REFLECT_LIVE` | 空 | 设 `1` 才真跑(否则整层 SKIP) |
-| `REFLECT_LIVE_BASE_URL` | `https://api.kilo.ai/api/gateway` | provider 端点 |
-| `REFLECT_LIVE_API_KEY` | 空 | 免 Key 端点留空;dsh 网关填 `forwardKey` |
-| `REFLECT_LIVE_MODELS` | 空 | 逗号分隔模型 id;空则从清单取 |
-| `REFLECT_LIVE_MODEL` | 空 | 指定本轮唯一使用的模型 |
-| `REFLECT_LIVE_MODEL_COUNT` | `3` | 从清单取几个 |
-| `REFLECT_LIVE_PROBE_TIMEOUT` | `90` | 能力探测超时(秒) |
-| `REFLECT_LIVE_DRAIN_TIMEOUT` | `240` | 回合等待预算(秒) |
-| `REFLECT_LIVE_RETRIES` | `2` | 单个用例重试次数(限流是常态) |
-| `REFLECT_LIVE_RETRY_DELAY` | `5` | 重试间隔(秒) |
+| `ZHUYE_LIVE` | 空 | 设 `1` 才真跑(否则整层 SKIP) |
+| `ZHUYE_LIVE_BASE_URL` | `https://api.kilo.ai/api/gateway` | provider 端点 |
+| `ZHUYE_LIVE_API_KEY` | 空 | 免 Key 端点留空;dsh 网关填 `forwardKey` |
+| `ZHUYE_LIVE_MODELS` | 空 | 逗号分隔模型 id;空则从清单取 |
+| `ZHUYE_LIVE_MODEL` | 空 | 指定本轮唯一使用的模型 |
+| `ZHUYE_LIVE_MODEL_COUNT` | `3` | 从清单取几个 |
+| `ZHUYE_LIVE_PROBE_TIMEOUT` | `90` | 能力探测超时(秒) |
+| `ZHUYE_LIVE_DRAIN_TIMEOUT` | `240` | 回合等待预算(秒) |
+| `ZHUYE_LIVE_RETRIES` | `2` | 单个用例重试次数(限流是常态) |
+| `ZHUYE_LIVE_RETRY_DELAY` | `5` | 重试间隔(秒) |
 
 ## 两条车道
 
 | 车道 | 端点 | 凭据 | 前置条件 | 开关 |
 |---|---|---|---|---|
 | **Kilo 免费池**(默认) | `https://api.kilo.ai/api/gateway` | 免 Key | 无 | 默认 |
-| **dsh 本地网关** | `http://127.0.0.1:<端口>` | `forwardKey` | 网关在跑 | `REFLECT_LIVE_LANE=dsh` |
+| **dsh 本地网关** | `http://127.0.0.1:<端口>` | `forwardKey` | 网关在跑 | `ZHUYE_LIVE_LANE=dsh` |
 
 Kilo 车道**零外部依赖** —— 只改 `config.toml` 就能用。
 
 dsh 车道 = 本仓用户自己的 `dsh-our-free-model` 实例(26 个模型,多为 `-free`
-结尾,靠**免费判定的 id 模式**命中)。`REFLECT_LIVE_LANE=dsh` 会**自动探测**:
+结尾,靠**免费判定的 id 模式**命中)。`ZHUYE_LIVE_LANE=dsh` 会**自动探测**:
 端口与密钥都从 `~/.our-free-model/settings.json` 取(`standalonePort` +
 `forwardKey`)—— **不要写死 18900**,该端口常被别的应用占用,网关会自己顺延
 (实测本机跑在 18902,18900 是另一个 node 服务)。网关没起 → 回落到 Kilo 车道。
 
-也可用 `REFLECT_LIVE_BASE_URL` / `REFLECT_LIVE_API_KEY` 显式指定任意端点。
+也可用 `ZHUYE_LIVE_BASE_URL` / `ZHUYE_LIVE_API_KEY` 显式指定任意端点。
 
 ## 模型从哪来(不写死)
 
-1. `REFLECT_LIVE_MODELS` 给了 → 用它;
+1. `ZHUYE_LIVE_MODELS` 给了 → 用它;
 2. 否则调 `zhuye-cli models list --free-only --json` → 拿 provider 的实时清单
-   (免费判定规则只有一份实现,在 Rust 侧 `reflect_llm::FreeModelRules`);
+   (免费判定规则只有一份实现,在 Rust 侧 `zhuye_llm::FreeModelRules`);
 3. 逐个做**能力探测**(带 `tools` 的最小请求)→ 不支持 tools 的模型标为
    **跳过**而不是失败;
-4. 取前 N 个(`REFLECT_LIVE_MODEL_COUNT`)。
+4. 取前 N 个(`ZHUYE_LIVE_MODEL_COUNT`)。
 
 免费模型集合由上游决定,随时可能下架 —— **写死模型 id 必然腐烂**。
 
 ### 跨模型降级链
 
 配置里的 `[routing].fallbacks` 从**免费清单**取(主模型之外的前 2 个),
-不是从本次矩阵取 —— 即使用 `REFLECT_LIVE_MODELS` 只钉了一个模型,降级链
+不是从本次矩阵取 —— 即使用 `ZHUYE_LIVE_MODELS` 只钉了一个模型,降级链
 也不是空的:主模型被限流(429)时,引擎自动换模型把这一轮跑完。
 
 ### 限流(429)怎么判
@@ -132,8 +132,8 @@ dsh 车道 = 本仓用户自己的 `dsh-our-free-model` 实例(26 个模型,多�
 合计 **134 条**(85 条矩阵 + 49 条专项)。
 
 ```bash
-REFLECT_LIVE=1 ./tests/run_all.sh live-full     # 全功能实战(较重,约 20 分钟量级)
-REFLECT_LIVE=1 ./tests/live/run.sh -k full_feature   # 等价写法
+ZHUYE_LIVE=1 ./tests/run_all.sh live-full     # 全功能实战(较重,约 20 分钟量级)
+ZHUYE_LIVE=1 ./tests/live/run.sh -k full_feature   # 等价写法
 ```
 
 矩阵条目里只有 `/model` 需要按车道改写(原矩阵切到 `mock/gpt-4o`,真实车道里
@@ -148,13 +148,13 @@ python3 tests/live/practice.py --models a,b --out report.md
 python3 tests/live/practice.py --dry-run
 
 # 或经统一入口(选项走环境变量,避免和套件名抢位置)
-REFLECT_LIVE_MODEL_COUNT=2 PRACTICE_OUT=report.md ./tests/run_all.sh live-practice
+ZHUYE_LIVE_MODEL_COUNT=2 PRACTICE_OUT=report.md ./tests/run_all.sh live-practice
 ```
 
 | 变量 | 作用 |
 |---|---|
-| `REFLECT_LIVE_MODELS` | 指定模型(逗号分隔) |
-| `REFLECT_LIVE_MODEL_COUNT` | 从清单取几个模型(默认 3) |
+| `ZHUYE_LIVE_MODELS` | 指定模型(逗号分隔) |
+| `ZHUYE_LIVE_MODEL_COUNT` | 从清单取几个模型(默认 3) |
 | `PRACTICE_OUT` | 报告落盘路径 |
 
 **不是门禁** —— 退出码只反映脚本自身错误;模型表现差异只体现在报告里。

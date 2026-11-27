@@ -209,10 +209,7 @@ fn inline_visualizations_use_canonical_full_render() {
     let mut source = String::new();
     let mut render = StreamingRender::new();
 
-    for chunk in [
-        "Before.\n\n",
-        "::reflect-inline-vis{file=\"missing.html\"}\n",
-    ] {
+    for chunk in ["Before.\n\n", "::zhuye-inline-vis{file=\"missing.html\"}\n"] {
         source.push_str(chunk);
         render.append(
             &source,
@@ -241,10 +238,7 @@ fn inline_visualizations_use_canonical_full_render() {
 #[test]
 fn inline_visualizations_without_context_use_canonical_full_render() {
     let (_, render) = assert_rich_stream_matches_full_render(
-        &[
-            "Before.\n\n",
-            "::reflect-inline-vis{file=\"missing.html\"}\n",
-        ],
+        &["Before.\n\n", "::zhuye-inline-vis{file=\"missing.html\"}\n"],
         Some(80),
     );
 
@@ -266,7 +260,7 @@ fn inline_visualization_directive_survives_raw_to_rich_render_mode_switch() {
     append(
         &mut render,
         &mut source,
-        "::reflect-inline-vis{file=\"missing.html\"}\n",
+        "::zhuye-inline-vis{file=\"missing.html\"}\n",
         width,
         &cwd,
         HistoryRenderMode::Raw,

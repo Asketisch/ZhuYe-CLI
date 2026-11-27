@@ -620,7 +620,7 @@ fn network_exec_options_use_expected_labels_and_hide_execpolicy_amendment() {
             "Yes, just this once".to_string(),
             "Yes, and allow this host for this conversation".to_string(),
             "Yes, and allow this host in the future".to_string(),
-            "No, and tell Reflect what to do differently".to_string(),
+            "No, and tell ZhuYe what to do differently".to_string(),
         ]
     );
 }
@@ -645,7 +645,7 @@ fn generic_exec_options_can_offer_allow_for_session() {
         vec![
             "Yes, proceed".to_string(),
             "Yes, and don't ask again for this command in this session".to_string(),
-            "No, and tell Reflect what to do differently".to_string(),
+            "No, and tell ZhuYe what to do differently".to_string(),
         ]
     );
 }
@@ -678,7 +678,7 @@ fn additional_permissions_exec_options_hide_execpolicy_amendment() {
         labels,
         vec![
             "Yes, proceed".to_string(),
-            "No, and tell Reflect what to do differently".to_string(),
+            "No, and tell ZhuYe what to do differently".to_string(),
         ]
     );
 }
@@ -1090,7 +1090,7 @@ fn exec_history_cell_wraps_with_two_space_indent() {
         })
         .collect();
     let expected = vec![
-        "✔ You approved reflect to run".to_string(),
+        "✔ You approved zhuye to run".to_string(),
         "  git add tui/src/render/".to_string(),
         "  mod.rs tui/src/render/".to_string(),
         "  renderable.rs this time".to_string(),
@@ -1160,8 +1160,7 @@ fn network_access_command_history_uses_target_without_structured_context() {
     assert_eq!(
         render_history_cell_lines(decision.as_ref(), /*width*/ 80),
         vec![
-            "✔ You approved reflect network access to https://example.com:8443 this time"
-                .to_string(),
+            "✔ You approved zhuye network access to https://example.com:8443 this time".to_string(),
         ]
     );
 }

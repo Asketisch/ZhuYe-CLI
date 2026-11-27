@@ -202,8 +202,8 @@ impl ChatWidget {
         self.has_chatgpt_account
     }
 
-    pub(crate) fn has_reflect_backend_auth(&self) -> bool {
-        self.has_reflect_backend_auth
+    pub(crate) fn has_zhuye_backend_auth(&self) -> bool {
+        self.has_zhuye_backend_auth
     }
 
     pub(crate) fn update_account_state(
@@ -211,7 +211,7 @@ impl ChatWidget {
         status_account_display: Option<StatusAccountDisplay>,
         plan_type: Option<PlanType>,
         has_chatgpt_account: bool,
-        has_reflect_backend_auth: bool,
+        has_zhuye_backend_auth: bool,
     ) {
         // 账户更新通知是身份边界。不同账户之间可见的账户字段可能完全相同，因此始终使账户作用域的请求和数据失效。
         self.clear_pending_token_activity_refreshes();
@@ -237,11 +237,11 @@ impl ChatWidget {
         self.status_account_display = status_account_display;
         self.plan_type = plan_type;
         self.has_chatgpt_account = has_chatgpt_account;
-        self.has_reflect_backend_auth = has_reflect_backend_auth;
+        self.has_zhuye_backend_auth = has_zhuye_backend_auth;
         self.bottom_pane
             .set_connectors_enabled(self.connectors_enabled());
         self.bottom_pane
-            .set_token_activity_command_enabled(has_reflect_backend_auth);
+            .set_token_activity_command_enabled(has_zhuye_backend_auth);
         self.refresh_status_surfaces();
     }
 
@@ -719,7 +719,7 @@ impl ChatWidget {
             && (previous_model != next_model || previous_effort != next_effort)
         {
             let mut message = format!("Model changed to {next_model}");
-            if !next_model.starts_with("reflect-auto-") {
+            if !next_model.starts_with("zhuye-auto-") {
                 let reasoning_label = match next_effort.as_ref() {
                     None | Some(ReasoningEffortConfig::None) => "default",
                     Some(effort) => effort.as_str(),

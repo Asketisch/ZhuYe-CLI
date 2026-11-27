@@ -37,7 +37,7 @@ struct PetPickerEntry {
 /// 构建 `/pets` 的选择弹窗参数。
 ///
 /// 当未配置任何宠物时，选择器会预选 `DEFAULT_PET_ID`，使 UI 有一个合理的起点，
-/// 且不暗示 Reflect 已是当前生效的常驻宠物。调用方应将返回的动作视为唯一
+/// 且不暗示 ZhuYe 已是当前生效的常驻宠物。调用方应将返回的动作视为唯一
 /// 受支持的变更路径；绕过它们会跳过预览加载与选择专属的事件接线。
 pub(crate) fn build_pet_picker_params(
     current_pet: Option<&str>,
@@ -171,7 +171,7 @@ fn custom_pet_entries(zhuye_home: &Path) -> Vec<PetPickerEntry> {
             }
             let selector = custom_pet_selector(id);
             let Ok(pet) =
-                Pet::load_with_reflect_home(&selector, /*zhuye_home*/ Some(zhuye_home))
+                Pet::load_with_zhuye_home(&selector, /*zhuye_home*/ Some(zhuye_home))
             else {
                 continue;
             };
@@ -253,10 +253,10 @@ mod tests {
                 "Dewey",
                 "Fireball",
                 "Null Signal",
-                "Reflect",
                 "Rocky",
                 "Seedy",
                 "Stacky",
+                "ZhuYe",
             ],
         );
         assert_eq!(params.initial_selected_idx, Some(2));
@@ -267,7 +267,7 @@ mod tests {
     }
 
     #[test]
-    fn picker_preselects_reflect_without_marking_it_current_when_no_pet_is_configured() {
+    fn picker_preselects_zhuye_without_marking_it_current_when_no_pet_is_configured() {
         let zhuye_home = tempfile::tempdir().unwrap();
         let params = build_pet_picker_params(
             /*current_pet*/ None,
@@ -278,10 +278,10 @@ mod tests {
         let zhuye_idx = params
             .items
             .iter()
-            .position(|item| item.name == "Reflect")
-            .expect("Reflect pet should be present");
+            .position(|item| item.name == "ZhuYe")
+            .expect("ZhuYe pet should be present");
         assert_eq!(params.initial_selected_idx, Some(zhuye_idx));
-        assert_eq!(params.items[zhuye_idx].name, "Reflect");
+        assert_eq!(params.items[zhuye_idx].name, "ZhuYe");
         assert!(!params.items[zhuye_idx].is_current);
     }
 

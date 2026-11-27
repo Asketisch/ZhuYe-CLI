@@ -1,6 +1,6 @@
 """真实 HTTP 链路的能力覆盖层:Anthropic Messages API 的 SSE 协议 + 确定性 busy 窗口。
 
-既有能力覆盖层用 `ZHUYE_MODEL=mock/mock-1` —— 那是 reflect-llm
+既有能力覆盖层用 `ZHUYE_MODEL=mock/mock-1` —— 那是 zhuye-llm
 `ModelClient` 层的内置 provider,**完全绕过** HTTP 传输、SSE 分帧与
 Anthropic 协议形态;内置 mock 还「瞬时完成」,离线无法确定性制造 busy
 窗口(见 `tests/COVERAGE.md` §6 的相关记录)。

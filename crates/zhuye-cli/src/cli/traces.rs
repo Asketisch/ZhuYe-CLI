@@ -4,7 +4,7 @@
 //! (每次 LLM 调用一条 `ModelIoRecord`)。`ls` 列 session 文件 + 调用次数 +
 //! 最近时间;`show` 展开某 session 的逐条调用详情。
 //!
-//! 参照:`zhuye-agent/crates/runtime/reflect-cli/src/traces.rs`。
+//! 参照:`zhuye-agent/crates/runtime/zhuye-cli/src/traces.rs`。
 
 use zhuye_rollout::index::list_sessions;
 use zhuye_telemetry::{
@@ -114,7 +114,7 @@ pub fn show(id: &str) -> anyhow::Result<()> {
 }
 
 /// `zhuye-cli traces spans [id] [--days N]` —— 展示 span 日志
-/// (`~/.zhuye/traces/span-log/reflect-YYYY-MM-DD.jsonl`)。
+/// (`~/.zhuye/traces/span-log/zhuye-YYYY-MM-DD.jsonl`)。
 ///
 /// - 不带 `id` → 展示最近 `--days` 天(默认 7)的全部 span 事件;
 /// - 带 `id`(完整 UUID 或前缀)→ 只看该 session 的事件。

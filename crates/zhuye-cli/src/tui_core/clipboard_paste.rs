@@ -124,7 +124,7 @@ pub fn paste_image_to_temp_png() -> Result<(PathBuf, PastedImageInfo), PasteImag
         Ok((png, info)) => {
             // 创建带有 .png 后缀的唯一临时文件，以避免冲突。
             let tmp = Builder::new()
-                .prefix("reflect-clipboard-")
+                .prefix("zhuye-clipboard-")
                 .suffix(".png")
                 .tempfile()
                 .map_err(|e| PasteImageError::IoError(e.to_string()))?;

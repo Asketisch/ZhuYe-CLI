@@ -8,8 +8,8 @@ edition = "2024"
 rust-version = "1.89"
 license = "Apache-2.0"
 authors = ["宋新亮 <songxinliang@hungrystudio.com>"]
-repository = "https://github.com/Asketisch/Reflect-TUI"
-homepage = "https://github.com/Asketisch/Reflect-TUI"
+repository = "https://github.com/Asketisch/ZhuYe-CLI"
+homepage = "https://github.com/Asketisch/ZhuYe-CLI"
 
 # ── 核心依赖:从 zhuye-agent submodule 通过 path 引用 ──
 # 注意:Cargo 不支持嵌套 workspace,这里只用 path 依赖,不把核心 crate 列入 members。
@@ -92,7 +92,7 @@ zhuye-discussion  = { path = "zhuye-agent/crates/orchestration/zhuye-discussion"
 zhuye-pipeline    = { path = "zhuye-agent/crates/orchestration/zhuye-pipeline" }
 
 # runtime 层(核心引擎)
-# 注:develop 起 submodule 移除了 reflect crate(顶层二进制由 zhuye/zhuye-cli facade 取代)。
+# 注:develop 起 submodule 移除了 zhuye crate(顶层二进制由 zhuye/zhuye-cli facade 取代)。
 zhuye-core = { path = "zhuye-agent/crates/runtime/zhuye-core" }
 zhuye      = { path = "zhuye-agent/crates/runtime/zhuye" }
 zhuye-exec = { path = "zhuye-agent/crates/runtime/zhuye-exec" }
@@ -187,7 +187,7 @@ codegen-units = 256
 # TUI 专属 patch —— nornagon fork 暴露 ratatui/crossterm 的 unstable features
 # (WidgetRef / rendered-line-info / scrolling-regions / backend-writer),
 # 被 custom_terminal.rs / insert_history.rs 深度使用。
-# 从 Reflect-Agent 根 Cargo.toml 迁移而来(TUI 是唯一消费者)。
+# 从 ZhuYe 根 Cargo.toml 迁移而来(TUI 是唯一消费者)。
 [patch.crates-io]
 crossterm = { git = "https://github.com/nornagon/crossterm", rev = "87db8bfa6dc99427fd3b071681b07fc31c6ce995" }
 ratatui = { git = "https://github.com/nornagon/ratatui", rev = "9b2ad1298408c45918ee9f8241a6f95498cdbed2" }

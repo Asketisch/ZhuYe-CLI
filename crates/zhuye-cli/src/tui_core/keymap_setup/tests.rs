@@ -86,7 +86,7 @@ fn test_pane() -> (BottomPane, AppEventSender, UnboundedReceiver<AppEvent>) {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: false,
         skills: Some(Vec::new()),

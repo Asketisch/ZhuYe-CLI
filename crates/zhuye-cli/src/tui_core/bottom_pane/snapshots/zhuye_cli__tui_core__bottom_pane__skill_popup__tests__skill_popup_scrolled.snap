@@ -1,5 +1,5 @@
 ---
-source: crates/reflect-tui/src/tui_core/bottom_pane/skill_popup.rs
+source: crates/zhuye-tui/src/tui_core/bottom_pane/skill_popup.rs
 expression: "render_popup(&popup, 72)"
 ---
 Buffer {

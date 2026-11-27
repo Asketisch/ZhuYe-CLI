@@ -245,7 +245,7 @@ fn issue_url_available_for_bug_bad_result_safety_check_and_other() {
         "thread-1",
         FeedbackAudience::OpenAiEmployee,
     );
-    let expected_slack_url = "http://go/reflect-feedback-internal".to_string();
+    let expected_slack_url = "http://go/zhuye-feedback-internal".to_string();
     assert_eq!(bug_url.as_deref(), Some(expected_slack_url.as_str()));
 
     let bad_result_url = issue_url_for_category(
@@ -279,7 +279,7 @@ fn issue_url_available_for_bug_bad_result_safety_check_and_other() {
     );
     let bug_url_non_employee =
         issue_url_for_category(FeedbackCategory::Bug, "t", FeedbackAudience::External);
-    let expected_external_url = "https://github.com/asketisch/reflect/issues/new?template=3-cli.yml&steps=Uploaded%20thread:%20t";
+    let expected_external_url = "https://github.com/asketisch/zhuye/issues/new?template=3-cli.yml&steps=Uploaded%20thread:%20t";
     assert_eq!(bug_url_non_employee.as_deref(), Some(expected_external_url));
 }
 
@@ -296,7 +296,7 @@ fn feedback_success_cell_matches_external_bug_copy() {
     );
     assert_eq!(
         rendered,
-        "• Feedback uploaded. Please open an issue using the following URL:\n\n  https://github.com/asketisch/reflect/issues/new?template=3-cli.yml&steps=Uploaded%20thread:%20thread-1\n\n  Or mention your thread ID thread-1 in an existing issue."
+        "• Feedback uploaded. Please open an issue using the following URL:\n\n  https://github.com/asketisch/zhuye/issues/new?template=3-cli.yml&steps=Uploaded%20thread:%20thread-1\n\n  Or mention your thread ID thread-1 in an existing issue."
     );
 }
 
@@ -313,7 +313,7 @@ fn feedback_success_cell_matches_employee_bug_copy() {
     );
     assert_eq!(
         rendered,
-        "• Feedback uploaded. Please report this in #reflect-feedback:\n\n  http://go/reflect-feedback-internal\n\n  Share this and add some info about your problem:\n    https://go/reflect-feedback/thread-2"
+        "• Feedback uploaded. Please report this in #zhuye-feedback:\n\n  http://go/zhuye-feedback-internal\n\n  Share this and add some info about your problem:\n    https://go/zhuye-feedback/thread-2"
     );
 }
 

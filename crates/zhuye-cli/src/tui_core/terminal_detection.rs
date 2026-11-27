@@ -14,7 +14,7 @@
 
 use std::sync::OnceLock;
 
-/// Reflect 能识别的终端模拟器名称。
+/// ZhuYe 能识别的终端模拟器名称。
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum TerminalName {
     #[default]

@@ -40,7 +40,7 @@ def sandbox() -> Iterator[Sandbox]:
 def mock_script(tmp_path: Path) -> Callable[[list[str]], Path]:
     """写 mock provider 脚本:JSONL,每行一次模型回复。
 
-    行格式(见 reflect-llm/src/providers/mock.rs):
+    行格式(见 zhuye-llm/src/providers/mock.rs):
     `{"type":"text","text":"..."}` / `{"type":"tool_call","name":"t","args":{}}`
     """
 

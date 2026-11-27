@@ -7,7 +7,7 @@
 #   3. cli_modules.sh       session / traces 参数矩阵与输出契约
 #   4. build_tooling.sh     构建工具面(Makefile 清理目标 gc / gc-deep 语义)
 #
-# `REFLECT_SKIP_WORKSPACE=1` 时跳过第 1 步 —— CI 的功能门禁入口用此模式:
+# `ZHUYE_SKIP_WORKSPACE=1` 时跳过第 1 步 —— CI 的功能门禁入口用此模式:
 # 那部分由既有 CI job 覆盖,避免重复消耗 CI 时间。
 #
 # 全程离线(ZHUYE_MODEL=mock/mock-1)+ 隔离 HOME,不污染真实 ~/.zhuye。
@@ -28,10 +28,10 @@ fi
 
 TOTAL_RC=0
 
-if [ "${REFLECT_SKIP_WORKSPACE:-0}" = "1" ]; then
+if [ "${ZHUYE_SKIP_WORKSPACE:-0}" = "1" ]; then
     echo
     echo "════════════════════════════════════════════════"
-    echo "  1/4 workspace 测试 —— 跳过(REFLECT_SKIP_WORKSPACE=1)"
+    echo "  1/4 workspace 测试 —— 跳过(ZHUYE_SKIP_WORKSPACE=1)"
     echo "════════════════════════════════════════════════"
 else
     echo

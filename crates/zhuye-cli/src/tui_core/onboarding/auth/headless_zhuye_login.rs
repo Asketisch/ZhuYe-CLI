@@ -20,7 +20,7 @@ use super::cancel_login_attempt;
 use super::mark_url_hyperlink;
 use super::onboarding_request_id;
 
-pub(super) fn start_headless_reflect_login(widget: &mut AuthModeWidget) {
+pub(super) fn start_headless_zhuye_login(widget: &mut AuthModeWidget) {
     let request_id = Uuid::new_v4().to_string();
     *widget.sign_in_state.write().unwrap() =
         SignInState::ChatGptDeviceCode(ContinueWithDeviceCodeState::pending(request_id.clone()));
@@ -126,7 +126,7 @@ pub(super) fn render_device_code_login(
         ]));
         lines.push("".into());
         lines.push(
-            "  Continue only if you started this login in Reflect. If a website or another person gave you this code, cancel."
+            "  Continue only if you started this login in ZhuYe. If a website or another person gave you this code, cancel."
                 .dim()
                 .into(),
         );

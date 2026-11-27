@@ -138,7 +138,7 @@ pub(crate) trait BottomPaneView: Renderable {
     ///
     /// 返回 `true` 的视图会显示 "Action Required" 终端标题，
     /// 而非通常的工作中转圈动画，使终端标签页清晰表明
-    /// Reflect 需要用户输入。
+    /// ZhuYe 需要用户输入。
     fn terminal_title_requires_action(&self) -> bool {
         false
     }

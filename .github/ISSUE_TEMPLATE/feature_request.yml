@@ -9,8 +9,8 @@ body:
     attributes:
       content: |
         提议新功能时,请先确认它属于 ZhuYe-CLI(表现层)职责,
-        而不是 Reflect-Agent(核心引擎)职责。核心引擎的改进请到
-        https://github.com/Asketisch/Reflect-Agent 提 issue。
+        而不是 ZhuYe(核心引擎)职责。核心引擎的改进请到
+        https://github.com/Asketisch/ZhuYe 提 issue。
 
   - type: textarea
     id: motivation

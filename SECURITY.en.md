@@ -18,7 +18,7 @@
 
 **Do not report security vulnerabilities through public issues.**
 
-Please use GitHub's [private vulnerability reporting](https://github.com/Asketisch/Reflect-TUI/security/advisories/new)
+Please use GitHub's [private vulnerability reporting](https://github.com/Asketisch/ZhuYe-CLI/security/advisories/new)
 (Security → Advisories → New draft security advisory).
 
 When reporting, please include as much as possible:

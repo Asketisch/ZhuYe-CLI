@@ -1,6 +1,6 @@
 use crate::events::{PendingApproval, UiState};
 use crate::history_render;
-use crate::tui_core::custom_terminal::Terminal as ReflectTerminal;
+use crate::tui_core::custom_terminal::Terminal as ZhuyeTerminal;
 use crate::tui_core::history_cell::HistoryCell;
 use crate::tui_core::insert_history::insert_history_lines;
 use ratatui::backend::Backend;
@@ -301,7 +301,7 @@ pub enum UiHistoryItem {
     Plan(String),
     Error(String),
     Notice(String),
-    /// 启动 Logo / 欢迎横幅(双轴渐变 REFLECT 字形 + 版本/提示语)。
+    /// 启动 Logo / 欢迎横幅(双轴渐变 ZHUYE 字形 + 版本/提示语)。
     /// 仅在 `run_async` 启动时 push 一条,跟随 scrollback 自然滚出。
     Banner(Vec<Line<'static>>),
 }
@@ -364,7 +364,7 @@ pub fn trim_history(history: &mut Vec<UiHistoryItem>, history_tail: &mut usize) 
 
 /// 应用 UI 事件。
 ///
-/// 流式引擎接线：`AgentDelta` 一方面 push 进 `StreamController`（保持与 Reflect
+/// 流式引擎接线：`AgentDelta` 一方面 push 进 `StreamController`（保持与 ZhuYe
 /// 同源的 markdown 解析 / 表格 holdback），另一方面**立即把已稳定行 drain 成
 /// 行返回**——主循环据此逐行写进 scrollback，文字边到边流式进入滚屏；live 区
 /// 只剩可变 tail（见 `draw`）。这样文字与工具调用在同一条 scrollback 流里**按
@@ -1096,7 +1096,7 @@ pub fn render_history_item(item: &UiHistoryItem, width: u16) -> Vec<Line<'static
 
 /// 将额外行写入 scrollback（预留 stream stable 扩展点）。
 pub fn flush_stream_lines<B: Backend + Write>(
-    terminal: &mut ReflectTerminal<B>,
+    terminal: &mut ZhuyeTerminal<B>,
     lines: Vec<Line<'static>>,
 ) -> std::io::Result<()> {
     if lines.is_empty() {

@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tokio::task::JoinSet;
 
-/// 待用户确认的审批请求（对齐 Reflect approval overlay 的最小交互）。
+/// 待用户确认的审批请求（对齐 ZhuYe approval overlay 的最小交互）。
 ///
 /// `kind` 保留原始 `ApprovalKind`（Tool/Hook/Plan），让 `handle_key` 在
 /// 用户按 y/n/a 时知道该回送 `Op::ToolApproval` 还是 `Op::HookApproval`；
@@ -160,7 +160,7 @@ pub struct UiState {
     /// 回合结束）flush 成一条 `UiHistoryItem::Thinking` 落进 scrollback，
     /// 保证整段思考显示为一条消息，而非每个 delta 碎片化成独立 `… ` 行。
     pub live_thinking: String,
-    /// Reflect 流式控制器：stable 行刷入 scrollback，tail 留在 viewport。
+    /// ZhuYe 流式控制器：stable 行刷入 scrollback，tail 留在 viewport。
     pub(crate) stream: Option<StreamController>,
     /// 最近一次创建/调整 StreamController 时用的内容宽度（`终端宽度 - 2`）。
     ///

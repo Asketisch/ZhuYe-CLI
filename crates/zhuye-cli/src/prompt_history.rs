@@ -139,7 +139,7 @@ impl PromptHistory {
     }
 }
 
-/// 历史文件路径:`<reflect home>/prompt_history.jsonl`。
+/// 历史文件路径:`<zhuye home>/prompt_history.jsonl`。
 pub fn default_path() -> Option<PathBuf> {
     // v0.1.8-develop:home 解析收编为 zhuye-config 的 data_dir 单一事实源
     zhuye_config::data_dir().map(|h| h.join("prompt_history.jsonl"))
@@ -299,7 +299,7 @@ mod tests {
     use super::*;
 
     fn tmpdir(tag: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("reflect-prompt-history-{tag}"));
+        let dir = std::env::temp_dir().join(format!("zhuye-prompt-history-{tag}"));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir.join("prompt_history.jsonl")

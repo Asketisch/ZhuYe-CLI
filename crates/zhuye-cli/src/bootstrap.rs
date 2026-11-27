@@ -1,7 +1,7 @@
-//! 稳定 Reflect 风格 TUI 的 Reflect runtime 引导启动。
+//! 稳定 ZhuYe 风格 TUI 的 ZhuYe runtime 引导启动。
 //!
 //! 加载 config,构建 model registry / provider / tools / AgentThread,
-//! 然后在 `tui::run_async` 中进入 Reflect 风格的聊天循环。
+//! 然后在 `tui::run_async` 中进入 ZhuYe 风格的聊天循环。
 //!
 //! 能力面对齐 headless(`zhuye-exec`):M4(agent 定义 / skills / notes /
 //! 恢复 / LLM 摘要压缩)、M5(子代理工厂 + runtime registry)、M6(MCP)、
@@ -45,7 +45,7 @@ pub struct TuiRuntimeHandles {
     pub lsp_manager: Option<Arc<zhuye_lsp::LspConnectionManager>>,
 }
 
-/// 加载 config + 构建 Reflect runtime,然后进入 TUI 主循环。
+/// 加载 config + 构建 ZhuYe runtime,然后进入 TUI 主循环。
 pub fn run(args: TuiArgs) -> Result<()> {
     // v1.3 接线:`[analytics]` 段此前是死配置 —— TUI 从不启动 OTLP exporter
     // (headless `zhuye-exec` 有)。这里先读一次配置拿到该段,交给
@@ -513,7 +513,7 @@ async fn bootstrap_and_run(args: TuiArgs) -> Result<()> {
     )
     .await;
 
-    // 10. 进入 Reflect 风格的 TUI 主循环，接入 agent thread。
+    // 10. 进入 ZhuYe 风格的 TUI 主循环，接入 agent thread。
     crate::tui::run_async(
         args,
         thread,

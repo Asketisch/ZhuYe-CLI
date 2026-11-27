@@ -5,13 +5,13 @@ expression: commands
 ---
 /model - choose what model and reasoning effort to use
 /ide - include current selection, open files, and other context from your IDE
-/permissions - choose what Reflect is allowed to do
+/permissions - choose what ZhuYe is allowed to do
 /keymap - remap TUI shortcuts
 /vim - toggle Vim mode for the composer
 /experimental - toggle experimental features
 /approve - approve one retry of a recent auto-review denial
 /memories - configure memory use and generation
-/skills - use skills to improve how Reflect performs specific tasks
+/skills - use skills to improve how ZhuYe performs specific tasks
 /import - import setup, this project, and recent chats from external agents
 /hooks - view and manage lifecycle hooks
 /review - review my current changes and find issues
@@ -23,7 +23,7 @@ expression: commands
 /rewind - drop the last turn from the conversation (.bak backup kept)
 /fork - fork the current chat
 /app - continue this session in the Desktop app
-/init - create an AGENTS.md file with instructions for Reflect
+/init - create an AGENTS.md file with instructions for ZhuYe
 /compact - summarize conversation to prevent hitting the context limit
 /loop - repeat a command on an interval: /loop <secs> <cmd>  (or /loop stop)
 /agent - switch the active agent thread
@@ -41,8 +41,8 @@ expression: commands
 /lsp - show language-server diagnostics status
 /todo - show the agent's current todo checklist
 /prompt - choose prompts: /prompt · /prompt use <profile> · /prompt reload
-/logout - log out of Reflect
-/exit - exit Reflect
+/logout - log out of ZhuYe
+/exit - exit ZhuYe
 /feedback - send logs to maintainers
 /rollout - print the rollout file path
 /ps - list background terminals

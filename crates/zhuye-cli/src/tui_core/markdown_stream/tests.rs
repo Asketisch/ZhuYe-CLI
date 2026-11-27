@@ -26,7 +26,7 @@ async fn finalize_commits_partial_line() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn e2e_stream_blockquote_simple_is_green() {
     let out = super::simulate_stream_markdown_for_tests(&["> Hello\n"], /*finalize*/ true);
     assert_eq!(out.len(), 1);
@@ -40,7 +40,7 @@ async fn e2e_stream_blockquote_simple_is_green() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn e2e_stream_blockquote_nested_is_green() {
     let out = super::simulate_stream_markdown_for_tests(
         &["> Level 1\n>> Level 2\n"],
@@ -67,7 +67,7 @@ async fn e2e_stream_blockquote_nested_is_green() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn e2e_stream_blockquote_with_list_items_is_green() {
     let out = super::simulate_stream_markdown_for_tests(
         &["> - item 1\n> - item 2\n"],
@@ -79,7 +79,7 @@ async fn e2e_stream_blockquote_with_list_items_is_green() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn e2e_stream_nested_mixed_lists_ordered_marker_is_light_blue() {
     let md = [
         "1. First\n",
@@ -111,7 +111,7 @@ async fn e2e_stream_nested_mixed_lists_ordered_marker_is_light_blue() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn e2e_stream_blockquote_wrap_preserves_green_style() {
     let long = "> This is a very long quoted line that should wrap across multiple columns to verify style preservation.";
     let out = super::simulate_stream_markdown_for_tests(&[long, "\n"], /*finalize*/ true);
@@ -149,7 +149,7 @@ async fn e2e_stream_blockquote_wrap_preserves_green_style() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn heading_starts_on_new_line_when_following_paragraph() {
     // 先流式发送一行段落，再在下一行发送一个标题。
     // 期望得到两行不同的渲染结果："Hello." 与 "Heading"。
@@ -205,7 +205,7 @@ async fn heading_starts_on_new_line_when_following_paragraph() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn heading_not_inlined_when_split_across_chunks() {
     // 先发送不带行尾换行的段落，然后发送以换行开头并包含标题文本的分块，
     // 最后再发送一个换行。收集器应先只提交段落行，之后再把标题作为独立的一行提交。
@@ -292,7 +292,7 @@ fn lines_to_plain_strings(lines: &[ratatui::text::Line<'_>]) -> Vec<String> {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn table_header_commits_without_holdback() {
     let mut c = super::MarkdownStreamCollector::new(/*width*/ None, &super::test_cwd());
     c.push_delta("| A | B |\n");
@@ -338,7 +338,7 @@ async fn lists_and_fences_commit_without_duplication() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn utf8_boundary_safety_and_wide_chars() {
     // 表情符号（宽字符）、中日韩文字、控制字符、数字 + 组合长音符序列
     let input = "🙂🙂🙂\n汉字漢字\nA\u{0003}0\u{0304}\n";
@@ -374,7 +374,7 @@ async fn utf8_boundary_safety_and_wide_chars() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn e2e_stream_deep_nested_third_level_marker_is_light_blue() {
     let md = "1. First\n   - Second level\n     1. Third level (ordered)\n        - Fourth level (bullet)\n          - Fifth level to test indent consistency\n";
     let streamed = super::simulate_stream_markdown_for_tests(&[md], /*finalize*/ true);
@@ -461,7 +461,7 @@ async fn paragraph_then_empty_fence_then_heading_keeps_heading_on_new_line() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn loose_list_with_split_dashes_matches_full_render() {
     // 由辅助工具找到的最小化失败序列：两个分块即可复现该不一致。
     let deltas = vec!["- item.\n\n", "-"];
@@ -487,7 +487,7 @@ async fn loose_list_with_split_dashes_matches_full_render() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn loose_vs_tight_list_items_streaming_matches_full() {
     // 增量数据取自 2025-08-27T00:33:18.216Z 附近的会话日志
     let deltas = vec![
@@ -612,14 +612,14 @@ async fn assert_streamed_equals_full(deltas: &[&str]) {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn fuzz_class_bullet_duplication_variant_1() {
     assert_streamed_equals_full(&["aph.\n- let one\n- bull", "et two\n\n  second paragraph \n"])
         .await;
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn fuzz_class_bullet_duplication_variant_2() {
     assert_streamed_equals_full(&[
         "- e\n  c",
@@ -640,7 +640,7 @@ async fn table_like_lines_inside_fenced_code_are_not_held() {
 }
 
 #[tokio::test]
-#[ignore = "Phase 1: requires full Reflect implementation"]
+#[ignore = "Phase 1: requires full ZhuYe implementation"]
 async fn collector_source_chunks_round_trip_into_agent_fence_unwrapping() {
     let deltas = [
         "```md\n",

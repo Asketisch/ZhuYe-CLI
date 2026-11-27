@@ -1,7 +1,7 @@
 //! `ChatWidget` 的限流警告、提示与通知界面。
 
 use super::*;
-use crate::app_server_protocol::ReflectErrorInfo as AppServerReflectErrorInfo;
+use crate::app_server_protocol::ZhuyeErrorInfo as AppServerZhuyeErrorInfo;
 
 pub(super) const NUDGE_MODEL_SLUG: &str = "gpt-5.6-luna";
 pub(super) const RATE_LIMIT_SWITCH_PROMPT_THRESHOLD: f64 = 90.0;
@@ -135,20 +135,20 @@ pub(super) enum RateLimitErrorKind {
 }
 
 pub(super) fn app_server_rate_limit_error_kind(
-    info: &AppServerReflectErrorInfo,
+    info: &AppServerZhuyeErrorInfo,
 ) -> Option<RateLimitErrorKind> {
     match info {
-        AppServerReflectErrorInfo::ServerOverloaded => Some(RateLimitErrorKind::ServerOverloaded),
-        AppServerReflectErrorInfo::UsageLimitExceeded => Some(RateLimitErrorKind::UsageLimit),
-        AppServerReflectErrorInfo::ResponseTooManyFailedAttempts {
+        AppServerZhuyeErrorInfo::ServerOverloaded => Some(RateLimitErrorKind::ServerOverloaded),
+        AppServerZhuyeErrorInfo::UsageLimitExceeded => Some(RateLimitErrorKind::UsageLimit),
+        AppServerZhuyeErrorInfo::ResponseTooManyFailedAttempts {
             http_status_code: Some(429),
         } => Some(RateLimitErrorKind::Generic),
         _ => None,
     }
 }
 
-pub(super) fn is_app_server_cyber_policy_error(info: &AppServerReflectErrorInfo) -> bool {
-    matches!(info, AppServerReflectErrorInfo::CyberPolicy)
+pub(super) fn is_app_server_cyber_policy_error(info: &AppServerZhuyeErrorInfo) -> bool {
+    matches!(info, AppServerZhuyeErrorInfo::CyberPolicy)
 }
 
 #[derive(Clone, Copy)]
@@ -180,7 +180,7 @@ impl ChatWidget {
             let limit_id = snapshot
                 .limit_id
                 .clone()
-                .unwrap_or_else(|| "reflect".to_string());
+                .unwrap_or_else(|| "zhuye".to_string());
             let limit_label = snapshot
                 .limit_name
                 .clone()
@@ -214,14 +214,14 @@ impl ChatWidget {
                 .and_then(PlanType::from_str_lossy)
                 .or(self.plan_type);
 
-            let is_reflect_limit = limit_id.eq_ignore_ascii_case("reflect");
-            if is_reflect_limit
+            let is_zhuye_limit = limit_id.eq_ignore_ascii_case("zhuye");
+            if is_zhuye_limit
                 && (matches!(source, RateLimitSnapshotSource::AccountUsage)
                     || snapshot.spend_control_reached.is_some())
             {
                 self.zhuye_spend_control_reached = snapshot.spend_control_reached;
             }
-            if (is_reflect_limit && matches!(source, RateLimitSnapshotSource::AccountUsage))
+            if (is_zhuye_limit && matches!(source, RateLimitSnapshotSource::AccountUsage))
                 || snapshot.rate_limit_reached_type.is_some()
             {
                 self.zhuye_rate_limit_reached_type = snapshot.rate_limit_reached_type.clone();
@@ -241,7 +241,7 @@ impl ChatWidget {
                     .credits
                     .as_ref()
                     .is_some_and(has_usable_workspace_credits);
-            if is_reflect_limit && has_workspace_credits {
+            if is_zhuye_limit && has_workspace_credits {
                 match self.rate_limit_switch_prompt {
                     RateLimitSwitchPromptState::Pending => {
                         self.rate_limit_switch_prompt = RateLimitSwitchPromptState::Idle;
@@ -253,7 +253,7 @@ impl ChatWidget {
                     RateLimitSwitchPromptState::Idle => {}
                 }
             }
-            let should_warn_about_rate_limit_usage = is_reflect_limit && !has_workspace_credits;
+            let should_warn_about_rate_limit_usage = is_zhuye_limit && !has_workspace_credits;
             let warnings = if should_warn_about_rate_limit_usage {
                 self.rate_limit_warnings.take_warnings(
                     snapshot
@@ -277,7 +277,7 @@ impl ChatWidget {
                 vec![]
             };
 
-            let high_usage = is_reflect_limit
+            let high_usage = is_zhuye_limit
                 && (snapshot
                     .secondary
                     .as_ref()
@@ -375,7 +375,7 @@ impl ChatWidget {
         let default_effort: ReasoningEffortConfig = preset.default_reasoning_effort;
 
         let switch_actions: Vec<SelectionAction> = vec![Box::new(move |tx| {
-            tx.send(AppEvent::ReflectOp(AppCommand::override_turn_context(
+            tx.send(AppEvent::ZhuyeOp(AppCommand::override_turn_context(
                 /*cwd*/ None,
                 /*approval_policy*/ None,
                 /*approvals_reviewer*/ None,
@@ -463,7 +463,7 @@ impl ChatWidget {
             ),
             AddCreditsNudgeCreditType::UsageLimit => (
                 "Usage limit reached",
-                "Request a limit increase from your owner to continue using reflect. Request increase?",
+                "Request a limit increase from your owner to continue using zhuye. Request increase?",
             ),
         };
         let send_actions: Vec<SelectionAction> = vec![Box::new(move |tx| {

@@ -63,7 +63,7 @@ def _main() -> int:
                 "APPDATA": str(home / "AppData/Roaming"),
                 "LOCALAPPDATA": str(home / "AppData/Local"),
                 "ZHUYE_MODEL": "mock/mock-1",
-                "REFLECT_TUI_UPDATE_CHECK": "0",
+                "ZHUYE_TUI_UPDATE_CHECK": "0",
                 "TERM": "xterm-256color",
             }
         )

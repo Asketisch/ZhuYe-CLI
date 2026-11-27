@@ -7,7 +7,7 @@ pub const FEEDBACK_DIAGNOSTICS_ATTACHMENT_FILENAME: &str = "diagnostics.json";
 pub const WINDOWS_SANDBOX_LOG_ATTACHMENT_FILENAME: &str = "windows_sandbox_log.txt";
 
 #[derive(Debug, Clone, Default)]
-pub struct ReflectFeedback;
+pub struct ZhuyeFeedback;
 
 #[derive(Debug, Clone, Default)]
 pub struct FeedbackDiagnostics;
@@ -45,7 +45,7 @@ impl FeedbackDiagnostics {
     }
 }
 
-impl ReflectFeedback {
+impl ZhuyeFeedback {
     pub fn snapshot(&self) -> FeedbackDiagnostics {
         FeedbackDiagnostics::new()
     }

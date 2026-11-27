@@ -76,7 +76,7 @@ pub(crate) fn mark_underlined_hyperlink(buf: &mut Buffer, area: Rect, url: &str)
 
 use super::onboarding_screen::StepState;
 
-mod headless_reflect_login;
+mod headless_zhuye_login;
 
 #[derive(Clone)]
 pub(crate) enum SignInState {
@@ -312,13 +312,13 @@ impl AuthModeWidget {
         !matches!(self.forced_login_method, Some(ForcedLoginMethod::Chatgpt))
     }
 
-    fn is_reflect_login_allowed(&self) -> bool {
+    fn is_zhuye_login_allowed(&self) -> bool {
         !matches!(self.forced_login_method, Some(ForcedLoginMethod::Api))
     }
 
     fn displayed_sign_in_options(&self) -> Vec<SignInOption> {
         let mut options = vec![SignInOption::ChatGpt];
-        if self.is_reflect_login_allowed() {
+        if self.is_zhuye_login_allowed() {
             options.push(SignInOption::DeviceCode);
         }
         if self.is_api_login_allowed() {
@@ -329,7 +329,7 @@ impl AuthModeWidget {
 
     fn selectable_sign_in_options(&self) -> Vec<SignInOption> {
         let mut options = Vec::new();
-        if self.is_reflect_login_allowed() {
+        if self.is_zhuye_login_allowed() {
             options.push(SignInOption::ChatGpt);
             options.push(SignInOption::DeviceCode);
         }
@@ -364,12 +364,12 @@ impl AuthModeWidget {
     fn handle_sign_in_option(&mut self, option: SignInOption) {
         match option {
             SignInOption::ChatGpt => {
-                if self.is_reflect_login_allowed() {
-                    self.start_reflect_login();
+                if self.is_zhuye_login_allowed() {
+                    self.start_zhuye_login();
                 }
             }
             SignInOption::DeviceCode => {
-                if self.is_reflect_login_allowed() {
+                if self.is_zhuye_login_allowed() {
                     self.start_device_code_login();
                 }
             }
@@ -394,7 +394,7 @@ impl AuthModeWidget {
         let mut lines: Vec<Line> = vec![
             Line::from(vec![
                 "  ".into(),
-                "Sign in to use Reflect as part of your paid plan".into(),
+                "Sign in to use ZhuYe as part of your paid plan".into(),
             ]),
             Line::from(vec![
                 "  ".into(),
@@ -432,8 +432,8 @@ impl AuthModeWidget {
             vec![line1, line2]
         };
 
-        let zhuye_description = if !self.is_reflect_login_allowed() {
-            "Reflect login is disabled"
+        let zhuye_description = if !self.is_zhuye_login_allowed() {
+            "ZhuYe login is disabled"
         } else {
             "Usage included with Plus, Pro, Business, and Enterprise plans"
         };
@@ -445,7 +445,7 @@ impl AuthModeWidget {
                     lines.extend(create_mode_item(
                         idx,
                         option,
-                        "Sign in to Reflect",
+                        "Sign in to ZhuYe",
                         zhuye_description,
                     ));
                 }
@@ -471,7 +471,7 @@ impl AuthModeWidget {
 
         if !self.is_api_login_allowed() {
             lines.push(
-                "  API key login is disabled by this workspace. Sign in to Reflect to continue."
+                "  API key login is disabled by this workspace. Sign in to ZhuYe to continue."
                     .dim()
                     .into(),
             );
@@ -547,22 +547,20 @@ impl AuthModeWidget {
         }
     }
 
-    fn render_reflect_success_message(&self, area: Rect, buf: &mut Buffer) {
+    fn render_zhuye_success_message(&self, area: Rect, buf: &mut Buffer) {
         let lines = vec![
-            "✓ Signed in to your Reflect account"
-                .fg(Color::Green)
-                .into(),
+            "✓ Signed in to your ZhuYe account".fg(Color::Green).into(),
             "".into(),
             "  Before you start:".into(),
             "".into(),
-            "  Decide how much autonomy you want to grant Reflect".into(),
+            "  Decide how much autonomy you want to grant ZhuYe".into(),
             "".into(),
-            "  Reflect can make mistakes".into(),
+            "  ZhuYe can make mistakes".into(),
             "  Review the code it writes and commands it runs"
                 .dim()
                 .into(),
             "".into(),
-            "  Powered by your Reflect account".into(),
+            "  Powered by your ZhuYe account".into(),
             Line::from(vec![
                 "  Uses your plan's rate limits and ".into(),
                 "training data preferences".underlined(),
@@ -581,12 +579,8 @@ impl AuthModeWidget {
             .render(area, buf);
     }
 
-    fn render_reflect_success(&self, area: Rect, buf: &mut Buffer) {
-        let lines = vec![
-            "✓ Signed in to your Reflect account"
-                .fg(Color::Green)
-                .into(),
-        ];
+    fn render_zhuye_success(&self, area: Rect, buf: &mut Buffer) {
+        let lines = vec!["✓ Signed in to your ZhuYe account".fg(Color::Green).into()];
 
         Paragraph::new(lines)
             .wrap(Wrap { trim: false })
@@ -597,7 +591,7 @@ impl AuthModeWidget {
         let lines = vec![
             "✓ API key configured".fg(Color::Green).into(),
             "".into(),
-            "  Reflect will use usage-based billing with your API key.".into(),
+            "  ZhuYe will use usage-based billing with your API key.".into(),
         ];
 
         Paragraph::new(lines)
@@ -834,7 +828,7 @@ impl AuthModeWidget {
         self.request_frame.schedule_frame();
     }
 
-    fn handle_existing_reflect_login(&mut self) -> bool {
+    fn handle_existing_zhuye_login(&mut self) -> bool {
         if matches!(
             self.login_status,
             LoginStatus::AuthMode(auth_mode) if auth_mode.has_chatgpt_account()
@@ -848,10 +842,10 @@ impl AuthModeWidget {
     }
 
     /// 启动 ChatGPT 认证流程，并让 UI 状态与本次尝试保持一致。
-    fn start_reflect_login(&mut self) {
+    fn start_zhuye_login(&mut self) {
         // 若已通过 ChatGPT 认证，就不要启动新的登录——
         // 直接进入成功消息流程。
-        if self.handle_existing_reflect_login() {
+        if self.handle_existing_zhuye_login() {
             return;
         }
 
@@ -897,12 +891,12 @@ impl AuthModeWidget {
     }
 
     fn start_device_code_login(&mut self) {
-        if self.handle_existing_reflect_login() {
+        if self.handle_existing_zhuye_login() {
             return;
         }
 
         self.set_error(/*message*/ None);
-        headless_reflect_login::start_headless_reflect_login(self);
+        headless_zhuye_login::start_headless_zhuye_login(self);
     }
 
     pub(crate) fn on_account_login_completed(
@@ -978,13 +972,13 @@ impl WidgetRef for AuthModeWidget {
                 self.render_continue_in_browser(area, buf);
             }
             SignInState::ChatGptDeviceCode(state) => {
-                headless_reflect_login::render_device_code_login(self, area, buf, state);
+                headless_zhuye_login::render_device_code_login(self, area, buf, state);
             }
             SignInState::ChatGptSuccessMessage => {
-                self.render_reflect_success_message(area, buf);
+                self.render_zhuye_success_message(area, buf);
             }
             SignInState::ChatGptSuccess => {
-                self.render_reflect_success(area, buf);
+                self.render_zhuye_success(area, buf);
             }
             SignInState::ApiKeyEntry(state) => {
                 self.render_api_key_entry(area, buf, state);

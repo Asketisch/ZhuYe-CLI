@@ -108,7 +108,7 @@ make coverage-audit    # = 覆盖自审(有未覆盖命令即失败)
 
 | | submodule `zhuye-agent/tests/` | 本仓 `tests/` |
 |---|---|---|
-| 测什么 | agent 基座的 headless `reflect serve` | 终端 TUI 的表现层 |
+| 测什么 | agent 基座的 headless `zhuye serve` | 终端 TUI 的表现层 |
 | 怎么驱动 | 原始 JSONL wire(`subprocess` + `json`) | pty + pyte 屏幕快照 |
 | 客户端 SDK | Python / TS 两套绑定层 | 无(本仓不提供 SDK) |
 | 覆盖面 | 17 个子命令 + 19 Op + 工具 + 编排 | 84 条 slash + 11 弹层 + 轮次 + 按键 + 渲染 + 审批/AskUser + 容错 + 持久化 + CLI |

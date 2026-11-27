@@ -24,11 +24,11 @@ fn write_pet_manifest(manifest: &str) -> tempfile::TempDir {
 }
 
 fn load_pet_from_dir(dir: &tempfile::TempDir) -> Pet {
-    Pet::load_with_reflect_home(dir.path().to_str().unwrap(), /*zhuye_home*/ None).unwrap()
+    Pet::load_with_zhuye_home(dir.path().to_str().unwrap(), /*zhuye_home*/ None).unwrap()
 }
 
 fn load_pet_error_from_dir(dir: &tempfile::TempDir) -> anyhow::Error {
-    Pet::load_with_reflect_home(dir.path().to_str().unwrap(), /*zhuye_home*/ None).unwrap_err()
+    Pet::load_with_zhuye_home(dir.path().to_str().unwrap(), /*zhuye_home*/ None).unwrap_err()
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn load_builtin_pet_uses_app_catalog_storage() {
     let zhuye_home = tempfile::tempdir().unwrap();
     super::super::asset_pack::write_test_pack(zhuye_home.path());
 
-    let pet = Pet::load_with_reflect_home("dewey", /*zhuye_home*/ Some(zhuye_home.path())).unwrap();
+    let pet = Pet::load_with_zhuye_home("dewey", /*zhuye_home*/ Some(zhuye_home.path())).unwrap();
 
     assert_eq!(pet.id, "dewey");
     assert_eq!(pet.display_name, "Dewey");
@@ -179,7 +179,7 @@ fn frame_cache_key_changes_with_frame_spec() {
 fn load_pet_json_path_uses_containing_directory() {
     let dir = write_minimal_pet();
 
-    let pet = Pet::load_with_reflect_home(
+    let pet = Pet::load_with_zhuye_home(
         dir.path().join("pet.json").to_str().unwrap(),
         /*zhuye_home*/ None,
     )
@@ -190,7 +190,7 @@ fn load_pet_json_path_uses_containing_directory() {
 }
 
 #[test]
-fn custom_pet_selector_loads_reflect_home_pet_manifest() {
+fn custom_pet_selector_loads_zhuye_home_pet_manifest() {
     let dir = write_minimal_pet();
     let zhuye_home = tempfile::tempdir().unwrap();
     let pet_dir = zhuye_home.path().join("pets").join("chefito");
@@ -202,7 +202,7 @@ fn custom_pet_selector_loads_reflect_home_pet_manifest() {
     )
     .unwrap();
 
-    let pet = Pet::load_with_reflect_home(
+    let pet = Pet::load_with_zhuye_home(
         &custom_pet_selector("chefito"),
         /*zhuye_home*/ Some(zhuye_home.path()),
     )
@@ -225,7 +225,7 @@ fn custom_pet_selector_falls_back_to_legacy_avatar_manifest() {
     )
     .unwrap();
 
-    let pet = Pet::load_with_reflect_home(
+    let pet = Pet::load_with_zhuye_home(
         &custom_pet_selector("legacy"),
         /*zhuye_home*/ Some(zhuye_home.path()),
     )
@@ -249,7 +249,7 @@ fn custom_pet_rejects_spritesheet_path_escape() {
     )
     .unwrap();
 
-    let err = Pet::load_with_reflect_home(
+    let err = Pet::load_with_zhuye_home(
         &custom_pet_selector("escape"),
         /*zhuye_home*/ Some(zhuye_home.path()),
     )

@@ -1,5 +1,5 @@
 ---
-source: crates/reflect-tui/src/tui_core/bottom_pane/pending_input_preview.rs
+source: crates/zhuye-tui/src/tui_core/bottom_pane/pending_input_preview.rs
 expression: "format!(\"{buf:?}\")"
 ---
 Buffer {

@@ -1,6 +1,6 @@
 //! 轻量键位映射层:全局快捷键的单一事实来源。
 //!
-//! 不接入 vendored 的 Reflect `RuntimeKeymap`(它耦合 `TuiKeymap` config 解析 +
+//! 不接入 vendored 的 ZhuYe `RuntimeKeymap`(它耦合 `TuiKeymap` config 解析 +
 //! 冲突校验 + ChatWidget UI,且完全未接线)。这里做一个自包含的薄层:
 //! `resolve_global_key(key) -> Option<KeyAction>` 把全局快捷键(Ctrl-C / Ctrl-T /
 //! /命令前的输入处理)集中到一个可测的纯函数,`handle_event` 顶层先 resolve,

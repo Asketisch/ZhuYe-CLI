@@ -1,5 +1,5 @@
 ---
-source: crates/reflect-tui/src/tui_core/bottom_pane/mcp_server_elicitation.rs
+source: crates/zhuye-tui/src/tui_core/bottom_pane/mcp_server_elicitation.rs
 expression: "render_snapshot(&overlay, Rect::new(0, 0, 120, 16))"
 ---
                                                                                                                         

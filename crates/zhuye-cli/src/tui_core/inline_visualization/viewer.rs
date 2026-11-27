@@ -5,7 +5,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 const FRAGMENT_PLACEHOLDER: &str = "<!--__INLINE_VISUALIZATION_FRAGMENT__-->";
-const VIEWER_DIRECTORY_NAME: &str = ".reflect-viewers";
+const VIEWER_DIRECTORY_NAME: &str = ".zhuye-viewers";
 
 // 保持这些资源与打包的 visualize 技能的浏览器渲染器一致。
 const VIEWER_STYLESHEET: &str = include_str!("assets/visualize.css");

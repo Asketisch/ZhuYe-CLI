@@ -1,14 +1,14 @@
 //! 老 TUI 消息标记字形改写层。
 //!
-//! Reflect 单元用 `› `(user)/`• `(agent) 前缀;用户要求「尽量显示老 TUI 样式」,
+//! ZhuYe 单元用 `› `(user)/`• `(agent) 前缀;用户要求「尽量显示老 TUI 样式」,
 //! 这里把渲染后的 `Line` 首位 span 前缀改写成老 TUI 的彩色字形:
 //! - user    `› ` → `▶ `(brand 绿)
 //! - agent   `• ` → `● `(brand 绿;完整回合)
 //!
-//! 这是对 Reflect 单元 `display_lines` 输出的纯 `Line`/`Span` 变换,**不**修改
-//! Reflect 单元源码(保持上游逐行对应便于 re-sync)。
+//! 这是对 ZhuYe 单元 `display_lines` 输出的纯 `Line`/`Span` 变换,**不**修改
+//! ZhuYe 单元源码(保持上游逐行对应便于 re-sync)。
 //!
-//! 注意:只改「消息正文首行」的前缀——Reflect 单元会在正文前后各插一条空行,
+//! 注意:只改「消息正文首行」的前缀——ZhuYe 单元会在正文前后各插一条空行,
 //! 空行没有前缀 span,不能动。判定方式:找第一条首个 span 内容恰好是
 //! `› `/`• ` 的行。
 
@@ -19,7 +19,7 @@ use ratatui::text::{Line, Span};
 /// 老 TUI 品牌色(对齐 `palette::brand()` Dark 主题 = Cyan)。
 const BRAND: Color = Color::Cyan;
 
-/// 改写一条历史项渲染出的行:把 Reflect 前缀换成老 TUI 彩色字形。
+/// 改写一条历史项渲染出的行:把 ZhuYe 前缀换成老 TUI 彩色字形。
 ///
 /// 仅处理 `User` / `Agent`;其余变体(Thinking/ToolCall/Separator/...)的
 /// 前缀在 [`crate::history_render::cells`] 里已直接用老字形,无需再改。
@@ -65,7 +65,7 @@ mod tests {
     use ratatui::text::Span;
 
     fn user_lines() -> Vec<Line<'static>> {
-        // 模拟 Reflect UserHistoryCell 输出:空行 / `› hello` / 空行。
+        // 模拟 ZhuYe UserHistoryCell 输出:空行 / `› hello` / 空行。
         vec![
             Line::from(""),
             Line::from(vec![Span::raw("› "), Span::raw("hello")]),

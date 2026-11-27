@@ -434,7 +434,7 @@ fn vt100_terminal_wrap_policy_does_not_pre_wrap_long_paragraph() {
     assert!(
         rows.iter()
             .any(|row| row.trim_end() == "alpha beta gamma del"),
-        "expected terminal soft-wrap instead of Reflect word pre-wrap, rows: {rows:?}"
+        "expected terminal soft-wrap instead of ZhuYe word pre-wrap, rows: {rows:?}"
     );
 }
 

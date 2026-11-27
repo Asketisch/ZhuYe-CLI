@@ -17,7 +17,7 @@
 
 **请勿通过公开 issue 报告安全漏洞。**
 
-请使用 GitHub 的 [私密漏洞报告](https://github.com/Asketisch/Reflect-TUI/security/advisories/new)
+请使用 GitHub 的 [私密漏洞报告](https://github.com/Asketisch/ZhuYe-CLI/security/advisories/new)
 （Security → Advisories → New draft security advisory）。
 
 报告时请尽量包含：

@@ -36,7 +36,7 @@ def run_cli(sandbox, *args: str, timeout: float = 30.0) -> subprocess.CompletedP
 def seeded(sandbox):
     """写入一条**真实形态**的会话(user + assistant + token_count)。
 
-    形态与引擎实际落盘一致(见 reflect-protocol `RolloutRecord`):
+    形态与引擎实际落盘一致(见 zhuye-protocol `RolloutRecord`):
       - `content` 是 **ContentBlock 数组**(v1.2 起的形态);
       - `token_count` 的 token 字段嵌在 `usage` 对象里。
     用真实形态而不是简化形态,才能测出「读取侧只认旧形态」这类缺陷。

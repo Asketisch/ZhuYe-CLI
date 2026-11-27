@@ -1,6 +1,6 @@
-//! 基于 Reflect 的 `custom_terminal::Terminal` 构建的终端生命周期 RAII。
+//! 基于 ZhuYe 的 `custom_terminal::Terminal` 构建的终端生命周期 RAII。
 //!
-//! 镜像 Reflect 的 "inline viewport"（行内视口）模型:我们停留在 **主屏**
+//! 镜像 ZhuYe 的 "inline viewport"（行内视口）模型:我们停留在 **主屏**
 //! (不使用备用屏),以保留终端的原生 scrollback。已提交
 //! 的历史行通过 `insert_history_lines` 推入原生 scrollback,
 //! 用户可以使用终端自身的 scrollback 控件(鼠标滚轮、PgUp 等)查看。
@@ -15,7 +15,7 @@
 //! 审查已提交历史时想要的行为。
 
 use crate::terminal_probe::{self, DefaultColors};
-use crate::tui_core::custom_terminal::Terminal as ReflectTerminal;
+use crate::tui_core::custom_terminal::Terminal as ZhuyeTerminal;
 use crate::tui_core::terminal_palette;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::style::{Color as CrosstermColor, query_background_color, query_foreground_color};
@@ -23,7 +23,7 @@ use ratatui::backend::CrosstermBackend;
 use std::io::{self, Stdout};
 
 pub type Backend = CrosstermBackend<Stdout>;
-pub type Terminal = ReflectTerminal<Backend>;
+pub type Terminal = ZhuyeTerminal<Backend>;
 
 pub struct TerminalGuard {
     terminal: Terminal,
@@ -42,7 +42,7 @@ impl TerminalGuard {
     pub fn enter(fullscreen: bool) -> anyhow::Result<Self> {
         crossterm::terminal::enable_raw_mode()?;
         let mut stdout = io::stdout();
-        // 主屏 + bracketed paste；不启 alternate scroll（与 Reflect 主界面一致）。
+        // 主屏 + bracketed paste；不启 alternate scroll（与 ZhuYe 主界面一致）。
         crossterm::execute!(stdout, crossterm::event::EnableBracketedPaste)?;
 
         // F49:鼠标捕获是 opt-in（默认关,防止改变现有用户的滚轮行为）。
@@ -163,7 +163,7 @@ impl Drop for TerminalGuard {
 /// 2. 配置 `~/.zhuye/config.toml` 的 `[tui] mouse = true`；
 /// 3. 缺省关。
 ///
-/// 引擎 schema（zhuye-config `ReflectConfig`）还没有 `[tui]` 段 —— serde 忽略
+/// 引擎 schema（zhuye-config `ZhuyeConfig`）还没有 `[tui]` 段 —— serde 忽略
 /// 未知键,所以用户写了该段不会破坏加载;TUI 侧直接读原始 TOML 消费,等引擎
 /// schema 收编该段后可平滑迁移。
 pub fn mouse_capture_enabled() -> bool {
@@ -515,7 +515,7 @@ mod terminal_title_tests {
     #[test]
     fn terminal_title_sanitizes_esc_and_control_chars() {
         // 测试 sanitized 字符串逻辑:ESC 和控制字符被移除。
-        let title = "Reflect · test\x1b\x00\x1f";
+        let title = "ZhuYe · test\x1b\x00\x1f";
         let sanitized: String = title
             .chars()
             .filter(|c| u32::from(*c) >= 0x20)
@@ -528,7 +528,7 @@ mod terminal_title_tests {
             !sanitized.contains('\x1f'),
             "Control char should be removed"
         );
-        assert_eq!(sanitized, "Reflect · test");
+        assert_eq!(sanitized, "ZhuYe · test");
     }
 
     #[test]

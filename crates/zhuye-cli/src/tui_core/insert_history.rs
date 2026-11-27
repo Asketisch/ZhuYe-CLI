@@ -1,6 +1,6 @@
 //! 将已定稿的历史行插入到终端滚动回溯区。
 //!
-//! Reflect 直接使用终端自身的滚动回溯来呈现已完成的聊天历史，因此插入历史单元
+//! ZhuYe 直接使用终端自身的滚动回溯来呈现已完成的聊天历史，因此插入历史单元
 //! 是转义序列操作，而非普通的 ratatui 渲染。
 
 use std::fmt;
@@ -48,7 +48,7 @@ pub enum HistoryLineWrapPolicy {
 /// 选择在视口上方写入历史时使用的终端转义策略。
 ///
 /// 原始行有意保持不断行，以便终端选中时能忠实复制其原文。
-/// Zellij 不会把软换行续行限制在 Reflect 的滚动区域内，因此其原始路径通过终端
+/// Zellij 不会把软换行续行限制在 ZhuYe 的滚动区域内，因此其原始路径通过终端
 /// 追加历史，并为下一次视口绘制预留空行。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum InsertHistoryMode {

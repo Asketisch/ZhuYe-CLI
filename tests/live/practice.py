@@ -9,7 +9,7 @@
 ## 与 submodule 的区别
 
 submodule `zhuye-agent/scripts/free_model_practice.sh` 驱动的是 headless
-`reflect exec`(事件流 JSONL);本脚本驱动的是**终端 TUI**(pty + pyte),
+`zhuye exec`(事件流 JSONL);本脚本驱动的是**终端 TUI**(pty + pyte),
 因此测的是「真实模型 + 真实 TUI 渲染 + 真实工具审批」这一整条链路。
 
 ## 用法
@@ -124,7 +124,7 @@ def _run_scenario(
     lane = current_lane()
     write_lane_config(sb.home, model=model, lane=lane, fallbacks=fallbacks)
     child_env = {var: "" for var in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "ZHUYE_MODEL", "ZHUYE_PROVIDER")}
-    child_env["REFLECT_TUI_UPDATE_CHECK"] = "0"
+    child_env["ZHUYE_TUI_UPDATE_CHECK"] = "0"
     # 隔离 HOME 显式写死(`Sandbox.env()` 先设 HOME 再叠加 extra,
     # extra 带宿主 HOME 会把隔离目录覆盖掉)。
     child_env["HOME"] = str(sb.home)
@@ -185,13 +185,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="免费模型横向对比演练(TUI 层)")
     parser.add_argument(
         "--models",
-        default=os.environ.get("REFLECT_LIVE_MODELS", ""),
+        default=os.environ.get("ZHUYE_LIVE_MODELS", ""),
         help="逗号分隔的 model id(默认从清单取)",
     )
     parser.add_argument(
         "--count",
         type=int,
-        default=int(os.environ.get("REFLECT_LIVE_MODEL_COUNT", "3")),
+        default=int(os.environ.get("ZHUYE_LIVE_MODEL_COUNT", "3")),
         help="从清单取几个模型",
     )
     parser.add_argument(

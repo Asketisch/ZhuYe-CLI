@@ -74,14 +74,14 @@ fn make_selection_view(subtitle: Option<&str>) -> ListSelectionView {
     let items = vec![
         SelectionItem {
             name: "Read Only".to_string(),
-            description: Some("Reflect can read files".to_string()),
+            description: Some("ZhuYe can read files".to_string()),
             is_current: true,
             dismiss_on_select: true,
             ..Default::default()
         },
         SelectionItem {
             name: "Full Access".to_string(),
-            description: Some("Reflect can edit files".to_string()),
+            description: Some("ZhuYe can edit files".to_string()),
             is_current: false,
             dismiss_on_select: true,
             ..Default::default()
@@ -190,7 +190,7 @@ fn renders_blank_line_between_title_and_items_without_subtitle() {
 
 #[test]
 fn renders_blank_line_between_subtitle_and_items() {
-    let view = make_selection_view(Some("Switch between Reflect approval presets"));
+    let view = make_selection_view(Some("Switch between ZhuYe approval presets"));
     assert_snapshot!("list_selection_spacing_with_subtitle", render_lines(&view));
 }
 
@@ -199,7 +199,7 @@ fn theme_picker_subtitle_uses_fallback_text_in_94x35_terminal() {
     let (tx_raw, _rx) = unbounded_channel::<AppEvent>();
     let tx = AppEventSender::new(tx_raw);
     let home = dirs::home_dir().expect("home directory should be available");
-    let zhuye_home = home.join(".reflect");
+    let zhuye_home = home.join(".zhuye");
     let params = crate::theme_picker::build_theme_picker_params(
         /*current_name*/ None,
         Some(&zhuye_home),
@@ -273,7 +273,7 @@ fn snapshot_footer_note_wraps() {
     let tx = AppEventSender::new(tx_raw);
     let items = vec![SelectionItem {
         name: "Read Only".to_string(),
-        description: Some("Reflect can read files".to_string()),
+        description: Some("ZhuYe can read files".to_string()),
         is_current: true,
         dismiss_on_select: true,
         ..Default::default()
@@ -305,7 +305,7 @@ fn renders_search_query_line_when_enabled() {
     let tx = AppEventSender::new(tx_raw);
     let items = vec![SelectionItem {
         name: "Read Only".to_string(),
-        description: Some("Reflect can read files".to_string()),
+        description: Some("ZhuYe can read files".to_string()),
         is_current: false,
         dismiss_on_select: true,
         ..Default::default()
@@ -1013,8 +1013,7 @@ fn width_changes_do_not_hide_rows() {
         SelectionItem {
             name: "gpt-5.1-pro".to_string(),
             description: Some(
-                "Optimized for Reflect. Balance of reasoning quality and coding ability."
-                    .to_string(),
+                "Optimized for ZhuYe. Balance of reasoning quality and coding ability.".to_string(),
             ),
             is_current: true,
             dismiss_on_select: true,
@@ -1023,7 +1022,7 @@ fn width_changes_do_not_hide_rows() {
         SelectionItem {
             name: "gpt-5.1-pro-mini".to_string(),
             description: Some(
-                "Optimized for Reflect. Cheaper, faster, but less capable.".to_string(),
+                "Optimized for ZhuYe. Cheaper, faster, but less capable.".to_string(),
             ),
             dismiss_on_select: true,
             ..Default::default()
@@ -1094,8 +1093,7 @@ fn snapshot_model_picker_width_80() {
         SelectionItem {
             name: "gpt-5.1-pro".to_string(),
             description: Some(
-                "Optimized for Reflect. Balance of reasoning quality and coding ability."
-                    .to_string(),
+                "Optimized for ZhuYe. Balance of reasoning quality and coding ability.".to_string(),
             ),
             is_current: true,
             dismiss_on_select: true,
@@ -1104,7 +1102,7 @@ fn snapshot_model_picker_width_80() {
         SelectionItem {
             name: "gpt-5.1-pro-mini".to_string(),
             description: Some(
-                "Optimized for Reflect. Cheaper, faster, but less capable.".to_string(),
+                "Optimized for ZhuYe. Cheaper, faster, but less capable.".to_string(),
             ),
             dismiss_on_select: true,
             ..Default::default()

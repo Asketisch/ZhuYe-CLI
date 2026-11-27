@@ -1,8 +1,8 @@
 //! app 模块(主应用控制器)的桩。
 //!
-//! Reflect 拥有自己的适配层;此桩存在是为了让那些引用 `crate::tui_core::app::App`
+//! ZhuYe 拥有自己的适配层;此桩存在是为了让那些引用 `crate::tui_core::app::App`
 //! 的 vendored UI 代码能够编译。上游 `app/` 模块包含的会话/回合/请求管理,
-//! Reflect 的处理方式不同。
+//! ZhuYe 的处理方式不同。
 
 pub mod app_server_requests {
     /// 已解析的 app server 请求(vendored 代码中按变体匹配的枚举)。
@@ -74,7 +74,7 @@ impl std::ops::Deref for AppEventTx {
 /// 应用控制器桩。
 ///
 /// 此结构体有大量 `pub` 字段,以便访问 `app.field_name` 的 vendored UI 代码能够编译。
-/// Reflect 适配器提供真正的实现,大多数字段默认值为空/None。
+/// ZhuYe 适配器提供真正的实现,大多数字段默认值为空/None。
 #[derive(Default)]
 pub struct App {
     pub bottom_pane: BottomPaneState,

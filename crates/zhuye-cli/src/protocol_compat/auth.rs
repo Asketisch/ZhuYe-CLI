@@ -27,7 +27,7 @@ impl AuthMode {
         )
     }
 
-    pub fn uses_reflect_backend(self) -> bool {
+    pub fn uses_zhuye_backend(self) -> bool {
         matches!(
             self,
             Self::Chatgpt

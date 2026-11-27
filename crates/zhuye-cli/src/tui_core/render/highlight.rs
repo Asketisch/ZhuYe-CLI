@@ -65,7 +65,7 @@ fn syntax_set() -> &'static SyntaxSet {
 // `ansi_themes_use_only_ansi_palette_colors` 测试会在构建时捕获
 // ——远在到达用户之前。运行时警告将是不可行动的噪音，因为用户无法修复上游主题。
 
-/// 设置用户配置的高亮主题覆盖和 Reflect 主路径。
+/// 设置用户配置的高亮主题覆盖和 ZhuYe 主路径。
 ///
 /// 使用**最终解析的配置**调用此函数（在引导、恢复和 fork 重新加载完成后）。
 /// 首次调用将 `name` 和 `zhuye_home` 持久化到 `OnceLock` 中，用于启动/默认主题解析。

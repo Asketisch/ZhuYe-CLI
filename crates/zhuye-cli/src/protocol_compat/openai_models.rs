@@ -128,7 +128,7 @@ pub struct ModelServiceTier {
     pub description: String,
 }
 
-/// 描述 Reflect 所支持模型的元数据。stub 仅保留
+/// 描述 ZhuYe 所支持模型的元数据。stub 仅保留
 /// TUI 实际读取的字段；上游未知的字段会被丢弃。
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ModelPreset {

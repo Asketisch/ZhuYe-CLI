@@ -136,7 +136,7 @@ pub(crate) enum AppEvent {
     FatalExitRequest(String),
 
     /// 将命令转发给 Agent。使用 `AppEvent` 可避免在多层级组件间冒泡传递 channel。
-    ReflectOp(AppCommand),
+    ZhuyeOp(AppCommand),
 
     /// 批准在 TUI 中选中的某次近期自动审阅拒绝的重试。
     ApproveRecentAutoReviewDenial {
@@ -282,7 +282,7 @@ pub(crate) enum AppEvent {
         url: String,
     },
 
-    /// 在 Reflect Desktop 中打开当前线程。
+    /// 在 ZhuYe Desktop 中打开当前线程。
     OpenDesktopThread {
         thread_id: ThreadId,
     },

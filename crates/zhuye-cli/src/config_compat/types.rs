@@ -282,14 +282,14 @@ impl IntoIterator for &ApprovalsReviewer {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ResumeCwdMode {
-    /// 使用启动 Reflect 时所在的目录（默认）。
+    /// 使用启动 ZhuYe 时所在的目录（默认）。
     #[default]
     Current,
     /// 使用所选会话中记录的最新工作目录。
     Session,
 }
 
-/// Reflect 存储 CLI 认证凭据的位置。
+/// ZhuYe 存储 CLI 认证凭据的位置。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AuthCredentialsStoreMode {

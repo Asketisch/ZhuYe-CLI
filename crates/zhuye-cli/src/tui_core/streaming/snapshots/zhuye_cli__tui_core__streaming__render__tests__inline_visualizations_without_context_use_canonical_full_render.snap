@@ -1,5 +1,5 @@
 ---
-source: crates/reflect-tui/src/tui_core/streaming/render_tests.rs
+source: crates/zhuye-tui/src/tui_core/streaming/render_tests.rs
 expression: render.lines
 ---
 [

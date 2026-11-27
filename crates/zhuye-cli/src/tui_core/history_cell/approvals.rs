@@ -57,7 +57,7 @@ pub fn new_approval_decision_cell(
                     vec![
                         actor.subject().into(),
                         "approved".bold(),
-                        " reflect to run ".into(),
+                        " zhuye to run ".into(),
                         Span::from(snippet).dim(),
                         " this time".bold(),
                     ]
@@ -76,7 +76,7 @@ pub fn new_approval_decision_cell(
                 vec![
                     actor.subject().into(),
                     "approved".bold(),
-                    " reflect network access to ".into(),
+                    " zhuye network access to ".into(),
                     Span::from(target).dim(),
                     " this time".bold(),
                 ],
@@ -91,7 +91,7 @@ pub fn new_approval_decision_cell(
                 vec![
                     actor.subject().into(),
                     "approved".bold(),
-                    " reflect to always run commands that start with ".into(),
+                    " zhuye to always run commands that start with ".into(),
                     snippet,
                 ],
             )
@@ -102,7 +102,7 @@ pub fn new_approval_decision_cell(
                     vec![
                         actor.subject().into(),
                         "approved".bold(),
-                        " reflect to run ".into(),
+                        " zhuye to run ".into(),
                         Span::from(snippet).dim(),
                         " every time this session".bold(),
                     ]
@@ -121,7 +121,7 @@ pub fn new_approval_decision_cell(
                 vec![
                     actor.subject().into(),
                     "approved".bold(),
-                    " reflect network access to ".into(),
+                    " zhuye network access to ".into(),
                     Span::from(target).dim(),
                     " every time this session".bold(),
                 ],
@@ -140,7 +140,7 @@ pub fn new_approval_decision_cell(
                     vec![
                         actor.subject().into(),
                         "persisted".bold(),
-                        " Reflect network access to ".into(),
+                        " ZhuYe network access to ".into(),
                         Span::from(target).dim(),
                     ],
                 ),
@@ -149,7 +149,7 @@ pub fn new_approval_decision_cell(
                     vec![
                         actor.subject().into(),
                         "denied".bold(),
-                        " reflect network access to ".into(),
+                        " zhuye network access to ".into(),
                         Span::from(target).dim(),
                         " and saved that rule".into(),
                     ],
@@ -164,13 +164,13 @@ pub fn new_approval_decision_cell(
                         ApprovalDecisionActor::User => vec![
                             actor.subject().into(),
                             "did not approve".bold(),
-                            " reflect to run ".into(),
+                            " zhuye to run ".into(),
                             snippet,
                         ],
                         ApprovalDecisionActor::Guardian => vec![
                             "Request ".into(),
                             "denied".bold(),
-                            " for reflect to run ".into(),
+                            " for zhuye to run ".into(),
                             snippet,
                         ],
                     }
@@ -193,7 +193,7 @@ pub fn new_approval_decision_cell(
                 vec![
                     actor.subject().into(),
                     "did not approve".bold(),
-                    " reflect network access to ".into(),
+                    " zhuye network access to ".into(),
                     Span::from(target).dim(),
                 ],
             ),
@@ -204,7 +204,7 @@ pub fn new_approval_decision_cell(
                     vec![
                         "Review ".into(),
                         "timed out".bold(),
-                        " before reflect could run ".into(),
+                        " before zhuye could run ".into(),
                         Span::from(snippet).dim(),
                     ]
                 } else {
@@ -221,7 +221,7 @@ pub fn new_approval_decision_cell(
                 vec![
                     "Review ".into(),
                     "timed out".bold(),
-                    " before reflect could access ".into(),
+                    " before zhuye could access ".into(),
                     Span::from(target).dim(),
                 ],
             ),
@@ -249,7 +249,7 @@ pub fn new_approval_decision_cell(
                 vec![
                     actor.subject().into(),
                     "canceled".bold(),
-                    " the request for reflect network access to ".into(),
+                    " the request for zhuye network access to ".into(),
                     Span::from(target).dim(),
                 ],
             ),
@@ -282,7 +282,7 @@ pub fn new_guardian_denied_patch_request(files: Vec<String>) -> Box<dyn HistoryC
     let mut summary = vec![
         "Request ".into(),
         "denied".bold(),
-        " for reflect to apply ".into(),
+        " for zhuye to apply ".into(),
     ];
     if files.len() == 1 {
         summary.push("a patch touching ".into());
@@ -324,7 +324,7 @@ pub fn new_guardian_timed_out_patch_request(files: Vec<String>) -> Box<dyn Histo
     let mut summary = vec![
         "Review ".into(),
         "timed out".bold(),
-        " before reflect could apply ".into(),
+        " before zhuye could apply ".into(),
     ];
     if files.len() == 1 {
         summary.push("a patch touching ".into());

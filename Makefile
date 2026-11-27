@@ -1,5 +1,5 @@
 # ── ZhuYe-CLI Makefile ──────────────────────────────────────────
-# 终端 TUI 独立仓库 —— Reflect-Agent 核心 crate 通过 submodule 复用。
+# 终端 TUI 独立仓库 —— ZhuYe 核心 crate 通过 submodule 复用。
 .PHONY: build run test test-fast test-suite test-suite-fast test-suite-live coverage-audit release-check check check-fast watch clean gc gc-deep dist dist-dry install release help
 
 BINARY_NAME := zhuye-cli

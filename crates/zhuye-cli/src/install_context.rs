@@ -1,7 +1,7 @@
-//! 检测 Reflect/Reflect 二进制文件的安装方式。
+//! 检测 ZhuYe/ZhuYe 二进制文件的安装方式。
 //!
 //! 对齐上游 `install-context` 的语义：检查当前可执行文件路径与
-//! `REFLECT_HOME`，据此分类安装方式（npm/bun/pnpm/brew/standalone/其他）。
+//! `ZHUYE_HOME`，据此分类安装方式（npm/bun/pnpm/brew/standalone/其他）。
 //! 驱动 `update_action::get_update_action()`,以便"有可用更新"提示能建议
 //! 正确的升级命令。
 
@@ -11,7 +11,7 @@ use crate::utils_absolute_path::AbsolutePathBuf;
 
 const STANDALONE_PACKAGES_DIRNAME: &str = "standalone";
 const RELEASES_DIRNAME: &str = "releases";
-const RESOURCES_DIRNAME: &str = "reflect-resources";
+const RESOURCES_DIRNAME: &str = "zhuye-resources";
 
 #[derive(Debug, Clone, Default, Eq, PartialEq)]
 pub struct InstallContext {
@@ -55,16 +55,16 @@ impl InstallContext {
     /// 检测当前运行二进制的安装方式。
     ///
     /// 优先级（对齐上游）：
-    /// 1. `REFLECT_MANAGED_BY_PNPM` / `_NPM` / `_BUN` 环境变量覆盖。
-    /// 2. Standalone 管理式安装（可执行文件位于 `$REFLECT_HOME/packages/standalone/releases`）。
+    /// 1. `ZHUYE_MANAGED_BY_PNPM` / `_NPM` / `_BUN` 环境变量覆盖。
+    /// 2. Standalone 管理式安装（可执行文件位于 `$ZHUYE_HOME/packages/standalone/releases`）。
     /// 3. macOS 上的 Homebrew 前缀（`/opt/homebrew` 或 `/usr/local`）。
     /// 4. `Other`（cargo run、应用包、任意路径）。
     pub fn current() -> Self {
-        let method_override = if std::env::var_os("REFLECT_MANAGED_BY_PNPM").is_some() {
+        let method_override = if std::env::var_os("ZHUYE_MANAGED_BY_PNPM").is_some() {
             Some(InstallMethod::Pnpm)
-        } else if std::env::var_os("REFLECT_MANAGED_BY_NPM").is_some() {
+        } else if std::env::var_os("ZHUYE_MANAGED_BY_NPM").is_some() {
             Some(InstallMethod::Npm)
-        } else if std::env::var_os("REFLECT_MANAGED_BY_BUN").is_some() {
+        } else if std::env::var_os("ZHUYE_MANAGED_BY_BUN").is_some() {
             Some(InstallMethod::Bun)
         } else {
             None

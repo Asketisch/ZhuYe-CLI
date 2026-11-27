@@ -56,7 +56,7 @@ fn test_pane_with_disable_paste_burst(
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -157,7 +157,7 @@ fn ctrl_c_on_modal_consumes_without_showing_quit_hint() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: true,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -177,7 +177,7 @@ fn ctrl_c_cancels_history_search_without_clearing_draft_or_showing_quit_hint() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: true,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -205,7 +205,7 @@ fn overlay_not_shown_above_approval_modal() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -455,7 +455,7 @@ fn composer_shown_after_denied_while_task_running() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -502,7 +502,7 @@ fn composer_shown_after_denied_while_task_running() {
         for x in 0..area.width {
             row.push(buf[(x, y)].symbol().chars().next().unwrap_or(' '));
         }
-        if row.contains("Ask Reflect") {
+        if row.contains("Ask ZhuYe") {
             found_composer = true;
             break;
         }
@@ -522,7 +522,7 @@ fn status_indicator_visible_during_command_execution() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -549,7 +549,7 @@ fn status_and_composer_fill_height_without_bottom_padding() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -580,7 +580,7 @@ fn status_only_snapshot() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -603,7 +603,7 @@ fn unified_exec_summary_does_not_increase_height_when_status_visible() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -632,7 +632,7 @@ fn status_with_details_and_queued_messages_snapshot() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -669,7 +669,7 @@ fn queued_messages_visible_when_status_hidden_snapshot() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -701,7 +701,7 @@ fn status_and_queued_messages_snapshot() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -732,7 +732,7 @@ fn remote_images_render_above_composer_text() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -761,7 +761,7 @@ fn drain_pending_submission_state_clears_remote_image_urls() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -784,7 +784,7 @@ fn esc_with_skill_popup_does_not_interrupt_task() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(vec![SkillMetadata {
@@ -812,7 +812,7 @@ fn esc_with_skill_popup_does_not_interrupt_task() {
 
     while let Ok(ev) = rx.try_recv() {
         assert!(
-            !matches!(ev, AppEvent::ReflectOp(Op::Interrupt)),
+            !matches!(ev, AppEvent::ZhuyeOp(Op::Interrupt)),
             "expected Esc to not send Op::Interrupt when dismissing skill popup"
         );
     }
@@ -831,7 +831,7 @@ fn esc_dismisses_slash_command_popup_without_interrupting_task() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -851,7 +851,7 @@ fn esc_dismisses_slash_command_popup_without_interrupting_task() {
 
     while let Ok(ev) = rx.try_recv() {
         assert!(
-            !matches!(ev, AppEvent::ReflectOp(Op::Interrupt)),
+            !matches!(ev, AppEvent::ZhuyeOp(Op::Interrupt)),
             "expected Esc to not send Op::Interrupt while command popup is active"
         );
     }
@@ -878,7 +878,7 @@ fn esc_with_agent_command_without_popup_does_not_interrupt_task() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -898,7 +898,7 @@ fn esc_with_agent_command_without_popup_does_not_interrupt_task() {
 
     while let Ok(ev) = rx.try_recv() {
         assert!(
-            !matches!(ev, AppEvent::ReflectOp(Op::Interrupt)),
+            !matches!(ev, AppEvent::ZhuyeOp(Op::Interrupt)),
             "expected Esc to not send Op::Interrupt while typing `/agent`"
         );
     }
@@ -914,7 +914,7 @@ fn esc_release_after_dismissing_agent_picker_does_not_interrupt_task() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -943,7 +943,7 @@ fn esc_release_after_dismissing_agent_picker_does_not_interrupt_task() {
 
     while let Ok(ev) = rx.try_recv() {
         assert!(
-            !matches!(ev, AppEvent::ReflectOp(Op::Interrupt)),
+            !matches!(ev, AppEvent::ZhuyeOp(Op::Interrupt)),
             "expected Esc release after dismissing agent picker to not interrupt"
         );
     }
@@ -962,7 +962,7 @@ fn esc_interrupts_running_task_when_no_popup() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -973,7 +973,7 @@ fn esc_interrupts_running_task_when_no_popup() {
     pane.handle_key_event(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
 
     assert!(
-        matches!(rx.try_recv(), Ok(AppEvent::ReflectOp(Op::Interrupt))),
+        matches!(rx.try_recv(), Ok(AppEvent::ZhuyeOp(Op::Interrupt))),
         "expected Esc to send Op::Interrupt while a task is running"
     );
 }
@@ -997,7 +997,7 @@ fn remapped_interrupt_turn_uses_configured_key_including_agent_drafts() {
 
     pane.handle_key_event(KeyEvent::new(KeyCode::F(12), KeyModifiers::NONE));
     assert!(
-        matches!(rx.try_recv(), Ok(AppEvent::ReflectOp(Op::Interrupt))),
+        matches!(rx.try_recv(), Ok(AppEvent::ZhuyeOp(Op::Interrupt))),
         "expected configured key to interrupt while `/agent` is being edited"
     );
 }
@@ -1073,7 +1073,7 @@ fn esc_routes_to_handle_key_event_when_requested() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -1121,7 +1121,7 @@ fn release_events_are_ignored_for_active_view() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),
@@ -1199,7 +1199,7 @@ fn paste_completion_clears_stacked_views_and_restores_composer_input() {
         frame_requester: FrameRequester::test_dummy(),
         has_input_focus: true,
         enhanced_keys_supported: false,
-        placeholder_text: "Ask Reflect to do anything".to_string(),
+        placeholder_text: "Ask ZhuYe to do anything".to_string(),
         disable_paste_burst: false,
         animations_enabled: true,
         skills: Some(Vec::new()),

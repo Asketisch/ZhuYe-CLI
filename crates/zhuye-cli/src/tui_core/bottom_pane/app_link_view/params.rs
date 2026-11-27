@@ -34,7 +34,7 @@ impl AppLinkViewParams {
         };
         if server_name == MCP_ZHUYE_CLI_APPS_SERVER_NAME {
             let url = validate_external_url(url, /*require_chatgpt_host*/ true)?;
-            return Self::from_reflect_apps_auth_url_parts(
+            return Self::from_zhuye_apps_auth_url_parts(
                 thread_id,
                 server_name,
                 request_id,
@@ -56,7 +56,7 @@ impl AppLinkViewParams {
         ))
     }
 
-    fn from_reflect_apps_auth_url_parts(
+    fn from_zhuye_apps_auth_url_parts(
         thread_id: ThreadId,
         server_name: &str,
         request_id: AppServerRequestId,

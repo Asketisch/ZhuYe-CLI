@@ -143,7 +143,7 @@ pub struct RateLimitResetCredit {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum RateLimitResetType {
     #[default]
-    ReflectRateLimits,
+    ZhuyeRateLimits,
     Unknown,
 }
 
@@ -227,7 +227,7 @@ impl Default for LoginAccountParams {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum LoginAppBrand {
     #[default]
-    Reflect,
+    ZhuYe,
     Chatgpt,
 }
 

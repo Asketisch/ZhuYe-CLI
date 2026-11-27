@@ -203,7 +203,7 @@ impl ChatWidget {
         self.set_status_line_hyperlink(hyperlink_url);
     }
 
-    /// 清除 Reflect 最近写入的终端标题（如果有）。
+    /// 清除 ZhuYe 最近写入的终端标题（如果有）。
     ///
     /// 该方法不会尝试恢复 shell 或终端此前的标题；它只清除受管理的标题，
     /// 并在 OSC 写入成功后更新缓存。
@@ -451,8 +451,8 @@ impl ChatWidget {
             )
             .iter()
             .find_map(|layer| match &layer.name {
-                ConfigLayerSource::Project { dot_reflect_folder } => {
-                    dot_reflect_folder.as_path().parent().map(Path::to_path_buf)
+                ConfigLayerSource::Project { dot_zhuye_folder } => {
+                    dot_zhuye_folder.as_path().parent().map(Path::to_path_buf)
                 }
                 _ => None,
             })
@@ -586,7 +586,7 @@ impl ChatWidget {
             .status_line_workspace_headline_pending_request_id
             .is_some()
             || self.status_line_workspace_messages_disabled
-            || !self.has_reflect_backend_auth
+            || !self.has_zhuye_backend_auth
         {
             return false;
         }
@@ -706,7 +706,7 @@ impl ChatWidget {
             StatusLineItem::FiveHourLimit => {
                 let (window, is_secondary) = self
                     .rate_limit_snapshots_by_limit_id
-                    .get("reflect")
+                    .get("zhuye")
                     .and_then(five_hour_status_window)?;
                 let label = limit_label_for_window(window.window_minutes, is_secondary);
                 self.status_line_limit_display(Some(window), &label)
@@ -714,12 +714,12 @@ impl ChatWidget {
             StatusLineItem::WeeklyLimit => {
                 let (window, is_secondary) = self
                     .rate_limit_snapshots_by_limit_id
-                    .get("reflect")
+                    .get("zhuye")
                     .and_then(weekly_status_window)?;
                 let label = limit_label_for_window(window.window_minutes, is_secondary);
                 self.status_line_limit_display(Some(window), &label)
             }
-            StatusLineItem::ReflectVersion => Some(ZHUYE_CLI_VERSION.to_string()),
+            StatusLineItem::ZhuyeVersion => Some(ZHUYE_CLI_VERSION.to_string()),
             StatusLineItem::ContextWindowSize => self
                 .status_line_context_window_size()
                 .map(|cws| format!("{} window", format_tokens_compact(cws))),
@@ -768,7 +768,7 @@ impl ChatWidget {
         item: StatusSurfacePreviewItem,
     ) -> Option<String> {
         let status_line_item = match item {
-            StatusSurfacePreviewItem::AppName => return Some("reflect".to_string()),
+            StatusSurfacePreviewItem::AppName => return Some("zhuye".to_string()),
             StatusSurfacePreviewItem::ProjectName => return self.terminal_title_project_name(),
             StatusSurfacePreviewItem::ProjectRoot => StatusLineItem::ProjectRoot,
             StatusSurfacePreviewItem::Status => return Some(self.run_state_status_text()),
@@ -784,7 +784,7 @@ impl ChatWidget {
             StatusSurfacePreviewItem::ContextUsed => StatusLineItem::ContextUsed,
             StatusSurfacePreviewItem::FiveHourLimit => StatusLineItem::FiveHourLimit,
             StatusSurfacePreviewItem::WeeklyLimit => StatusLineItem::WeeklyLimit,
-            StatusSurfacePreviewItem::ReflectVersion => StatusLineItem::ReflectVersion,
+            StatusSurfacePreviewItem::ZhuyeVersion => StatusLineItem::ZhuyeVersion,
             StatusSurfacePreviewItem::ContextWindowSize => StatusLineItem::ContextWindowSize,
             StatusSurfacePreviewItem::UsedTokens => StatusLineItem::UsedTokens,
             StatusSurfacePreviewItem::TotalInputTokens => StatusLineItem::TotalInputTokens,
@@ -809,7 +809,7 @@ impl ChatWidget {
         now: Instant,
     ) -> Option<String> {
         match item {
-            TerminalTitleItem::AppName => Some("reflect".to_string()),
+            TerminalTitleItem::AppName => Some("zhuye".to_string()),
             TerminalTitleItem::Project => self.terminal_title_project_name(),
             TerminalTitleItem::CurrentDir => Some(Self::truncate_terminal_title_part(
                 format_directory_display(self.status_line_cwd(), /*max_width*/ None),
@@ -835,8 +835,8 @@ impl ChatWidget {
             TerminalTitleItem::WeeklyLimit => self
                 .status_line_value_for_item(StatusLineItem::WeeklyLimit)
                 .map(|value| Self::truncate_terminal_title_part(value, /*max_chars*/ 32)),
-            TerminalTitleItem::ReflectVersion => self
-                .status_line_value_for_item(StatusLineItem::ReflectVersion)
+            TerminalTitleItem::ZhuyeVersion => self
+                .status_line_value_for_item(StatusLineItem::ZhuyeVersion)
                 .map(|value| Self::truncate_terminal_title_part(value, /*max_chars*/ 32)),
             TerminalTitleItem::UsedTokens => self
                 .status_line_value_for_item(StatusLineItem::UsedTokens)

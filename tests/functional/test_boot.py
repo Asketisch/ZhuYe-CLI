@@ -8,7 +8,7 @@
   - `Send a message… (shift+enter for newline)`   events.rs:593 / tui/mod.rs:990
   - ` (no tool calls yet)`                        statusline.rs:273
   - `Ctrl+C to quit`                              statusline.rs:218
-  - 终端标题 `ZhuYe-CLI · <model> · [<mode>] · …`   tui/mod.rs:958-971
+  - 终端标题 `ZhuYe · <model> · [<mode>] · …`   tui/mod.rs:958-971
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import re
 
 from tui_pty import Sandbox, TuiSession
 
-# 终端标题(OSC 0):`Reflect · <model> · [<mode>] · git:(<branch>)`
+# 终端标题(OSC 0):`ZhuYe · <model> · [<mode>] · git:(<branch>)`
 _TITLE_RE = re.compile(r"\x1b\]0;([^\x07\x1b]*)")
 
 
@@ -208,7 +208,7 @@ def test_dynamic_model_free_resolves_via_catalog(sandbox: Sandbox) -> None:
     """B13 `model = "free"` 走清单发现:解析不到时报清晰错误(非 0 退出)。
 
     v1.7 起 `model = "free"` 是「运行时才知道」的动态值 —— 启动期必须
-    经 `reflect_config::resolve_model_spec` 从 provider 清单里挑出真实 id。
+    经 `zhuye_config::resolve_model_spec` 从 provider 清单里挑出真实 id。
     未接线时这里会拿着占位串 `"anthropic/free"` 照常启动(HUD 显示
     一个不存在的模型),接线后则在启动期如实失败。
 

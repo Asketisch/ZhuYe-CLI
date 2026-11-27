@@ -24,7 +24,7 @@ use uuid::Uuid;
 
 use self::viewer::materialize_document;
 
-pub(crate) const DIRECTIVE_PREFIX: &str = "::reflect-inline-vis{";
+pub(crate) const DIRECTIVE_PREFIX: &str = "::zhuye-inline-vis{";
 const MAX_FRAGMENT_BYTES: u64 = 2 * 1024 * 1024;
 
 #[derive(Clone, Debug)]
@@ -40,7 +40,7 @@ impl InlineVisualizationContext {
 
     // 阶段 1 占位实现：`from_config` 需要 `crate::tui_core::legacy_core`，该模块尚未引入。
     // 直接接受 `zhuye_home` 而非完整的 Config 对象。
-    pub(crate) fn from_config(_reflect_home: &Path, _thread_id: ThreadId) -> Option<Self> {
+    pub(crate) fn from_config(_zhuye_home: &Path, _thread_id: ThreadId) -> Option<Self> {
         None
     }
 
@@ -231,7 +231,7 @@ fn link_placeholder() -> String {
     let mut bytes = [0_u8; 24];
     rand::thread_rng().fill_bytes(&mut bytes);
     let token = URL_SAFE_NO_PAD.encode(bytes);
-    format!("https://reflect.invalid/inline-visualization/{token}")
+    format!("https://zhuye.invalid/inline-visualization/{token}")
 }
 
 fn parse_directive_file(directive: &str) -> Option<&str> {

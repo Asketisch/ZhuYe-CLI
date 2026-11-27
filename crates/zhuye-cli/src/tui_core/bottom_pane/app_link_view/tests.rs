@@ -32,7 +32,7 @@ fn generic_url_target() -> AppLinkElicitationTarget {
 fn auth_url_request(url: &str) -> crate::app_server_protocol::McpServerElicitationRequest {
     crate::app_server_protocol::McpServerElicitationRequest::Url {
         meta: Some(serde_json::json!({
-            "_reflect_apps": {
+            "_zhuye_apps": {
                 "connector_auth_failure": {
                     "is_auth_failure": true,
                     "connector_id": "connector_calendar",
@@ -40,7 +40,7 @@ fn auth_url_request(url: &str) -> crate::app_server_protocol::McpServerElicitati
                 },
             },
         })),
-        message: "Reconnect Google Calendar on Reflect.".to_string(),
+        message: "Reconnect Google Calendar on ZhuYe.".to_string(),
         url: url.to_string(),
         elicitation_id: "zhuye_apps_auth_call_123".to_string(),
     }
@@ -70,7 +70,7 @@ fn zhuye_apps_auth_url_elicitation_builds_auth_app_link_params() {
 }
 
 #[test]
-fn non_reflect_apps_url_elicitation_builds_generic_app_link_params() {
+fn non_zhuye_apps_url_elicitation_builds_generic_app_link_params() {
     let target = generic_url_target();
     let request = crate::app_server_protocol::McpServerElicitationRequest::Url {
         meta: None,
@@ -195,7 +195,7 @@ fn installed_app_has_toggle_action() {
 
     assert_eq!(
         view.action_labels(),
-        vec!["Manage on Reflect", "Disable app", "Back"]
+        vec!["Manage on ZhuYe", "Disable app", "Back"]
     );
 }
 
@@ -346,7 +346,7 @@ fn toggle_action_sends_set_app_enabled_and_updates_label() {
 
     assert_eq!(
         view.action_labels(),
-        vec!["Manage on Reflect", "Enable app", "Back"]
+        vec!["Manage on ZhuYe", "Enable app", "Back"]
     );
 }
 
@@ -777,7 +777,7 @@ fn auth_suggestion_with_reason_snapshot() {
             url: "https://chatgpt.com/apps/google-calendar/connector_google_calendar".to_string(),
             is_installed: true,
             is_enabled: true,
-            suggest_reason: Some("Reconnect Google Calendar on Reflect.".to_string()),
+            suggest_reason: Some("Reconnect Google Calendar on ZhuYe.".to_string()),
             suggestion_type: Some(AppLinkSuggestionType::Auth),
             elicitation_target: Some(suggestion_target()),
         },

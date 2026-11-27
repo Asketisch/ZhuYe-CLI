@@ -1,4 +1,4 @@
-//! 简易 transcript overlay（对齐 Reflect Ctrl+T）。
+//! 简易 transcript overlay（对齐 ZhuYe Ctrl+T）。
 //!
 //! 进入备用屏后用滚动偏移渲染已提交历史行；不依赖完整 stub `Tui`/`Overlay`
 //! 接线。滚轮/方向键翻页，Esc 或 Ctrl+T 关闭。

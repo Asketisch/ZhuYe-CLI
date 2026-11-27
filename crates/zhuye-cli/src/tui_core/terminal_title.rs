@@ -3,7 +3,7 @@
 //! 此模块拥有底层 OSC 标题写入路径和发出前
 //! 立即进行的净化处理。它的职责刻意保持狭窄：
 //! 由调用方决定标题何时应更改，以及空标题意味着
-//! "保留旧标题"还是"清除 Reflect 上次写入的标题"。
+//! "保留旧标题"还是"清除 ZhuYe 上次写入的标题"。
 //! 此模块不尝试读取或恢复终端之前的
 //! 标题，因为这无法在终端间移植。
 //!
@@ -39,7 +39,7 @@ pub(crate) enum SetTerminalTitleResult {
     ///
     /// 这与清除标题不同。由调用方决定
     /// 净化后为空的值应导致无操作、清除
-    /// Reflect 管理的标题，还是其他回退行为。
+    /// ZhuYe 管理的标题，还是其他回退行为。
     NoVisibleContent,
 }
 
@@ -70,7 +70,7 @@ pub(crate) fn set_terminal_title(title: &str) -> io::Result<SetTerminalTitleResu
 /// 通过写入空 OSC 标题负载清除当前终端标题。
 ///
 /// 这会清除可见标题；它不会恢复 shell 或之前的程序
-/// 在 Reflect 开始管理标题之前可能设置的任何标题。
+/// 在 ZhuYe 开始管理标题之前可能设置的任何标题。
 pub(crate) fn clear_terminal_title() -> io::Result<()> {
     if !stdout().is_terminal() {
         return Ok(());

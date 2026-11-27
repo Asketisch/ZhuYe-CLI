@@ -9,7 +9,7 @@
 //! - `8 <= height < 12` → 1 行(只 identity,给 scrollback 让空间)
 //! - `height < 8` → 0 行(不渲)
 //!
-//! 这是 Reflect 侧薄层:不改 Reflect,产 `Vec<Line>` 交给主循环画在视口底部。
+//! 这是 ZhuYe 侧薄层:不改 ZhuYe,产 `Vec<Line>` 交给主循环画在视口底部。
 
 use crate::adapter::UiHistoryItem;
 use ratatui::style::{Modifier, Style};
@@ -506,7 +506,7 @@ mod tests {
             &crate::theme::Palette::DARK,
             false,
             0,
-            "reflect",
+            "zhuye",
             "myproj",
             None,
             false,
@@ -517,7 +517,7 @@ mod tests {
             false,
         );
         let s: String = line.spans.iter().map(|s| s.content.clone()).collect();
-        assert!(s.contains("reflect"), "model: {s}");
+        assert!(s.contains("zhuye"), "model: {s}");
         assert!(s.contains("myproj"), "cwd: {s}");
         assert!(!s.contains("git:"));
         assert!(!s.contains("Context"));

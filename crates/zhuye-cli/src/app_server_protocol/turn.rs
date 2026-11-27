@@ -37,12 +37,12 @@ pub enum TurnStatus {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TurnError {
     pub message: String,
-    pub zhuye_error_info: Option<ReflectErrorInfo>,
+    pub zhuye_error_info: Option<ZhuyeErrorInfo>,
     pub additional_details: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub enum ReflectErrorInfo {
+pub enum ZhuyeErrorInfo {
     #[default]
     ContextWindowExceeded,
     SessionBudgetExceeded,

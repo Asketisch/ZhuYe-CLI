@@ -1,5 +1,5 @@
 ---
-source: crates/reflect-tui/src/tui_core/bottom_pane/unified_exec_footer.rs
+source: crates/zhuye-tui/src/tui_core/bottom_pane/unified_exec_footer.rs
 expression: "format!(\"{buf:?}\")"
 ---
 Buffer {

@@ -2,7 +2,7 @@
 
 任务 ID 与 PLAN.md 第 3 章对应;映射到仓库现有测试入口:
 能力覆盖层(tests/functional/,pytest + pty)、Rust 侧(tests/rust/)、
-覆盖自审(tools/coverage_audit.py)与 live 层。coverage 语义同 Reflect-Agent。
+覆盖自审(tools/coverage_audit.py)与 live 层。coverage 语义同 ZhuYe。
 """
 
 TASKS: dict[str, dict] = {

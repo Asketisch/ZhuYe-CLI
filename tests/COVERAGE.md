@@ -7,7 +7,7 @@
 零 API key)+ 隔离 HOME(mktemp,不污染真实 `~/.zhuye`)。
 
 > 本文件的结构与判据对齐 submodule `zhuye-agent/tests/COVERAGE.md`,
-> 但**覆盖对象不同**:submodule 是 agent 基座(测 headless `reflect serve`
+> 但**覆盖对象不同**:submodule 是 agent 基座(测 headless `zhuye serve`
 > 的 JSONL wire);本仓是终端 TUI(测 pty 上的真实渲染、真实按键路由、
 > 真实文件落盘)。
 
@@ -241,7 +241,7 @@
 | V4 | markdown 代码块 | 围栏内容(`fn probe_render_fn`)上屏 |
 | V5 | markdown 表格 / 列表 | `CELLKEY42` / `LISTITEM_*` 上屏 |
 | V6 | `NO_COLOR=1` 分支 | 首屏锚点齐全(`term/theme.rs` `resolve_startup`) |
-| V7 | `REFLECT_TUI_THEME=light` 分支 | 首屏锚点齐全 |
+| V7 | `ZHUYE_TUI_THEME=light` 分支 | 首屏锚点齐全 |
 | V8 | resize 布局锚点 | 80x24 → 120x40 → 80x24,HUD 模型名 + composer 占位符始终可见(升级 B9) |
 | V9 | 极小窗口 40x10 | 存活 + 有渲染输出 + 交互不崩 |
 
@@ -285,7 +285,7 @@
 | G5 | 门控插件默认态零变化(上游 8da90e5) | 空 `[plugins]` 下 `tool_search` 命中 `web_search [builtin]`(默认开 + 升级零影响) |
 | G6 | `disabled_plugins` = 注册门控 | `[plugins].disabled_plugins = ["web-search"]` 后 `tool_search` 报 `No tools matched`,直调报 `tool not found`(区别于可见性过滤与缺 key 执行错误) |
 
-> 前置:G1–G4 依赖 submodule 构建出的 `reflect` CLI(用于安装示例插件),
+> 前置:G1–G4 依赖 submodule 构建出的 `zhuye` CLI(用于安装示例插件),
 > 缺失则 SKIP;G5 / G6 只依赖本仓二进制 + mock provider,恒跑。
 
 ### U 组 测试设施自身(`test_pty_helpers.py`)
@@ -317,7 +317,7 @@
 | H7 | 动态 `model = "free"` 清单发现 | 真实 `/models` 解析出 `mock-free`;HUD 与首个请求均使用 `openai/mock-free` |
 
 > **为什么要有这一组**:其余用例都用 `ZHUYE_MODEL=mock/mock-1` —— 那是
-> reflect-llm `ModelClient` 层的内置 provider,**完全绕过** HTTP 传输、
+> zhuye-llm `ModelClient` 层的内置 provider,**完全绕过** HTTP 传输、
 > SSE 分帧与 Anthropic 协议形态;内置 mock 还「瞬时完成」,离线造不出
 > **确定性 busy 窗口**(这正是 §6 里「Ctrl+C busy 首按中断」等条目长期
 > 锁在「未设用例」的原因)。本组用 `mock_anthropic_server.py` 起一个本地
@@ -368,21 +368,21 @@
 | LSP 工具 | `bootstrap_wiring.rs:691-693` | `LSP server 'x' started` 通知 |
 | 插件能力 | `bootstrap.rs:409-426` | `Plugin 'x' loaded (…)` 通知 + `/plugin` 面板 |
 | Telemetry | `bootstrap_wiring.rs:75-129` | `~/.zhuye/traces/` 产物 + `traces spans` |
-| 压缩 | `bootstrap.rs` + `reflect-compact` | `🗜 已压缩上下文:…` 通知 |
+| 压缩 | `bootstrap.rs` + `zhuye-compact` | `🗜 已压缩上下文:…` 通知 |
 | 权限模式 | `Op::CyclePermissionMode` | HUD `[prompt]` / `[plan]` 段 |
 | 工具参数流(`ToolCallArgsDelta`) | `tui/conversion.rs` + `adapter.rs` | 调用行参数摘要 `✓ glob (…) · *.rs` |
-| 会话恢复回放(任意日期 + 轮转副本 + 双 id) | `resume.rs::replay_all`(`reflect_rollout::reader::replay`) | 旧日期会话 `--resume` 历史回填 + 续写原文件(P8);按内部 session id 恢复(P9) |
+| 会话恢复回放(任意日期 + 轮转副本 + 双 id) | `resume.rs::replay_all`(`zhuye_rollout::reader::replay`) | 旧日期会话 `--resume` 历史回填 + 续写原文件(P8);按内部 session id 恢复(P9) |
 | 路由事件(failover / 冷却 / 跨模型降级) | `tui/conversion.rs` + `views/routing_status.rs` | `↻ 路由切换 · main: …` / `↘ 模型降级 · …` 通知行 |
 | 目标模式状态快照 | `tui/mod.rs`(`AgentThread::goal_snapshot`) | `/goal` 无参 → `目标模式 · 进行中` + 进度行 |
-| provider 模型清单 + 免费判定 | `reflect_config::fetch_catalog` + `reflect_llm::model_catalog` | `/model` 无参 → 清单行 + `免费` / `免费?` 标记 |
-| 配置热重载 | `reflect_config::ConfigWatcher` + `config_reload.rs` | `🔄 配置已重载(…)· 变更段: …` 通知行 |
-| 分析遥测(OTLP) | `logging.rs`(`reflect_config::init_exporter`) | `[analytics] enabled=true` → OTLP span 导出 |
-| LSP 诊断 | `reflect_lsp::DiagnosticRegistry` | `/lsp` → `诊断文档: N · 诊断条数: M` |
+| provider 模型清单 + 免费判定 | `zhuye_config::fetch_catalog` + `zhuye_llm::model_catalog` | `/model` 无参 → 清单行 + `免费` / `免费?` 标记 |
+| 配置热重载 | `zhuye_config::ConfigWatcher` + `config_reload.rs` | `🔄 配置已重载(…)· 变更段: …` 通知行 |
+| 分析遥测(OTLP) | `logging.rs`(`zhuye_config::init_exporter`) | `[analytics] enabled=true` → OTLP span 导出 |
+| LSP 诊断 | `zhuye_lsp::DiagnosticRegistry` | `/lsp` → `诊断文档: N · 诊断条数: M` |
 | Agent 待办清单 | `AgentConfig::todos_slot` | `/todo` → `N 项(✅ … 完成 · 🔄 … 进行中 · ⬜ … 待办)` |
-| MCP 精选目录 | `reflect_mcp::curated_catalog` | `/mcp` overlay 的 `Curated catalog` 段 + 安装片段 |
-| 目标模式校验 / 预算 | `reflect_goal` + `Op::EnterGoalMode` | `/goal <目标> --verify <cmd> --budget <n>` |
-| OS 级沙箱状态 | `reflect_sandbox::OsSandbox::status_line` | `/status` 的 `sandbox:` 段 |
-| 终端通知开关 / 通道 | `reflect_config::TuiNotificationsSection` | `[notifications.tui]` 的 `enabled` / `on_*` / `channels` 真正生效 |
+| MCP 精选目录 | `zhuye_mcp::curated_catalog` | `/mcp` overlay 的 `Curated catalog` 段 + 安装片段 |
+| 目标模式校验 / 预算 | `zhuye_goal` + `Op::EnterGoalMode` | `/goal <目标> --verify <cmd> --budget <n>` |
+| OS 级沙箱状态 | `zhuye_sandbox::OsSandbox::status_line` | `/status` 的 `sandbox:` 段 |
+| 终端通知开关 / 通道 | `zhuye_config::TuiNotificationsSection` | `[notifications.tui]` 的 `enabled` / `on_*` / `channels` 真正生效 |
 | 挂起交互了结(InteractionResolved,v1.12) | `tui/conversion.rs` + `adapter.rs`(五类挂起态按 id 清理) | TTL 过期 / 取消 / 中断 → 弹条清理 + `⚠ <类别>已…` 通知行;用户应答(Answered)静默幂等 |
 | 上下文组成(ContextComposition,v1.12) | `tui/conversion.rs` + `adapter.rs`(入 `context_usage.composition`)+ `statusline::format_composition` | `/status` 的 `context composition:` 段(六类 snake_case 分解;引擎组成无变化时省略不发) |
 | 子代理会话血缘(v1.12) | `bootstrap_wiring.rs::build_m5`(`set_rollout_base` / `set_workspace`) | 子会话独立 JSONL(`parent_session_id`)+ `session ls` 的 `↳` 行 + `session show` 的 `Parent:` 行 + 父 Fork 回填 `child_session_id`(W14) |
@@ -437,20 +437,20 @@
 
 | # | 缺陷 | 证据 | 状态 |
 |---|---|---|---|
-| D1 | **`session show` 对真实会话的消息预览恒为空**:`preview_message_body` 只认 `content` 为字符串 / `{text}` 对象,认不出 v1.2 起的 **ContentBlock 数组**形态 —— 而那正是引擎的实际落盘形态 | `crates/zhuye-cli/src/cli/session.rs:607`(修复前) | **已修**(`crates/zhuye-cli/src/cli/session.rs:607-641` + 4 条单测)。同款缺陷在 submodule `reflect-cli` 亦存在,未同步修复 |
+| D1 | **`session show` 对真实会话的消息预览恒为空**:`preview_message_body` 只认 `content` 为字符串 / `{text}` 对象,认不出 v1.2 起的 **ContentBlock 数组**形态 —— 而那正是引擎的实际落盘形态 | `crates/zhuye-cli/src/cli/session.rs:607`(修复前) | **已修**(`crates/zhuye-cli/src/cli/session.rs:607-641` + 4 条单测)。同款缺陷在 submodule `zhuye-cli` 亦存在,未同步修复 |
 | D2 | **未知 slash 命令的拒绝提示被丢弃**:`chat_composer.rs:2801-2806` 发出的 `AppEvent::InsertHistoryCell("Unrecognized command '/x'")` 没有消费方(`ComposerInput::handle_app_events` 只处理 `StartFileSearch`),`src/tui/mod.rs` 也从不调 `take_app_events` | `tui_core/public_widgets/composer_input.rs:483-493` | 未修(记录)。用户只看到「输入还在框里、没发出去」 |
 | D3 | **`TurnAborted` 与 `TurnComplete` 折叠**:协议两者都映射 `UiEventKind::TurnCompleted`,屏幕无法区分「正常结束」与「被 Esc/Ctrl-C 中断」 | `tui/conversion.rs:53-54` | 未修(记录)。只能靠中断瞬间的 `⏹ 已发送中断请求…` notice 间接区分 |
 | D4 | **4 个协议事件被静默丢弃**:`McpToolInvoked` / `PermissionBubble` / `ConfigReloaded` / `CollabMessage` / `Routing` 在 `convert_event` 里返回 `None`,屏幕无任何痕迹 | `tui/conversion.rs:226-241` | 未修(记录) |
 | D5 | **picker 的 `Nop` 键位不吞键**:在 image/keymap/statusline/theme/skills_hub 里按 `j`/`k` 既移动选择又往 composer 输入框打字;keymap / skills_hub / statusline 的 `Enter` 也是 `Nop`(会提交草稿) | `tui/mod.rs:2594, 2721, 2737, 2772, 2788, 2804, 2848` | 未修(记录)。本套件一律用 `Esc` 关闭弹层以规避 |
-| D6 | **`REFLECT_TUI_UPDATE_CHECK` 无人读取**:旧 harness 设它以屏蔽启动期更新探测,但本 fork 的 `update_action.rs:29-33` 恒返回 `None` | `crates/zhuye-cli/src/tui_core/update_action.rs:29-33` | 未修(记录)。无害,但属残留 |
-| D7 | **mock provider 一次提交触发多次模型调用**:实测 4 次,导致脚本行与最终落盘的 assistant 消息不是一一对应 | `zhuye-agent/crates/abilities/reflect-llm/src/providers/mock.rs:163` | 引擎侧行为,记录 |
+| D6 | **`ZHUYE_TUI_UPDATE_CHECK` 无人读取**:旧 harness 设它以屏蔽启动期更新探测,但本 fork 的 `update_action.rs:29-33` 恒返回 `None` | `crates/zhuye-cli/src/tui_core/update_action.rs:29-33` | 未修(记录)。无害,但属残留 |
+| D7 | **mock provider 一次提交触发多次模型调用**:实测 4 次,导致脚本行与最终落盘的 assistant 消息不是一一对应 | `zhuye-agent/crates/abilities/zhuye-llm/src/providers/mock.rs:163` | 引擎侧行为,记录 |
 | D8 | **`Ctrl+Shift+D` 快捷键在真实终端不可达**:终端无法区分 Ctrl+D 与 Ctrl+Shift+D(同为字节 `0x04`),crossterm 把 `0x04` 解析成 `Char('d') + CONTROL`(**不带 SHIFT**),而 `keymap.rs` 的 `OpenDiff` 分支要求 `CONTROL|SHIFT` —— 该分支永远命中不了,实际落到 `Ctrl+D → Exit` | `crates/zhuye-cli/src/term/keymap.rs:88-94`(要求 SHIFT)vs `:60-65`(Ctrl+D 排除 SHIFT);实测见 `test_overlay.py::test_ctrl_shift_d_is_unreachable_from_a_terminal` | 未修(记录)。diff overlay 的实际入口只有 `/diff` |
 | D9 | ~~**坏 `config.toml` 静默回落**~~:`this is [ not valid toml {{{` 这类非法内容不产生任何用户可见告警,TUI 以默认配置照常启动 —— 用户改了配置却不生效时无从得知 | W9 实证(2026-10):进程存活、无 panic、raw 无 config 相关输出 | **已修**:bootstrap 启动前显式体检 config.toml,解析失败在终端打印 `⚠ 警告:<路径> 解析失败(...)`,仍回落默认配置不挡启动 |
 | D10 | **busy 窗口内的 composer 提交被吞且草稿保留**:回合进行中按 Enter,提交内容不上传也不清框;`/loop stop` 在迭代 busy 窗口内提交即失效,且残留草稿会污染后续输入(与 `/loop` 的自动提交叠加尤其明显) | W5 调试实证(2026-10):第 2 轮触发后立刻 stop 无效,拖到空闲窗口才生效;残留草稿使后续 stop 拼成非法命令 | 未修(记录) |
 | D11 | ~~**Shift+Tab 权限模式循环与注释不符**~~:`keymap.rs` 注释宣称五模式循环,旧实测 HUD 可见循环只有三态 Auto → AcceptEdits → Plan → Auto,Prompt / Bypass 到不了 | K1 实证(2026-10):连续 6 次 Shift+Tab 交替出现 `[accept_edits]`/`[plan]`/无标记 | **已对齐**:核心 81776217 起三段工作模式,轮换即 Auto → Prompt(Ask)→ Plan → Auto(`next_in_ui_cycle`),accept_edits/deny/bubble/bypass 弃用、不进循环;CLI 侧注释与 `/mode` 帮助同步(b905335),K1 锚点已更新 |
 | D12 | **整段输入(paste-burst)会丢字符**:一次 `write` 写入的连续按键被当作 bracketed paste 处理,部分字符被吞 —— 实测 `/demo:hello` → `/emo:hello`、`/plugin` → `/lugin`,表现为 slash 弹窗不弹、命令不被识别 | G 组实证(2026-10):`test_plugin.py` 的 G2/G3/G4 在整组跑时**间歇**失败(单跑恒过),屏上可见缺字;与 submodule 升级无关(升级前后各复现一次,基线代码同样复现) | 未修(记录)。测试侧规避:分两段写入 + `_pump` 让出(G2/G3/G4 已按此改);产品侧 paste-burst 的字符丢弃待定 |
 | D13 | **满载下 Ctrl+G 按键间歇丢失**:套件满载连续跑时 `ctrl+g`(0x07)偶发未被处理 —— 编辑器未拉起、无任何通知、composer 草稿原样保留;单跑稳定复现不了 | K3 / K3b 实证(2026-10-27,合并 submodule `e4560bc` 后):全套件跑复现 2 次(K3+K3b 同批)+ 单跑复现 1 次,随后单跑连 7 次全过;失败批次均在 7 分钟连续 pty 压测的高负载窗口。 ede1639 长驻阻塞读取任务事件循环下出现,基线(每轮 spawn poll 任务)同批次未复现 | 未修(记录)。疑与高负载下 fork 版 crossterm poll/read 或输入通道交接时序有关;复现率低,先挂观察 |
-| D15 | **checkpoint 前缀随 submodule 更名,旧 tag 失联**:`9332aa9` 把 checkpoint 实现收编进 `zhuye_git::checkpoint` 时前缀从 `reflect-checkpoint:` / `reflect-cp/` 改名为 `zhuye-checkpoint:` / `zhuye-cp/`;`/checkpoint` 列表按新前缀过滤,**develop 接线前**创建的历史 checkpoint 不再显示、也无法 rewind(提交仍在仓库里,手工 `git reset` 可达) | `zhuye-agent/crates/resources/zhuye-git/src/checkpoint.rs:27-31`;`git tag \| grep reflect-cp` 可列出失联旧 tag | 未修(记录)。更名是 submodule 的既定口径(烛夜更名),属一次性迁移代价 |
+| D15 | **checkpoint 前缀随 submodule 更名,旧 tag 失联**:`9332aa9` 把 checkpoint 实现收编进 `zhuye_git::checkpoint` 时前缀从 `zhuye-checkpoint:` / `zhuye-cp/` 改名为 `zhuye-checkpoint:` / `zhuye-cp/`;`/checkpoint` 列表按新前缀过滤,**develop 接线前**创建的历史 checkpoint 不再显示、也无法 rewind(提交仍在仓库里,手工 `git reset` 可达) | `zhuye-agent/crates/resources/zhuye-git/src/checkpoint.rs:27-31`;`git tag \| grep zhuye-cp` 可列出失联旧 tag | 未修(记录)。更名是 submodule 的既定口径(烛夜更名),属一次性迁移代价 |
 | D14 | **套件入口二进制新鲜度缺陷(假绿通道)**:`run_all.sh` / `functional/run.sh` 旧写法「release 二进制不存在才构建」,submodule 指针升级后旧二进制继续冒充新行为 —— v0.1.8 升级实证:本地与 CI macos job 全绿,唯 ubuntu(缓存冷、真重建)暴露行为回归 | `tests/run_all.sh:29-33`(修复前);复盘见 §T 组 mock 语义段 | **已修**:入口统一 `ensure_release_binary`(tests/lib.sh),每次 `cargo build --release --locked` 增量校验;外部 `ZHUYE_CLI_BIN` 覆盖时旁路信任 |
 | D16 | **MCP elicitation 无交互面,请求即时取消**:v1.x 起 MCP server 可经 `elicitation/create` 请求用户输入(form 表单 / url 引导),TUI 尚无表单 UI —— 宿主装配侧按 fail-closed 立即以 `cancel` 回执(不让 server 干等 exec 同款 300s TTL),屏幕仅 Notice 提示「谁在请求、请求什么、已取消」 | `bootstrap_wiring.rs`(Elicitation 臂,指针 e246299)+ `tui/conversion.rs` McpElicitation 臂(单测锚定) | 未修(记录)。补表单 UI 时改为登记 `approval_context.mcp_elicitations` 共享表 + TTL 兜底(对齐 exec `bootstrap_m6`,crate 篇契约 11) |
 

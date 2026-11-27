@@ -1,7 +1,7 @@
 //! 终端通知(BEL / OSC9)触发逻辑。
 //!
 //! 对齐老 TUI `notifications.rs`:回合结束 / 需要审批 / 出错时发终端通知,
-//! 让用户切到别的窗口也能被提醒。后端复用 vendored 的 Reflect
+//! 让用户切到别的窗口也能被提醒。后端复用 vendored 的 ZhuYe
 //! `tui_core::notifications`(OSC9/BEL + 终端探测自动选)。
 //!
 //! 触发判定与文案构建是纯函数(可单测);实际的 escape-sequence 发送在主循环里
@@ -18,7 +18,7 @@ pub struct NotifyTriggers {
     /// 本回合是否出现过工具调用 / 子代理活动 —— 用来判断「值得通知」。
     ///
     /// 对齐 claude code:不是每个回合结束都响。用户刚敲了回车、盯着屏幕等
-    /// 结果时来一条 "Reflect finished." 是纯噪音;真正的价值是「你切去别的
+    /// 结果时来一条 "ZhuYe finished." 是纯噪音;真正的价值是「你切去别的
     /// 窗口干活,这边跑完了」。
     pub did_work: bool,
 }
@@ -82,19 +82,19 @@ impl NotifyTriggers {
             if !allows(section, NotifyTrigger::Error) {
                 return None;
             }
-            return Some(format!("Reflect error: {e}"));
+            return Some(format!("ZhuYe error: {e}"));
         }
         if let Some(a) = &self.approval_needed {
             if !allows(section, NotifyTrigger::Approval) {
                 return None;
             }
-            return Some(format!("Reflect needs approval: {a}"));
+            return Some(format!("ZhuYe needs approval: {a}"));
         }
         if self.turn_completed && self.did_work {
             if !allows(section, NotifyTrigger::TurnComplete) {
                 return None;
             }
-            return Some("Reflect finished.".to_string());
+            return Some("ZhuYe finished.".to_string());
         }
         None
     }
@@ -257,7 +257,7 @@ mod tests {
 
     #[test]
     fn turn_completed_notifies_only_when_real_work_happened() {
-        // 回归:此前每个回合结束都发 "Reflect finished." —— 用户刚敲完回车
+        // 回归:此前每个回合结束都发 "ZhuYe finished." —— 用户刚敲完回车
         // 盯着屏幕等结果时,这是纯噪音。对齐 claude code:只在干了实事
         // (工具调用 / 子代理)或跑得够久时才通知。
         let mut t = NotifyTriggers::new();
@@ -270,7 +270,7 @@ mod tests {
             name: "bash".into(),
             args: None,
         });
-        assert_eq!(t.message().as_deref(), Some("Reflect finished."));
+        assert_eq!(t.message().as_deref(), Some("ZhuYe finished."));
 
         // 长回合例外:没调工具但跑得够久,仍值得把人叫回来。
         let mut long = NotifyTriggers::new();
@@ -290,7 +290,7 @@ mod tests {
             args: None,
         });
         t.observe(&UiEventKind::Error("boom".into()));
-        assert_eq!(t.message().as_deref(), Some("Reflect error: boom"));
+        assert_eq!(t.message().as_deref(), Some("ZhuYe error: boom"));
 
         let mut t2 = NotifyTriggers::new();
         t2.observe(&UiEventKind::ApprovalNeeded {
@@ -303,7 +303,7 @@ mod tests {
         });
         assert_eq!(
             t2.message().as_deref(),
-            Some("Reflect needs approval: Bash: rm -rf /")
+            Some("ZhuYe needs approval: Bash: rm -rf /")
         );
     }
 
@@ -312,7 +312,7 @@ mod tests {
         let mut t = NotifyTriggers::new();
         t.observe(&UiEventKind::TurnCompleted);
         t.observe(&UiEventKind::SubagentStatusUpdate { children: vec![] });
-        assert_eq!(t.message().as_deref(), Some("Reflect finished."));
+        assert_eq!(t.message().as_deref(), Some("ZhuYe finished."));
     }
 
     #[test]
@@ -328,7 +328,7 @@ mod tests {
             name: "bash".into(),
             args: None,
         });
-        assert_eq!(t.message().as_deref(), Some("Reflect finished."));
+        assert_eq!(t.message().as_deref(), Some("ZhuYe finished."));
     }
 
     #[test]
@@ -344,7 +344,7 @@ mod tests {
         });
         assert_eq!(
             t.message().as_deref(),
-            Some("Reflect needs approval: run Bash")
+            Some("ZhuYe needs approval: run Bash")
         );
     }
 
@@ -352,7 +352,7 @@ mod tests {
     fn error_triggers_message() {
         let mut t = NotifyTriggers::new();
         t.observe(&UiEventKind::Error("boom".into()));
-        assert_eq!(t.message().as_deref(), Some("Reflect error: boom"));
+        assert_eq!(t.message().as_deref(), Some("ZhuYe error: boom"));
     }
 
     #[test]
@@ -368,7 +368,7 @@ mod tests {
             },
         });
         t.observe(&UiEventKind::Error("fatal".into()));
-        assert_eq!(t.message().as_deref(), Some("Reflect error: fatal"));
+        assert_eq!(t.message().as_deref(), Some("ZhuYe error: fatal"));
     }
 
     #[test]
@@ -383,7 +383,7 @@ mod tests {
                 args: serde_json::Value::Null,
             },
         });
-        assert_eq!(t.message().as_deref(), Some("Reflect needs approval: y"));
+        assert_eq!(t.message().as_deref(), Some("ZhuYe needs approval: y"));
     }
 
     #[test]

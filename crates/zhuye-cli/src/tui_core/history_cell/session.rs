@@ -163,7 +163,7 @@ pub(crate) fn new_session_info(
             Line::from(vec![
                 "  ".into(),
                 "/init".into(),
-                " - create an AGENTS.md file with instructions for Reflect".dim(),
+                " - create an AGENTS.md file with instructions for ZhuYe".dim(),
             ]),
             Line::from(vec![
                 "  ".into(),
@@ -173,7 +173,7 @@ pub(crate) fn new_session_info(
             Line::from(vec![
                 "  ".into(),
                 "/permissions".into(),
-                " - choose what Reflect is allowed to do".dim(),
+                " - choose what ZhuYe is allowed to do".dim(),
             ]),
             Line::from(vec![
                 "  ".into(),
@@ -327,10 +327,10 @@ impl HistoryCell for SessionHeaderHistoryCell {
 
         let make_row = |spans: Vec<Span<'static>>| Line::from(spans);
 
-        // 框内渲染的标题行：“>_ Reflect (vX)”
+        // 框内渲染的标题行：“>_ ZhuYe (vX)”
         let title_spans: Vec<Span<'static>> = vec![
             Span::from(">_ ").dim(),
-            Span::from("Reflect").bold(),
+            Span::from("ZhuYe").bold(),
             Span::from(" ").dim(),
             Span::from(format!("(v{})", self.version)).dim(),
         ];
@@ -397,7 +397,7 @@ impl HistoryCell for SessionHeaderHistoryCell {
 
     fn raw_lines(&self) -> Vec<Line<'static>> {
         let mut lines = vec![
-            Line::from(format!("Reflect (v{})", self.version)),
+            Line::from(format!("ZhuYe (v{})", self.version)),
             Line::from(format!(
                 "model: {}{}",
                 self.model,

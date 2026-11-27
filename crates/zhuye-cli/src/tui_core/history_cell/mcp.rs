@@ -261,7 +261,7 @@ pub(crate) fn new_active_mcp_tool_call(
 ///
 /// 手动测试提示：
 /// - 运行 rmcp stdio 测试服务器（上游 rmcp-client test_stdio_server），
-///   并通过 `reflect mcp add` 将其注册为 MCP 服务器。
+///   并通过 `zhuye mcp add` 将其注册为 MCP 服务器。
 /// - 使用其 `image_scenario` 工具，配合 `text_then_image`、
 ///   `invalid_base64_then_image` 或 `invalid_image_bytes_then_image` 等用例进行验证，
 ///   以确保即使第一个块不是有效图像，也能触发此路径。

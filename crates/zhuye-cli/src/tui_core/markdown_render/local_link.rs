@@ -18,7 +18,7 @@ pub(super) fn is_local_path_like_link(dest_url: &str) -> bool {
 
 /// 将本地链接目标解析为规范化路径文本加上可选的位置后缀。
 ///
-/// 此函数接受 Reflect 当前产出的路径形式：`file://` URL、绝对路径与相对路径、
+/// 此函数接受 ZhuYe 当前产出的路径形式：`file://` URL、绝对路径与相对路径、
 /// `~/...`、Windows 路径，以及 `#L..C..` 或 `:line:col` 后缀。
 pub(super) fn render_local_link_target(dest_url: &str, cwd: Option<&Path>) -> Option<String> {
     let (path_text, location_suffix) = parse_local_link_target(dest_url)?;

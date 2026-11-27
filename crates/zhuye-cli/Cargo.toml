@@ -23,7 +23,7 @@ tui-upstream-tests = []
 name = "zhuye_cli"
 path = "src/lib.rs"
 
-# TUI 独立二进制入口。原 Reflect-Agent(现 ZhuYe)里由顶层 `reflect`(现 `zhuye`)二进制进程内转发,
+# TUI 独立二进制入口。原 ZhuYe(现 ZhuYe)里由顶层 `zhuye`(现 `zhuye`)二进制进程内转发,
 # 拆仓后 TUI 自带 thin binary(仅 clap 路由 + 调 `zhuye_cli::run`)。
 [[bin]]
 name = "zhuye-cli"

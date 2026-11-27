@@ -85,7 +85,7 @@ assert_contains "session 列出 fork" "fork" "$TMP/session_help.txt"
 assert_contains "session 列出 rename" "rename" "$TMP/session_help.txt"
 assert_contains "session 列出 export" "export" "$TMP/session_help.txt"
 assert_contains "session 列出 stats" "stats" "$TMP/session_help.txt"
-# v1.5 接线:跨会话全文搜索(reflect_rollout::search_sessions)。
+# v1.5 接线:跨会话全文搜索(zhuye_rollout::search_sessions)。
 assert_contains "session 列出 search" "search" "$TMP/session_help.txt"
 
 # ── 3b. session search:跨会话全文搜索 ──────────────────────────────────────
@@ -105,7 +105,7 @@ assert_contains "traces 列出 ls" "ls" "$TMP/traces_help.txt"
 assert_contains "traces 列出 show" "show" "$TMP/traces_help.txt"
 assert_contains "traces 列出 spans" "spans" "$TMP/traces_help.txt"
 
-# v1.x 接线:workspace clone(reflect_stream::workspace_sync 共享 API)。
+# v1.x 接线:workspace clone(zhuye_stream::workspace_sync 共享 API)。
 run_cli "$TMP/workspace_help.txt" workspace --help
 assert_contains "workspace 列出 clone" "clone" "$TMP/workspace_help.txt"
 
@@ -118,8 +118,8 @@ run_cli "$TMP/workspace_clone_bad.txt" workspace clone ""
 assert_nonempty "workspace clone 空 url 有诊断输出" "$TMP/workspace_clone_bad.txt"
 assert_exit_nonzero "workspace clone 空 url 非 0 退出" "$LAST_RC"
 
-# v1.x 接线:多 agent 讨论(reflect_discussion::cli::run)与安全扫描
-# (reflect_integration::security_scan)。
+# v1.x 接线:多 agent 讨论(zhuye_discussion::cli::run)与安全扫描
+# (zhuye_integration::security_scan)。
 run_cli "$TMP/discussion_help.txt" discussion --help
 assert_contains "discussion 列出 run" "run" "$TMP/discussion_help.txt"
 

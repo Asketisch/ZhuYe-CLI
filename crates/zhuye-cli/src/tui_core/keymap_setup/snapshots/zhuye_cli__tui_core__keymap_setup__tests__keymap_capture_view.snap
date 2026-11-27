@@ -1,5 +1,5 @@
 ---
-source: crates/reflect-tui/src/tui_core/keymap_setup/mod.rs
+source: crates/zhuye-tui/src/tui_core/keymap_setup/mod.rs
 expression: "format!(\"{:?}\", render_capture(&view, 80, 8))"
 ---
 Buffer {

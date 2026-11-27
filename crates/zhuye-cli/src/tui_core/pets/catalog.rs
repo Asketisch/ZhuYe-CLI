@@ -1,4 +1,4 @@
-//! 从 Reflect App 头像目录移植而来的内置宠物目录。
+//! 从 ZhuYe App 头像目录移植而来的内置宠物目录。
 
 pub(super) const DEFAULT_FRAME_WIDTH: u32 = 192;
 pub(super) const DEFAULT_FRAME_HEIGHT: u32 = 208;
@@ -17,10 +17,10 @@ pub(super) struct BuiltinPet {
 
 pub(super) const BUILTIN_PETS: &[BuiltinPet] = &[
     BuiltinPet {
-        id: "reflect",
-        display_name: "Reflect",
-        description: "The original Reflect companion",
-        spritesheet_file: "reflect-spritesheet-v4.webp",
+        id: "zhuye",
+        display_name: "ZhuYe",
+        description: "The original ZhuYe companion",
+        spritesheet_file: "zhuye-spritesheet-v4.webp",
     },
     BuiltinPet {
         id: "dewey",

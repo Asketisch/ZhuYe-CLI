@@ -648,7 +648,7 @@ mod tests {
             /*has_input_focus*/ true,
             AppEventSender::new(tx),
             /*enhanced_keys_supported*/ false,
-            "Ask Reflect to do anything".to_string(),
+            "Ask ZhuYe to do anything".to_string(),
             /*disable_paste_burst*/ false,
         )
     }

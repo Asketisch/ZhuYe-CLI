@@ -10,7 +10,7 @@
 # 这四项是 CI 已有的门槛;本套件把它们收拢到一处,保证「发布前审查」
 # 跑的是同一组命令。
 #
-# `REFLECT_SKIP_WORKSPACE=1` 时整体跳过(CI 的功能门禁入口用此模式:
+# `ZHUYE_SKIP_WORKSPACE=1` 时整体跳过(CI 的功能门禁入口用此模式:
 # 那部分由既有 CI job 覆盖,避免重复消耗 CI 时间)。
 #
 # 退出码 0 = 全部通过。
@@ -22,8 +22,8 @@ source "$HERE/../lib.sh"
 
 cd "$ROOT"
 
-if [ "${REFLECT_SKIP_WORKSPACE:-0}" = "1" ]; then
-    echo "  workspace 测试 —— 跳过(REFLECT_SKIP_WORKSPACE=1)"
+if [ "${ZHUYE_SKIP_WORKSPACE:-0}" = "1" ]; then
+    echo "  workspace 测试 —— 跳过(ZHUYE_SKIP_WORKSPACE=1)"
     exit 0
 fi
 

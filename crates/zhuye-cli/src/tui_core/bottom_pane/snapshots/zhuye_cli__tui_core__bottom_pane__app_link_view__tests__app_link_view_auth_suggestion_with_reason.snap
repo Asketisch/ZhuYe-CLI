@@ -1,5 +1,5 @@
 ---
-source: crates/reflect-tui/src/tui_core/bottom_pane/app_link_view.rs
+source: crates/zhuye-tui/src/tui_core/bottom_pane/app_link_view.rs
 expression: "render_snapshot(&view, Rect::new(0, 0, 72, view.desired_height(72)))"
 ---
 

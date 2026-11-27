@@ -6,7 +6,7 @@ use crate::install_context::StandalonePlatform;
 
 /// TUI 退出后 CLI 应执行的更新动作。
 ///
-/// Reflect 不提供上游安装路径，因此解析结果始终
+/// ZhuYe 不提供上游安装路径，因此解析结果始终
 /// 返回 `None`。保留这些变体是为了与
 /// 调用方和测试保持结构兼容。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,14 +27,14 @@ pub enum UpdateAction {
 
 impl UpdateAction {
     pub(crate) fn from_install_context(_context: &InstallContext) -> Option<Self> {
-        // Reflect 不发布上游安装/更新命令，因此
+        // ZhuYe 不发布上游安装/更新命令，因此
         // 永远不会有需要执行的自动更新动作。
         None
     }
 
     /// 返回调用更新所需的命令行参数列表。
     ///
-    /// Reflect 不输出上游安装命令。此处返回一个中性的
+    /// ZhuYe 不输出上游安装命令。此处返回一个中性的
     /// 占位结果，使该方法对结构化调用方仍然可用。
     pub fn command_args(self) -> (&'static str, &'static [&'static str]) {
         ("true", &[])
@@ -105,7 +105,7 @@ mod tests {
                 method: InstallMethod::Standalone {
                     platform: StandalonePlatform::Unix,
                     release_dir: native_release_dir.clone(),
-                    resources_dir: Some(native_release_dir.join("reflect-resources")),
+                    resources_dir: Some(native_release_dir.join("zhuye-resources")),
                 },
                 package_layout: None,
             }),
@@ -116,7 +116,7 @@ mod tests {
                 method: InstallMethod::Standalone {
                     platform: StandalonePlatform::Windows,
                     release_dir: native_release_dir.clone(),
-                    resources_dir: Some(native_release_dir.join("reflect-resources")),
+                    resources_dir: Some(native_release_dir.join("zhuye-resources")),
                 },
                 package_layout: None,
             }),
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn standalone_update_commands_return_neutral_placeholder() {
-        // Reflect 不输出上游安装命令；所有变体
+        // ZhuYe 不输出上游安装命令；所有变体
         // 都解析为中性的空操作占位结果。
         assert_eq!(
             UpdateAction::StandaloneUnix.command_args(),

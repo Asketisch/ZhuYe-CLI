@@ -29,7 +29,7 @@ fn history_search_opens_without_previewing_latest_entry() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer
@@ -52,7 +52,7 @@ fn unavailable_history_search_restores_idle_draft() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.set_text_content("draft".to_string(), Vec::new(), Vec::new());
@@ -91,7 +91,7 @@ fn history_search_accepts_matching_entry() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer
@@ -129,7 +129,7 @@ fn vim_normal_history_search_preview_places_cursor_on_last_char() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer
@@ -155,7 +155,7 @@ fn history_search_stays_on_single_match_at_boundaries() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer.history.record_local_submission(HistoryEntry::new(
@@ -209,7 +209,7 @@ fn history_search_footer_action_hints_are_emphasized() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer
@@ -270,7 +270,7 @@ fn history_search_highlights_matches_until_accepted() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ true,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer
@@ -325,7 +325,7 @@ fn history_search_esc_restores_original_draft() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer
@@ -354,7 +354,7 @@ fn history_search_ctrl_c_restores_original_draft() {
             /*has_input_focus*/ true,
             sender,
             /*enhanced_keys_supported*/ false,
-            "Ask Reflect to do anything".to_string(),
+            "Ask ZhuYe to do anything".to_string(),
             /*disable_paste_burst*/ false,
         );
         composer
@@ -391,7 +391,7 @@ fn history_search_flushes_pending_first_char_before_snapshot() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -422,7 +422,7 @@ fn history_search_flushes_buffered_paste_before_snapshot() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
 
@@ -457,7 +457,7 @@ fn history_search_esc_resets_normal_history_navigation() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer
@@ -490,7 +490,7 @@ fn history_search_no_match_restores_preview_but_keeps_search_open() {
         /*has_input_focus*/ true,
         sender,
         /*enhanced_keys_supported*/ false,
-        "Ask Reflect to do anything".to_string(),
+        "Ask ZhuYe to do anything".to_string(),
         /*disable_paste_burst*/ false,
     );
     composer

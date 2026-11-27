@@ -1,5 +1,5 @@
 ---
-source: crates/reflect-tui/src/tui_core/bottom_pane/app_link_view/tests.rs
+source: crates/zhuye-tui/src/tui_core/bottom_pane/app_link_view/tests.rs
 expression: "render_snapshot(&view, Rect::new(0, 0, 72, view.desired_height(72)))"
 ---
 
@@ -14,7 +14,7 @@ expression: "render_snapshot(&view, Rect::new(0, 0, 72, view.desired_height(72))
   Newly installed apps can take a few minutes to appear in /apps.
 
 
-  › 1. Manage on Reflect
+  › 1. Manage on ZhuYe
     2. Enable app
     3. Back
   Use tab / ↑ ↓ to move, enter to select, esc to close

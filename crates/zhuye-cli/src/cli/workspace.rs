@@ -2,10 +2,10 @@
 //!
 //! v1.x 接线:submodule 的 `zhuye_stream::workspace_sync` 提供
 //! `clone_repo` / `sync_status_line`(`git clone` 包装 + 状态行)。此前 TUI
-//! 既没有这个子命令,`reflect-stream` 依赖也是**声明了但零引用** —— 用户
+//! 既没有这个子命令,`zhuye-stream` 依赖也是**声明了但零引用** —— 用户
 //! 想把远程工作区拉到本地只能绕开 TUI。
 //!
-//! 与 zhuye-cli 的 `reflect workspace clone` 对称,底层调用走同一套共享
+//! 与 zhuye-cli 的 `zhuye workspace clone` 对称,底层调用走同一套共享
 //! API(不在本仓库复刻一份 clone 逻辑)。
 
 use std::path::PathBuf;
@@ -20,7 +20,7 @@ pub fn clone(
     branch: Option<String>,
     depth: u32,
 ) -> anyhow::Result<()> {
-    println!("Reflect workspace clone");
+    println!("ZhuYe workspace clone");
     println!("======================");
     // `--dest` 缺省 → 用仓库名(URL 最后一段)作目录名。
     let dest = dest.unwrap_or_else(|| default_dest(&url));

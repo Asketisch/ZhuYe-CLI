@@ -94,7 +94,7 @@ impl WidgetRef for &WelcomeWidget {
         lines.push(Line::from(vec![
             "  ".into(),
             "Welcome to ".into(),
-            "Reflect".bold(),
+            "ZhuYe".bold(),
             ", your command-line coding agent".into(),
         ]));
 

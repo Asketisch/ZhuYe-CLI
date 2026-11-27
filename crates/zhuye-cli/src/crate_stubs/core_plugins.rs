@@ -1,4 +1,4 @@
-pub fn is_reflect_curated_marketplace_name(_name: &str) -> bool {
+pub fn is_zhuye_curated_marketplace_name(_name: &str) -> bool {
     false
 }
 pub mod remote {

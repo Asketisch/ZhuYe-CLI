@@ -1,6 +1,6 @@
 #![allow(clippy::collapsible_if)]
 #![allow(dead_code)]
-// 宽松头(沿用 Reflect-Agent 工作区惯例):以下 lint 命中的是仓库既有代码
+// 宽松头(沿用 ZhuYe 工作区惯例):以下 lint 命中的是仓库既有代码
 // 风格,批量改写收益低、风险高(rust 1.98 clippy 新增/收紧后全量暴露),
 // 统一在此豁免;新代码仍以 `cargo clippy -D warnings` 全绿为门槛。
 #![allow(
@@ -101,7 +101,7 @@ use clap::Args;
 
 pub use adapter::{UiEvent, UiEventKind, UiHistoryItem};
 pub use events::UiState;
-pub use tui_core::custom_terminal::Terminal as ReflectTerminal;
+pub use tui_core::custom_terminal::Terminal as ZhuyeTerminal;
 pub use tui_core::insert_history::{HistoryLineWrapPolicy, insert_history_lines};
 pub use tui_core::live_wrap::{Row, RowBuilder, take_prefix_by_width};
 pub use tui_core::markdown_render::render_markdown_text;
@@ -131,7 +131,7 @@ pub struct TuiArgs {
     pub fullscreen: bool,
 }
 
-/// 启动稳定的 Reflect 风格表现层,启用完整的 Reflect 运行时。
+/// 启动稳定的 ZhuYe 风格表现层,启用完整的 ZhuYe 运行时。
 pub fn run(args: TuiArgs) -> anyhow::Result<()> {
     bootstrap::run(args)
 }
@@ -146,7 +146,7 @@ mod tests {
     use clap::Parser;
 
     #[derive(Debug, clap::Parser)]
-    #[command(name = "reflect", disable_help_flag = true)]
+    #[command(name = "zhuye", disable_help_flag = true)]
     struct TestCli {
         #[arg(long)]
         prompt: Option<String>,
@@ -155,8 +155,8 @@ mod tests {
     }
 
     #[test]
-    fn cli_arguments_keep_reflect_compatibility() {
-        let args = TestCli::try_parse_from(["reflect", "--plan-mode", "--prompt", "hello"])
+    fn cli_arguments_keep_zhuye_compatibility() {
+        let args = TestCli::try_parse_from(["zhuye", "--plan-mode", "--prompt", "hello"])
             .expect("compatible TUI args");
         assert!(args.plan_mode);
         assert_eq!(args.prompt.as_deref(), Some("hello"));
@@ -241,7 +241,7 @@ mod tests {
     }
 
     fn composer_render(
-        terminal: &mut ReflectTerminal<VT100Backend>,
+        terminal: &mut ZhuyeTerminal<VT100Backend>,
         composer: &ComposerInput,
     ) -> String {
         terminal
@@ -274,7 +274,7 @@ mod tests {
     #[test]
     fn composer_empty_renders_content() {
         let backend = VT100Backend::new(60, 10);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(ratatui::layout::Rect::new(0, 0, 60, 10));
         let composer = test_composer();
         let text = composer_render(&mut terminal, &composer);
@@ -284,7 +284,7 @@ mod tests {
     #[test]
     fn composer_typing_shows_text() {
         let backend = VT100Backend::new(60, 10);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(ratatui::layout::Rect::new(0, 0, 60, 10));
         let mut composer = test_composer();
         composer_type(&mut composer, "hello");
@@ -298,7 +298,7 @@ mod tests {
     #[test]
     fn composer_slash_popup_shows_commands() {
         let backend = VT100Backend::new(80, 20);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(ratatui::layout::Rect::new(0, 0, 80, 20));
         let mut composer = test_composer();
         composer_type(&mut composer, "/");
@@ -312,7 +312,7 @@ mod tests {
     #[test]
     fn composer_slash_popup_filters() {
         let backend = VT100Backend::new(80, 20);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(ratatui::layout::Rect::new(0, 0, 80, 20));
         let mut composer = test_composer();
         composer_type(&mut composer, "/st");
@@ -337,7 +337,7 @@ mod tests {
     #[test]
     fn composer_backspace_deletes() {
         let backend = VT100Backend::new(60, 10);
-        let mut terminal = ReflectTerminal::with_options(backend).unwrap();
+        let mut terminal = ZhuyeTerminal::with_options(backend).unwrap();
         terminal.set_viewport_area(ratatui::layout::Rect::new(0, 0, 60, 10));
         let mut composer = test_composer();
         composer_type(&mut composer, "hello");

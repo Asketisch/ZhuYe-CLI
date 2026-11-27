@@ -91,8 +91,8 @@ fn assert_listener_unused(listener: &std::os::unix::net::UnixListener) {
 }
 
 #[test]
-fn primary_ipc_socket_path_uses_reflect_home() {
-    let zhuye_home = Path::new("/home/test/.reflect");
+fn primary_ipc_socket_path_uses_zhuye_home() {
+    let zhuye_home = Path::new("/home/test/.zhuye");
 
     assert_eq!(
         primary_ipc_socket_path(zhuye_home),
@@ -284,7 +284,7 @@ fn validate_unix_socket_path_rejects_unsafe_parent_directory() {
     let tempdir = tempfile::tempdir().expect("tempdir");
     std::fs::set_permissions(tempdir.path(), std::fs::Permissions::from_mode(0o777))
         .expect("set unsafe permissions");
-    let socket_path = tempdir.path().join("reflect-ipc.sock");
+    let socket_path = tempdir.path().join("zhuye-ipc.sock");
     let _listener = UnixListener::bind(&socket_path).expect("bind socket");
 
     let err = validate_unix_socket_path(&socket_path)
@@ -300,7 +300,7 @@ fn fetch_ide_context_uses_unregistered_request_route() {
     use std::thread;
 
     let tempdir = tempfile::tempdir().expect("tempdir");
-    let socket_path = tempdir.path().join("reflect-ipc.sock");
+    let socket_path = tempdir.path().join("zhuye-ipc.sock");
     let listener = UnixListener::bind(&socket_path).expect("bind socket");
 
     let server = thread::spawn(move || {

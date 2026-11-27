@@ -34,7 +34,7 @@ impl AppEventSender {
     pub(crate) fn send(&self, event: AppEvent) {
         // 为高保真会话回放记录入站事件。
         // 避免双重记录 Op；它们在提交点被记录。
-        if !matches!(event, AppEvent::ReflectOp(_)) {
+        if !matches!(event, AppEvent::ZhuyeOp(_)) {
             session_log::log_inbound_app_event(&event);
         }
         if let Err(e) = self.app_event_tx.send(event) {
@@ -43,30 +43,30 @@ impl AppEventSender {
     }
 
     pub(crate) fn interrupt(&self) {
-        self.send(AppEvent::ReflectOp(AppCommand::interrupt()));
+        self.send(AppEvent::ZhuyeOp(AppCommand::interrupt()));
     }
 
     pub(crate) fn compact(&self) {
-        self.send(AppEvent::ReflectOp(AppCommand::compact()));
+        self.send(AppEvent::ZhuyeOp(AppCommand::compact()));
     }
 
     pub(crate) fn set_thread_name(&self, name: String) {
-        self.send(AppEvent::ReflectOp(AppCommand::set_thread_name(name)));
+        self.send(AppEvent::ZhuyeOp(AppCommand::set_thread_name(name)));
     }
 
     pub(crate) fn review(&self, target: ReviewTarget) {
-        self.send(AppEvent::ReflectOp(AppCommand::review(target)));
+        self.send(AppEvent::ZhuyeOp(AppCommand::review(target)));
     }
 
     pub(crate) fn list_skills(&self, cwds: Vec<PathBuf>, force_reload: bool) {
-        self.send(AppEvent::ReflectOp(AppCommand::list_skills(
+        self.send(AppEvent::ZhuyeOp(AppCommand::list_skills(
             cwds,
             force_reload,
         )));
     }
 
     pub(crate) fn user_input_answer(&self, id: String, response: ToolRequestUserInputResponse) {
-        self.send(AppEvent::ReflectOp(AppCommand::user_input_answer(
+        self.send(AppEvent::ZhuyeOp(AppCommand::user_input_answer(
             id, response,
         )));
     }

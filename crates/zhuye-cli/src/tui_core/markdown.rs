@@ -378,7 +378,7 @@ mod tests {
         assert_eq!(rendered[1], "After 【F:/x.rs†L3】");
     }
 
-    #[ignore = "Phase 1: requires full Reflect markdown implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe markdown implementation"]
     fn indented_code_blocks_preserve_leading_whitespace() {
         // 基本合理性检查：带前后空行的缩进代码应产出该缩进行。
         let src = "Before\n\n    code 1\n\nAfter\n";
@@ -390,9 +390,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_preserves_full_text_line() {
-        let src = "Hi! How can I help with reflect-agent today? Want me to explore the repo, run tests, or work on a specific change?\n";
+        let src = "Hi! How can I help with zhuye-agent today? Want me to explore the repo, run tests, or work on a specific change?\n";
         let mut out = Vec::new();
         append_markdown(src, /*width*/ None, /*cwd*/ None, &mut out);
         assert_eq!(
@@ -408,12 +408,12 @@ mod tests {
             .join("");
         assert_eq!(
             rendered,
-            "Hi! How can I help with reflect-agent today? Want me to explore the repo, run tests, or work on a specific change?"
+            "Hi! How can I help with zhuye-agent today? Want me to explore the repo, run tests, or work on a specific change?"
         );
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_matches_tui_markdown_for_ordered_item() {
         let mut out = Vec::new();
         append_markdown(
@@ -427,7 +427,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_keeps_ordered_list_line_unsplit_in_context() {
         let src = "Loose vs. tight list items:\n1. Tight item\n";
         let mut out = Vec::new();
@@ -450,7 +450,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_agent_unwraps_markdown_fences_for_table_rendering() {
         let src = "```markdown\n| A | B |\n|---|---|\n| 1 | 2 |\n```\n";
         let mut out = Vec::new();
@@ -461,7 +461,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_agent_unwraps_markdown_fences_for_no_outer_table_rendering() {
         let src = "```md\nCol A | Col B | Col C\n--- | --- | ---\nx | y | z\n10 | 20 | 30\n```\n";
         let mut out = Vec::new();
@@ -481,7 +481,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_agent_unwraps_markdown_fences_for_two_column_no_outer_table() {
         let src = "```md\nA | B\n--- | ---\nleft | right\n```\n";
         let mut out = Vec::new();
@@ -493,7 +493,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_agent_unwraps_markdown_fences_for_single_column_table() {
         let src = "```md\n| Only |\n|---|\n| value |\n```\n";
         let mut out = Vec::new();
@@ -504,7 +504,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_agent_keeps_non_markdown_fences_as_code() {
         let src = "```rust\n| A | B |\n|---|---|\n| 1 | 2 |\n```\n";
         let mut out = Vec::new();
@@ -521,7 +521,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_agent_unwraps_blockquoted_markdown_fence_table() {
         let src = "> ```markdown\n> | A | B |\n> |---|---|\n> | 1 | 2 |\n> ```\n";
         let rendered = unwrap_markdown_fences(src);
@@ -532,7 +532,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_agent_keeps_non_blockquoted_markdown_fence_with_blockquote_table_example() {
         let src = "```markdown\n> | A | B |\n> |---|---|\n> | 1 | 2 |\n```\n";
         let normalized = unwrap_markdown_fences(src);
@@ -540,7 +540,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_agent_keeps_markdown_fence_when_content_is_not_table() {
         let src = "```markdown\n**bold**\n```\n";
         let mut out = Vec::new();
@@ -557,7 +557,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Phase 1: requires full Reflect implementation"]
+    #[ignore = "Phase 1: requires full ZhuYe implementation"]
     fn append_markdown_agent_keeps_markdown_fence_with_blank_line_between_header_and_delimiter() {
         let src = "```markdown\n| A | B |\n\n|---|---|\n| 1 | 2 |\n```\n";
         let rendered = unwrap_markdown_fences(src);

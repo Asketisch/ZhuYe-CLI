@@ -13,7 +13,7 @@ const MAX_OPEN_TABS_CHARS: usize = 20_000;
 // 序列化进原始提示，随后会话渲染会裁剪回最后一个标记之后的请求。
 // 保持相同的标记与裁剪语义，可让在一个界面中携带 IDE 上下文创建的线程
 // 在其他界面中干净地回放。
-const PROMPT_REQUEST_BEGIN: &str = "## My request for Reflect:";
+const PROMPT_REQUEST_BEGIN: &str = "## My request for ZhuYe:";
 
 pub(crate) fn apply_ide_context_to_user_input(
     context: &IdeContext,
@@ -282,7 +282,7 @@ mod tests {
 
         assert!(apply_ide_context_to_user_input(&context, &mut items));
 
-        let expected_prefix = "# Context from my IDE setup:\n\n## Active file: src/lib.rs\n\n## My request for Reflect:\n";
+        let expected_prefix = "# Context from my IDE setup:\n\n## Active file: src/lib.rs\n\n## My request for ZhuYe:\n";
         let prefix_len = expected_prefix.len();
         assert_eq!(
             items,
@@ -308,7 +308,7 @@ mod tests {
     #[test]
     fn extract_prompt_request_returns_text_after_last_delimiter() {
         let message =
-            "# Context\n## My request for Reflect:\nFirst\n## My request for Reflect:\n  Second\n";
+            "# Context\n## My request for ZhuYe:\nFirst\n## My request for ZhuYe:\n  Second\n";
 
         assert_eq!(
             extract_prompt_request_with_offset(message),
