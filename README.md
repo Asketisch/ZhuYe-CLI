@@ -194,5 +194,7 @@ git commit -m "chore: bump zhuye-agent submodule"
 
 本项目基于以下开源工作构建(完整归因见 [NOTICE](NOTICE)):
 
-- [Reflect-Agent](https://github.com/Asketisch/Reflect-Agent) — 核心引擎(Apache-2.0),通过 git submodule 引入
+
+
+- [ZhuYe](https://github.com/Asketisch/ZhuYe)  — 核心引擎(Apache-2.0),通过 git submodule 引入
 - [nornagon/ratatui](https://github.com/nornagon/ratatui) 与 [nornagon/crossterm](https://github.com/nornagon/crossterm) — 暴露 unstable features 的 fork(MIT)
